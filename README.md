@@ -66,7 +66,7 @@ Open Vim and run:
 - `:VisidianSetVault` - Set or reset the vault path.
 - `:VisidianPara` - Setup PARA folders in your vault.
 - `:VisidianHelp` - Open this help document.
-
+- `:VisidianSync` - Sync your Vault with a Remote
 ---
 
 ## PARA Method

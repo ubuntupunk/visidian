@@ -296,3 +296,8 @@ function! visidian#help()
     echoerr "Help file for Visidian not found in any expected locations."
 endfunction
 
+#Call Sync
+function! visidian#sync()
+    call visidian#sync#sync()
+endfunction
+

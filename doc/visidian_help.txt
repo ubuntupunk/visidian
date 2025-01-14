@@ -25,7 +25,7 @@ Contents:
 :VisidianSetVault    - Set or reset the vault path.
 :VisidianPara        - Setup PARA folders in your vault.
 :VisidianHelp        - Open this help document.
-
+:VisidianSync        - Sync vault with remote.
 ------------------------------------------------------------------------------
 2. PARA Method                                    *visidian-para*
 

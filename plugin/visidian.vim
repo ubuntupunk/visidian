@@ -25,4 +25,4 @@ command! -nargs=0 VisidianLinkNotes call visidian#link_notes()
 command! -nargs=0 VisidianSetVault call visidian#set_vault_path()
 command! -nargs=0 VisidianGenPara call visidian#para()
 command! -nargs=0 VisidianHelp call visidian#help()
-
+command! -nargs=0 VisidianSync call visidian#sync()
