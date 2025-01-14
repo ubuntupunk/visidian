@@ -11,8 +11,6 @@ This is currently just a note-taking tool. If you want a more established task-m
 4. [Tips for Using Visidian](#tips-for-using-visidian)
 
 ---
-
-
 ## Installation
 
 ### Manual Installation
@@ -21,24 +19,22 @@ This is currently just a note-taking tool. If you want a more established task-m
    ```sh
    git clone https://github.com/yourusername/visidian.vim.git ~/.vim/pack/visidian/start/visidian.vim
    ```
-
 ### Using a Plugin Manager
-
--- Vim-Plug:
+* **Vim-Plug:**
 Add the following to your vimrc:
 ```vim
 Plug 'yourusername/visidian.vim'
 ```
 Then, in Vim, run :PlugInstall.
 
--- Vundle:
+* **Vundle:**
 Add this line to your vimrc:
 ```vim
 Plugin 'yourusername/visidian.vim'
 ```
 Run :PluginInstall from Vim.
 
--- Pathogen:
+*  **Pathogen:**
 If you use Pathogen, clone the repository into your bundle directory
 ```sh
 git clone https://github.com/yourusername/visidian.vim.git ~/.vim/bundle/visidian.vim
@@ -57,7 +53,6 @@ Open Vim and run:
 :helptags ~/.vim/pack/visidian/start/visidian.vim/doc
 ```
 ## Commands
-
 - `:VisidianDashboard` - Open the Visidian dashboard.
 - `:VisidianNewFile` - Create a new markdown file in the vault.
 - `:VisidianNewFolder` - Create a new folder in the vault.
