@@ -1,0 +1,164 @@
+" Global variables
+if !exists('g:obsidian_cache')
+    let g:obsidian_cache = {}
+endif
+if !exists('g:obsidian_vault_path')
+    let g:obsidian_vault_path = ''
+endif
+
+" Helper function to cache file information
+function! s:cache_file_info(file)
+    let full_path = g:obsidian_vault_path . a:file
+    try
+        let lines = readfile(full_path)
+        let yaml_start = match(lines, '^---$')
+        let yaml_end = match(lines, '^---$', yaml_start + 1)
+        if yaml_start != -1 && yaml_end != -1
+            let g:obsidian_cache[a:file] = {
+            \   'yaml': lines[yaml_start+1 : yaml_end-1]
+            \}
+        else
+            let g:obsidian_cache[a:file] = {'yaml': []}
+        endif
+    catch /^Vim\%((\a\+)\)\=:E484/
+        echoerr "Error reading file: " . full_path
+    endtry
+endfunction
+
+function! obsidian#dashboard()
+    if g:obsidian_vault_path == ''
+        echoerr "No vault path set. Please create a vault first."
+        return
+    endif
+    let files = globpath(g:obsidian_vault_path, '**/*.md', 0, 1)
+    let folders = globpath(g:obsidian_vault_path, '**/', 0, 1)
+
+    enew
+    setlocal buftype=nofile bufhidden=wipe nobuflisted noswapfile nowrap
+    syntax match ObsidianFile "\v^(### Files|  .*\.md$)"
+    syntax match ObsidianFolder "\v^(### Folders|  .*/$)"
+    syntax match ObsidianYAML "\v^  .*$"
+    highlight link ObsidianFile Directory
+    highlight link ObsidianFolder Special
+    highlight link ObsidianYAML String
+
+    " Clear existing cache
+    let g:obsidian_cache = {}
+
+    " Display Files
+    call append(0, "### Files")
+    for file in files
+        call append(line('$'), '  ' . substitute(file, g:obsidian_vault_path, '', ''))
+        call s:cache_file_info(file)  " Cache the file info
+    endfor
+
+    " Display Folders
+    call append(line('$'), "\n### Folders")
+    for folder in folders
+        call append(line('$'), '  ' . substitute(folder, g:obsidian_vault_path, '', ''))
+    endfor
+
+    " Navigation setup
+    nnoremap <buffer> <silent> <CR> :call <SID>open_item()<CR>
+
+    " Open a sidepanel for navigation
+    vsplit 
+    setlocal buftype=nofile bufhidden=wipe nobuflisted noswapfile nowrap
+    call append(0, "Navigate: ")
+    call append(1, "Press <Enter> on an item to open")
+    nnoremap <buffer> <silent> <CR> :call <SID>open_item()<CR>
+endfunction
+
+function! s:open_item()
+    let line = getline('.')
+    if line =~ '^\s*\zs.*\.md$'
+        let file = substitute(line, '^\s*', '', '')
+        exe 'edit ' . g:obsidian_vault_path . file
+        if has_key(g:obsidian_cache, file) && !empty(g:obsidian_cache[file]['yaml'])
+            " Show YAML frontmatter
+            let yaml_buffer = []
+            for yaml_line in g:obsidian_cache[file]['yaml']
+                call add(yaml_buffer, '> ' . yaml_line)
+            endfor
+            call append(line('$'), yaml_buffer)
+        endif
+    elseif line =~ '^\s*\zs.*/$'
+        let folder = substitute(line, '^\s*', '', '')
+        exe 'Explore ' . g:obsidian_vault_path . folder
+    endif
+endfunction
+
+function! obsidian#create_vault()
+    try
+        let vault_name = input("Enter new vault name: ")
+        if vault_name != ''
+            let vault_path = expand('~/') . vault_name . '/'
+            call mkdir(vault_path, 'p')
+            let g:obsidian_vault_path = vault_path
+            echo "New vault created at " . vault_path
+        else
+            echo "No vault name provided."
+        endif
+    catch /^Vim\%((\a\+)\)\=:E739/
+        echoerr "Cannot create directory: Permission denied."
+    endtry
+endfunction
+
+function! obsidian#new_md_file()
+    if g:obsidian_vault_path == ''
+        echoerr "No vault path set. Please create a vault first."
+        return
+    endif
+    try
+        let name = input("Enter new markdown file name: ")
+        if name != ''
+            let full_path = g:obsidian_vault_path . name . '.md'
+            exe 'edit ' . full_path
+            write
+        else
+            echo "No file name provided."
+        endif
+    catch /^Vim\%((\a\+)\)\=:E484/
+        echoerr "Cannot create file: Permission denied or file already exists."
+    endtry
+endfunction
+
+function! obsidian#new_folder()
+    let folder_name = input("Enter new folder name: ")
+    if folder_name != ''
+        let full_path = g:obsidian_vault_path . folder_name
+        call mkdir(full_path, 'p')
+        echo "Folder created at " . full_path
+    else
+        echo "No folder name provided."
+    endif
+endfunction
+
+function! obsidian#link_notes()
+    " Search for YAML front matter
+    let yaml_start = search('^---$', 'nw')
+    if yaml_start == 0
+        return
+    endif
+
+    let yaml_end = search('^---$', 'nW')
+    if yaml_end == 0
+        return
+    endif
+
+    " Extract YAML content
+    let yaml_content = getline(yaml_start + 1, yaml_end - 1)
+
+    " Parse YAML for links (this would need a real YAML parser for robustness)
+    for line in yaml_content
+        if line =~? 'tags:' || line =~? 'links:'
+            " Here you'd parse the actual tags or links.
+            " For simplicity, let's just echo what we find:
+            echo line
+        endif
+    endfor
+
+    " TODO: Implement actual linking by searching other files for matching tags or links
+endfunction
+
+
