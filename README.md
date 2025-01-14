@@ -1,6 +1,6 @@
 # Visidian - An Obsidian-like PKM for Vim
 
-Visidian is a Vim plugin designed to provide Obsidian-like Personal Knowledge Management (PKM) functionality within Vim. It supports managing notes, interconnecting them, and organizing your knowledge using various methods, including the PARA method.
+Visidian is a Vim plugin designed to provide Obsidian-like **Personal Knowledge Management (PKM)** functionality within Vim. It supports managing notes, interconnecting them, and organizing your knowledge using various methods, including the PARA method.
 
 This is currently just a note-taking tool. If you want a more established task-management project, try org mode for vim i.e [vim-orgmode](https://github.com/jceb/vim-orgmode).
 ## Contents
@@ -11,8 +11,6 @@ This is currently just a note-taking tool. If you want a more established task-m
 4. [Tips for Using Visidian](#tips-for-using-visidian)
 
 ---
-
-
 ## Installation
 
 ### Manual Installation
@@ -21,24 +19,22 @@ This is currently just a note-taking tool. If you want a more established task-m
    ```sh
    git clone https://github.com/yourusername/visidian.vim.git ~/.vim/pack/visidian/start/visidian.vim
    ```
-
 ### Using a Plugin Manager
-
--- Vim-Plug:
+* **Vim-Plug:**
 Add the following to your vimrc:
 ```vim
 Plug 'yourusername/visidian.vim'
 ```
 Then, in Vim, run :PlugInstall.
 
--- Vundle:
+* **Vundle:**
 Add this line to your vimrc:
 ```vim
 Plugin 'yourusername/visidian.vim'
 ```
 Run :PluginInstall from Vim.
 
--- Pathogen:
+*  **Pathogen:**
 If you use Pathogen, clone the repository into your bundle directory
 ```sh
 git clone https://github.com/yourusername/visidian.vim.git ~/.vim/bundle/visidian.vim
@@ -46,7 +42,10 @@ git clone https://github.com/yourusername/visidian.vim.git ~/.vim/bundle/visidia
 After installation, make sure to restart Vim or source your vimrc for changes to take effect
 
 ## Configuration
+note: this section is just a placholder, fixme.
+
 Update Your vimrc:
+
 Add the following line to your .vimrc or init.vim if you haven't already:
 ```vim
 set runtimepath^=~/.vim/pack/visidian/start/visidian.vim
@@ -57,7 +56,6 @@ Open Vim and run:
 :helptags ~/.vim/pack/visidian/start/visidian.vim/doc
 ```
 ## Commands
-
 - `:VisidianDashboard` - Open the Visidian dashboard.
 - `:VisidianNewFile` - Create a new markdown file in the vault.
 - `:VisidianNewFolder` - Create a new folder in the vault.
@@ -109,6 +107,22 @@ Getting Things Done (GTD) by David Allen can be seamlessly integrated with Visid
   links:
     - related_note.md
   ---
+
+- **Regularly review** your dashboard to keep your knowledge base up-to-date.
+- **Customize your workflow**: While PARA and GTD are good frameworks, feel free
+to adjust Visidian's structure to match your personal productivity style.
+- **Keyboard Shortcuts**: Map commands to shortcuts for efficiency. For example:
+
+```
+nnoremap <leader>d :VisidianDashboard<CR>
+nnoremap <leader>n :VisidianNewFile<CR>
+```
+- **Note Naming**: Use consistent naming conventions or a date system for your
+notes to make searching and sorting easier.
+
+Remember, Visidian is meant to enhance your productivity, not to be a rigid
+system. Experiment with different setups until you find what works best for you.
+
 
 ## License
 
