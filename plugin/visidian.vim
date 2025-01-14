@@ -26,3 +26,5 @@ command! -nargs=0 VisidianSetVault call visidian#set_vault_path()
 command! -nargs=0 VisidianGenPara call visidian#para()
 command! -nargs=0 VisidianHelp call visidian#help()
 command! -nargs=0 VisidianSync call visidian#sync()
+command! -nargs=0 VisidianToggleAutoSync call visidian#toggle_auto_sync()
+

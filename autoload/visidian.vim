@@ -301,3 +301,24 @@ function! visidian#sync()
     call visidian#sync#sync()
 endfunction
 
+" Function to start and stop the auto-sync timer
+function! visidian#toggle_auto_sync()
+    if exists('s:auto_sync_timer')
+        " Stop the existing timer
+        call timer_stop(s:auto_sync_timer)
+        unlet s:auto_sync_timer
+        echo "Auto-sync stopped."
+    else
+        " Start a new timer
+        let s:auto_sync_timer = timer_start(3600000, function('s:AutoSyncCallback'), {'repeat': -1})
+        echo "Auto-sync started. Syncing every hour."
+    endif
+endfunction
+
+" Callback function for the auto-sync timer
+function! s:AutoSyncCallback(timer)
+    call visidian#sync()
+    echo "Auto-sync performed."
+endfunction
+
+
