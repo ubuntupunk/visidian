@@ -255,7 +255,24 @@ function! visidian#link_notes()
     endfor
 endfunction
 
-    " TODO: Implement actual linking by searching other files for matching tags or links
+" TODO: Implement actual linking by searching other files for matching tags or links
 
+" Generate PKM folders using the PARA method
+function! visidian#para()
+    if g:visidian_vault_path == ''
+        echoerr "No vault path set. Please create or set a vault first."
+        return
+    endif
+
+    let para_folders = ['projects', 'areas', 'resources', 'archives']
+    for folder in para_folders
+        try
+            call mkdir(g:visidian_vault_path . folder, 'p')
+            echo "Created folder: " . folder
+        catch /^Vim\%((\a\+)\)\=:E739/
+            echoerr "Error creating folder " . folder . ": Permission denied."
+        endtry
+    endfor
+endfunction
 
 
