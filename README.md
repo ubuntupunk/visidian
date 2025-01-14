@@ -1,6 +1,6 @@
 # Visidian - An Obsidian-like PKM for Vim
 
-Visidian is a Vim plugin designed to provide Obsidian-like Personal Knowledge Management (PKM) functionality within Vim. It supports managing notes, interconnecting them, and organizing your knowledge using various methods, including the PARA method.
+Visidian is a Vim plugin designed to provide Obsidian-like **Personal Knowledge Management (PKM)** functionality within Vim. It supports managing notes, interconnecting them, and organizing your knowledge using various methods, including the PARA method.
 
 This is currently just a note-taking tool. If you want a more established task-management project, try org mode for vim i.e [vim-orgmode](https://github.com/jceb/vim-orgmode).
 ## Contents
