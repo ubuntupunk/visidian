@@ -43,7 +43,9 @@ After installation, make sure to restart Vim or source your vimrc for changes to
 
 ## Configuration
 note: this section is just a placholder, fixme.
+
 Update Your vimrc:
+
 Add the following line to your .vimrc or init.vim if you haven't already:
 ```vim
 set runtimepath^=~/.vim/pack/visidian/start/visidian.vim
