@@ -42,6 +42,7 @@ git clone https://github.com/yourusername/visidian.vim.git ~/.vim/bundle/visidia
 After installation, make sure to restart Vim or source your vimrc for changes to take effect
 
 ## Configuration
+note: this section is just a placholder, fixme.
 Update Your vimrc:
 Add the following line to your .vimrc or init.vim if you haven't already:
 ```vim
