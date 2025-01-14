@@ -113,9 +113,10 @@ Getting Things Done (GTD) by David Allen can be seamlessly integrated with Visid
 to adjust Visidian's structure to match your personal productivity style.
 - **Keyboard Shortcuts**: Map commands to shortcuts for efficiency. For example:
 
+```
 nnoremap <leader>d :VisidianDashboard<CR>
 nnoremap <leader>n :VisidianNewFile<CR>
-
+```
 - **Note Naming**: Use consistent naming conventions or a date system for your
 notes to make searching and sorting easier.
 
