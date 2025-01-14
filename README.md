@@ -108,6 +108,21 @@ Getting Things Done (GTD) by David Allen can be seamlessly integrated with Visid
     - related_note.md
   ---
 
+- **Regularly review** your dashboard to keep your knowledge base up-to-date.
+- **Customize your workflow**: While PARA and GTD are good frameworks, feel free
+to adjust Visidian's structure to match your personal productivity style.
+- **Keyboard Shortcuts**: Map commands to shortcuts for efficiency. For example:
+
+nnoremap <leader>d :VisidianDashboard<CR>
+nnoremap <leader>n :VisidianNewFile<CR>
+
+- **Note Naming**: Use consistent naming conventions or a date system for your
+notes to make searching and sorting easier.
+
+Remember, Visidian is meant to enhance your productivity, not to be a rigid
+system. Experiment with different setups until you find what works best for you.
+
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
