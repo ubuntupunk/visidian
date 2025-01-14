@@ -2,6 +2,7 @@
 
 Visidian is a Vim plugin designed to provide Obsidian-like Personal Knowledge Management (PKM) functionality within Vim. It supports managing notes, interconnecting them, and organizing your knowledge using various methods, including the PARA method.
 
+This is currently just a note-taking tool. If you want a more established task-management project, try org mode for vim i.e [vim-orgmode](https://github.com/jceb/vim-orgmode).
 ## Contents
 
 1. [Commands](#commands)
@@ -27,7 +28,7 @@ Visidian is a Vim plugin designed to provide Obsidian-like Personal Knowledge Ma
 Add the following to your vimrc:
 ```vim
 Plug 'yourusername/visidian.vim'
-
+```
 Then, in Vim, run :PlugInstall.
 
 -- Vundle:
@@ -109,4 +110,7 @@ Getting Things Done (GTD) by David Allen can be seamlessly integrated with Visid
     - related_note.md
   ---
 
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
