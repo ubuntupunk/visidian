@@ -275,4 +275,24 @@ function! visidian#para()
     endfor
 endfunction
 
+" Help
+function! visidian#help()
+    let paths = [
+        \ '~/.vim/visidian.vim/doc/visidian_help.txt',
+        \ '~/.vim/plugins/visidian.vim/doc/visidian_help.txt',
+        \ '$VIMRUNTIME/sources_non_forked/visidian.vim/doc/visidian_help.txt',
+        \ '$HOME/.vim/plugged/visidian.vim/doc/visidian_help.txt',
+        \ '$HOME/.vim/bundle/visidian.vim/doc/visidian_help.txt'
+    \ ]
+
+    for path in paths
+        let full_path = expand(path)
+        if filereadable(full_path)
+            execute 'split ' . full_path
+            return
+        endif
+    endfor
+
+    echoerr "Help file for Visidian not found in any expected locations."
+endfunction
 

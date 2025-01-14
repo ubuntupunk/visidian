@@ -1,0 +1,93 @@
+*visidian.txt*  Visidian - An Obsidian-like PKM for Vim
+
+VISIDIAN                                               *visidian*
+
+Visidian is a Vim plugin designed to provide Obsidian-like Personal Knowledge 
+Management (PKM) functionality within Vim. It supports managing notes, 
+interconnecting them, and organizing your knowledge using various methods, 
+including the PARA method.
+
+Contents:
+
+1. Commands ......................... |visidian-commands|
+2. PARA Method ...................... |visidian-para|
+3. Combining GTD with Visidian ...... |visidian-gtd|
+4. Tips for Using Visidian .......... |visidian-tips|
+
+------------------------------------------------------------------------------
+1. Commands                                      *visidian-commands*
+
+:VisidianDashboard   - Open the Visidian dashboard.
+:VisidianNewFile     - Create a new markdown file in the vault.
+:VisidianNewFolder   - Create a new folder in the vault.
+:VisidianNewVault    - Create a new vault.
+:VisidianLinkNotes   - Display connections between notes using YAML front matter.
+:VisidianSetVault    - Set or reset the vault path.
+:VisidianPara        - Setup PARA folders in your vault.
+:VisidianHelp        - Open this help document.
+
+------------------------------------------------------------------------------
+2. PARA Method                                    *visidian-para*
+
+The PARA method, developed by Tiago Forte, stands for Projects, Areas, 
+Resources, and Archives. It's a simple, yet effective way to organize 
+information:
+
+- *Projects*: For tasks with a defined goal and deadline.
+- *Areas*: Ongoing responsibilities without a deadline.
+- *Resources*: Topics of interest or areas of study, not tied to immediate action.
+- *Archives*: Completed projects, expired areas, or old resources.
+
+To use PARA in Visidian, run `:VisidianPara` to create these folder structures 
+in your vault.
+
+------------------------------------------------------------------------------
+3. Combining GTD with Visidian                    *visidian-gtd*
+
+Getting Things Done (GTD) by David Allen can be seamlessly integrated with 
+Visidian:
+
+- **Capture**: Use Visidian to take quick notes or create files for any new 
+  ideas or tasks.
+- **Clarify**: Review these notes, deciding whether they're actionable or not.
+- **Organize**: Place actionable items into Projects or Areas. Non-actionable 
+  items can go into Resources or Archives.
+- **Reflect**: Use Visidian's dashboard to review your notes regularly, 
+  updating your GTD lists.
+- **Engage**: Work from your organized notes, moving items through stages 
+  like 'Next Actions' or 'Waiting For'.
+
+Combining PARA and GTD:
+- Use 'Projects' for GTD projects, breaking them down into tasks within 
+  markdown files.
+- 'Areas' can represent contexts or areas of focus from GTD.
+- 'Resources' for reference material, and 'Archives' for completed or 
+  outdated projects.
+
+------------------------------------------------------------------------------
+4. Tips for Using Visidian                        *visidian-tips*
+
+- **Use YAML front matter** effectively to link notes. For instance:
+
+---
+tags: [project, tech]
+  links:
+    - related_note.md
+---
+
+- **Regularly review** your dashboard to keep your knowledge base up-to-date.
+- **Customize your workflow**: While PARA and GTD are good frameworks, feel free 
+to adjust Visidian's structure to match your personal productivity style.
+- **Keyboard Shortcuts**: Map commands to shortcuts for efficiency. For example:
+
+nnoremap <leader>d :VisidianDashboard<CR>
+nnoremap <leader>n :VisidianNewFile<CR>
+
+- **Note Naming**: Use consistent naming conventions or a date system for your 
+notes to make searching and sorting easier.
+
+Remember, Visidian is meant to enhance your productivity, not to be a rigid 
+system. Experiment with different setups until you find what works best for you.
+
+------------------------------------------------------------------------------
+ vim:tw=78:ts=8:ft=help:norl:
