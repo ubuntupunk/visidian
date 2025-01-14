@@ -1,30 +1,30 @@
 " Global variables
-if !exists('g:obsidian_cache')
-    let g:obsidian_cache = {}
+if !exists('g:visidian_cache')
+    let g:visidian_cache = {}
 endif
-if !exists('g:obsidian_vault_path')
-    let g:obsidian_vault_path = ''
+if !exists('g:visidian_vault_path')
+    let g:visidian_vault_path = ''
 endif
-if !exists('g:obsidian_vault_name')
-    let g:obsidian_vault_name = ''
+if !exists('g:visidian_vault_name')
+    let g:visidian_vault_name = ''
 endif
-"if !exists('g:obsidian#load_vault_path')
-"    let g:obsidian#load_vault_path = 1
+"if !exists('g:visidian#load_vault_path')
+"    let g:visidian#load_vault_path = 1
 "endif
 
 " You can also add this to your vimrc or init.vim
-" autocmd VimEnter * call obsidian#load_vault_path()
+" autocmd VimEnter * call visidian#load_vault_path()
 
 
 " Load the vault path from cache or prompt for one 
-function! obsidian#load_vault_path()
-    if !exists('g:obsidian_vault_path') || g:obsidian_vault_path == ''
+function! visidian#load_vault_path()
+    if !exists('g:visidian_vault_path') || g:visidian_vault_path == ''
         let json_data = s:read_json()
         if has_key(json_data, 'vault_path')
-            let g:obsidian_vault_path = json_data['vault_path']
+            let g:visidian_vault_path = json_data['vault_path']
         else
             " If no path found, prompt for one or handle accordingly
-            call obsidian#set_vault_path()
+            call visidian#set_vault_path()
         endif
     endif
 endfunction
@@ -33,17 +33,17 @@ endfunction
 " Commands
 " Helper function to cache file information
 function! s:cache_file_info(file)
-    let full_path = g:obsidian_vault_path . a:file
+    let full_path = g:visidian_vault_path . a:file
     try
         let lines = readfile(full_path)
         let yaml_start = match(lines, '^---$')
         let yaml_end = match(lines, '^---$', yaml_start + 1)
         if yaml_start != -1 && yaml_end != -1
-            let g:obsidian_cache[a:file] = {
+            let g:visidian_cache[a:file] = {
             \   'yaml': lines[yaml_start+1 : yaml_end-1]
             \}
         else
-            let g:obsidian_cache[a:file] = {'yaml': []}
+            let g:visidian_cache[a:file] = {'yaml': []}
         endif
     catch /^Vim\%((\a\+)\)\=:E484/
         echoerr "Error reading file: " . full_path
@@ -51,7 +51,7 @@ function! s:cache_file_info(file)
 endfunction
 
 " Constants for JSON handling
-let s:json_file = expand('~/.obsidian.json')
+let s:json_file = expand('~/.visidian.json')
 
 " Helper function to write to JSON file
 function! s:write_json(data)
@@ -89,20 +89,20 @@ function! s:read_json()
     return {}
 endfunction
 
-" Set the vault path, either from cache, .obsidian.json, or new input
-function! obsidian#set_vault_path()
+" Set the vault path, either from cache, .visidian.json, or new input
+function! visidian#set_vault_path()
     " Check if vault path is already cached
-    if exists('g:obsidian_vault_path') && g:obsidian_vault_path != ''
+    if exists('g:visidian_vault_path') && g:visidian_vault_path != ''
         return
     endif
 
-" Try to read from .obsidian.json
+" Try to read from .visidian.json
     let json_data = s:read_json()
     if has_key(json_data, 'vault_path')
-        let g:obsidian_vault_path = json_data['vault_path']
+        let g:visidian_vault_path = json_data['vault_path']
         " Ensure there's exactly one trailing slash for consistency
-        if g:obsidian_vault_path[-1:] != '/'
-            let g:obsidian_vault_path .= '/'
+        if g:visidian_vault_path[-1:] != '/'
+            let g:visidian_vault_path .= '/'
         endif
         return
     endif
@@ -110,18 +110,18 @@ function! obsidian#set_vault_path()
 " If no cache or JSON file, prompt user for vault path
     let vault_name = input("Enter existing vault name or path: ")
     if vault_name != ''
-        let g:obsidian_vault_path = expand(vault_name . '/')
+        let g:visidian_vault_path = expand(vault_name . '/')
         " Save to JSON for future use
-        call s:write_json({'vault_path': g:obsidian_vault_path})
+        call s:write_json({'vault_path': g:visidian_vault_path})
     else
         echo "No vault path provided."
     endif
 endfunction
 
 " Main dashboard
-function! obsidian#dashboard()
-  call obsidian#load_vault_path() " Ensure vault path is set
-  if g:obsidian_vault_path == ''
+function! visidian#dashboard()
+  call visidian#load_vault_path() " Ensure vault path is set
+  if g:visidian_vault_path == ''
         echoerr "No vault path set. Please create a vault first."
         return
     endif
@@ -129,27 +129,27 @@ function! obsidian#dashboard()
     " Check if NERDTree is installed, use 'silent' to suppress NERDTree messages
     " if used
     if exists(":NERDTree")
-         exe 'NERDTree ' . g:obsidian_vault_path
+         exe 'NERDTree ' . g:visidian_vault_path
     else
         " Use Vim's built-in Explore as a fallback
-         exe 'Explore ' . g:obsidian_vault_path
+         exe 'Explore ' . g:visidian_vault_path
     endif
 
     " Only split if not already in a dashboard buffer    
-    if &buftype != 'nofile' || expand('%:t') != 'ObsidianDashboard'
+   " if &buftype != 'nofile' || expand('%:t') != 'visidianDashboard'
     vsplit 
-    endif
+   " endif
 
     " Set up the dashboard buffer
-    setlocal buftype=nofile bufhidden=hide noswapfile nowrap
+   " setlocal buftype=nofile bufhidden=hide noswapfile nowrap
     setlocal modifiable
-    silent %delete _
+   " silent %delete _
 
-    " Frame the buffer to indicate Obsidian dashboard
+    " Frame the buffer to indicate visidian dashboard
     call append(0, repeat('=', 50))
-    call append(1, ' Obsidian Dashboard')
+    call append(1, ' visidian Dashboard')
     call append(2, repeat('=', 50))
-    call append(3, 'Vault: ' . g:obsidian_vault_path)
+    call append(3, 'Vault: ' . g:visidian_vault_path)
 
     " Add some useful information or commands here if needed
     if exists(":NERDTree")
@@ -157,37 +157,37 @@ function! obsidian#dashboard()
     else
         call append(4, ' - Navigate using Netrw')
     endif
-    call append(5, ' - Use :ObsidianLinkNotes to see connections')
-    call append(6, ' - Use :ObsidianNewFile for new notes')
-    call append(7, ' - Use :ObsidianNewFolder for new folders')
-    call append(8, ' - Use :ObsidianCreateVault for new vaults')
-    call append(9, ' - Use :ObsidianSetVaultPath to change vaults')
-    call append(10, ' - Use :ObsidianDashboard to refresh this buffer')
+    call append(5, ' - Use :VisidianLinkNotes to see connections')
+    call append(6, ' - Use :VisidianNewFile for new notes')
+    call append(7, ' - Use :VisidianNewFolder for new folders')
+    call append(8, ' - Use :VisidianCreateVault for new vaults')
+    call append(9, ' - Use :VisidianSetVaultPath to change vaults')
+    call append(10, ' - Use :VisidianDashboard to refresh this buffer')
     call append(11, ' - Use q to close this buffer')
-    call append(12, ' - Use :ObsidianHelp for more information')
+    call append(12, ' - Use :VisidianHelp for more information')
     call append(13, ' - set mouse=a to enable mouse support')
 
     setlocal nomodifiable
     nnoremap <buffer> <silent> q :bd<CR>  " Close the dashboard buffer with 'q'
 
     " Populate cache
-    let files = globpath(g:obsidian_vault_path, '**/*.md', 0, 1)
+    let files = globpath(g:visidian_vault_path, '**/*.md', 0, 1)
     for file in files
         call s:cache_file_info(file)
     endfor
 endfunction
 
 " Create a new vault
-function! obsidian#create_vault()
+function! visidian#create_vault()
     try
         let vault_name = input("Enter new vault name: ")
         if vault_name != ''
             let vault_path = expand('~/') . vault_name . '/'
             call mkdir(vault_path, 'p')
-            let g:obsidian_vault_path = vault_path
+            let g:visidian_vault_path = vault_path
             echo "New vault created at " . vault_path
             " Save to JSON for future use
-            call s:write_json({'vault_path': g:obsidian_vault_path})
+            call s:write_json({'vault_path': g:visidian_vault_path})
         else
             echo "No vault name provided."
         endif
@@ -198,15 +198,15 @@ function! obsidian#create_vault()
 endfunction
 
 " Create a new markdown file
-function! obsidian#new_md_file()
-    if g:obsidian_vault_path == ''
+function! visidian#new_md_file()
+    if g:visidian_vault_path == ''
         echoerr "No vault path set. Please create a vault first."
         return
     endif
     try
         let name = input("Enter new markdown file name: ")
         if name != ''
-            let full_path = g:obsidian_vault_path . name . '.md'
+            let full_path = g:visidian_vault_path . name . '.md'
             exe 'edit ' . full_path
             write
         else
@@ -218,10 +218,10 @@ function! obsidian#new_md_file()
 endfunction
 
 " Create a new folder
-function! obsidian#new_folder()
+function! visidian#new_folder()
     let folder_name = input("Enter new folder name: ")
     if folder_name != ''
-        let full_path = g:obsidian_vault_path . folder_name
+        let full_path = g:visidian_vault_path . folder_name
         call mkdir(full_path, 'p')
         echo "Folder created at " . full_path
     else
@@ -230,7 +230,7 @@ function! obsidian#new_folder()
 endfunction
 
 " Link notes
-function! obsidian#link_notes()
+function! visidian#link_notes()
     " Search for YAML front matter
     let yaml_start = search('^---$', 'nw')
     if yaml_start == 0
