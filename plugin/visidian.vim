@@ -3,13 +3,11 @@
 " Last Change: 2024-01-11 
 " Maintainer: David Robert Lewis 
 " Email: ubuntupunk at gmail dot com 
-" License: This program is free software. It comes without any warranty, 
-" to the extent permitted by applicable law. You can redistribute it·     
-" and/or modify it under the terms of the Do What The Fuck You Want To Public License,
-" Version 2, as published by Sam Hocevar.    
-" See http://sam.zoy.org/wtfpl/COPYING for more details.           
+" License: GPL-3.0 
+" License Details: https://www.gnu.org/licenses/gpl-3.0.en.html
 
 "Prevents the plugin from being loaded multiple times                  
+
 if exists("g:loaded_visidian_vim")
    runtime! autoload/visidian.vim
  finish

@@ -126,5 +126,5 @@ system. Experiment with different setups until you find what works best for you.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the GPL General Public License - see the [LICENSE](LICENSE) file for details.
 
