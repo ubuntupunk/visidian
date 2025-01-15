@@ -32,8 +32,11 @@ function! visidian#file_creation#new_md_file()
     let tags = input("Enter tags for the file (comma-separated): ")
     let tags_list = map(split(tags, ','), 'trim(v:val)')
 
+    let links = input("Enter linked file names (comma-separated, without .md): ")
+    let links_list = map(split(links, ','), 'trim(v:val)')
+
     let suggested_dir = s:suggest_directory(tags_list)
-    let confirmed_dir = input('Save file in directory [' . suggested_dir . ']: ', suggested_dir)
+    let confirmed_dir = input('Save file in directory? [' . suggested_dir . ']: ', suggested_dir)
     if empty(confirmed_dir)
         let confirmed_dir = suggested_dir
     endif
@@ -61,9 +64,10 @@ function! visidian#file_creation#new_md_file()
         call append(1, 'title: ' . name)
         call append(2, 'date: ' . strftime('%Y-%m-%d %H:%M:%S'))
         call append(3, 'tags: ' . json_encode(tags_list))
-        call append(4, '---')
-        call append(5, '')
-        call setpos('.', [0, 6, 1, 0]) " Move cursor below the front matter
+        call append(4, 'links: ' . json_encode(links_list))
+        call append(5, '---')
+        call append(6, '')
+        call setpos('.', [0, 7, 1, 0]) " Move cursor below the front matter
 
         write
         echo "File created at: " . full_path

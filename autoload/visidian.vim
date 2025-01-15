@@ -136,7 +136,7 @@ function! visidian#dashboard()
     " if used
     if exists(":NERDTree")
          exe 'NERDTree ' . g:visidian_vault_path
-    " Bookmark the last opened note if bookmarking is enabled
+         " Bookmark the last opened note if bookmarking is enabled
         if g:visidian_bookmark_last_note
             call visidian#bookmarking#bookmark_last_note()
         endif
@@ -186,21 +186,6 @@ function! visidian#dashboard()
     for file in files
         call s:cache_file_info(file)
     endfor
-endfunction
-
-" FUNCTION: set the last note
-function! visidian#set_last_note()
-    if &ft == 'markdown'
-        let s:last_note = expand('%:p')
-    else
-        unlet! s:last_note
-    endif
-endfunction
-
-"FUNCTION: toggle bookmarking
-function! visidian#toggle_bookmarking()
-    let g:visidian_bookmark_last_note = !g:visidian_bookmark_last_note
-    echo "Bookmarking last note is now " . (g:visidian_bookmark_last_note ? "enabled" : "disabled")
 endfunction
 
 " FUNCTION: Call Search
