@@ -26,6 +26,7 @@ Contents:
 :VisidianPara        - Setup PARA folders in your vault.
 :VisidianHelp        - Open this help document.
 :VisidianSync        - Sync vault with remote.
+:VisidianSyncToggleAutoSync - Toggle auto-sync on/off.
 ------------------------------------------------------------------------------
 2. PARA Method                                    *visidian-para*
 

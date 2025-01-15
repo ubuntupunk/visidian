@@ -1,0 +1,77 @@
+Setting up automatic synchronization for Visidian can be done in several ways, depending on whether you want to use cron jobs or integrate automatic syncing directly into Vim. Here are methods for both approaches:
+
+Using Cron Jobs:
+Cron jobs are great for automating periodic tasks on Unix-like systems:
+
+Open the Cron Table:
+Open your crontab for editing with crontab -e.
+
+Add a Sync Entry:
+You'll need to ensure Vim can run commands from the command line. Here's an example cron job that syncs every hour:
+
+```bash
+0 * * * * /usr/bin/vim -c ":VisidianSync" -c ":q"
+```
+
+
+/usr/bin/vim should be replaced with the actual path to Vim on your system if it's different.
+
+`:VisidianSync` runs the sync command within Vim.
+
+:q quits Vim after the command.
+
+Customizing the Sync:
+If you need to specify a particular user's Vim settings, you might need to set environment variables like HOME or VIMINIT. Here's a more complex example:
+
+```bash
+0 * * * * HOME=/home/username VIMINIT='source ~/.vimrc' /usr/bin/vim -c ":VisidianSync" -c ":q"
+```
+Replace username with the actual username.
+
+Considerations:
+Make sure the user running the cron job has permissions to perform Git operations or Rsync to the specified locations.
+If using Git, you might need to configure SSH keys for passwordless access to remote repositories.
+
+Automatic Syncing Within Vim:
+If you want the sync to happen automatically within Vim:
+Visidian provides a :VisidianSync command to sync the vault with a remote
+repository and :VisidianToggleAutoSync to toggle auto-sync on and off.
+
+Autocommands for Sync:
+Add the following to your vimrc or init.vim to sync when certain events occur:
+
+```vim
+augroup VisidianSyncAuto
+    autocmd!
+    " Sync on Vim exit
+    autocmd VimLeave * call visidian#sync()
+    " Or sync after a certain amount of time of inactivity
+    " autocmd CursorHold * if &modified | call visidian#sync() | endif
+augroup END
+```
+VimLeave will sync when Vim is closed.
+
+CursorHold can be used for periodic syncing, but it's less common and might be intrusive if not carefully configured.
+
+Periodic Sync with Timers:
+Vim 8.0+ or Neovim supports timers for periodic tasks:
+
+```vim
+if has('timers')
+    let s:sync_timer = timer_start(3600000, 'VisidianPeriodicSync', {'repeat': -1}) " 3600000 ms = 1 hour
+endif
+```
+
+function! VisidianPeriodicSync(timer)
+    call visidian#sync()
+endfunction
+```
+This will sync every hour when Vim is open. Adjust the interval as needed.
+
+Notes:
+Security: Be cautious with cron jobs, especially if they involve SSH keys or passwords for Git push/pull operations. Ensure that only trusted users have access to the cron setup.
+
+Vim Configuration: For both methods, ensure that Vim's configuration (vimrc or init.vim) includes all the necessary plugin paths and settings for Visidian to function correctly.
+Performance: Regular automatic syncs might impact system performance or battery life, especially if syncing large vaults or over slow connections. Adjust frequency based on your needs.
+
+User Notification: For automatic syncing within Vim, you might want to add notifications or logs to inform the user when a sync has happened or if it failed. This can be done by extending the visidian#sync() function to log or notify.

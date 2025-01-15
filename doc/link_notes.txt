@@ -1,0 +1,15 @@
+Documentation for visidian#link_notes()
+
+Explanation:
+YAML Parsing: The function s:get_yaml_front_matter attempts to use a real YAML parser if available. If not, it falls back to a simple regex-based parser for extracting tags and links.
+
+Linking Notes: 
+s:search_and_link searches through all .md files in the vault for matching tags or direct links.
+Tags are matched if a note in the vault has the same tag.
+Direct links are checked by looking if the current file name is listed in another note's links section.
+Displaying Results: If matches are found, a new buffer is created to display the linked notes with reasons for the linkage.
+
+Notes:
+This approach assumes that file names in links are just the file names (without paths) of the Markdown files within the vault, matching how they would appear in the file system relative to the vault root.
+
+Users need to have a YAML parser installed for optimal performance. Without it, the fallback method might not handle all YAML nuances correctly.

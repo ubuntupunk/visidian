@@ -197,10 +197,10 @@ function! visidian#create_vault()
     
 endfunction
 
-" Create a new markdown file
+" Create a new markdown file (with YAML front matter)
 function! visidian#new_md_file()
     if g:visidian_vault_path == ''
-        echoerr "No vault path set. Please create a vault first."
+        echoerr "No vault path set. Please create or set a vault first."
         return
     endif
     try
@@ -208,6 +208,16 @@ function! visidian#new_md_file()
         if name != ''
             let full_path = g:visidian_vault_path . name . '.md'
             exe 'edit ' . full_path
+
+            " Insert YAML front matter
+            call append(0, '---')
+            call append(1, 'title: ' . name)
+            call append(2, 'date: ' . strftime('%Y-%m-%d %H:%M:%S'))
+            call append(3, 'tags: []')
+            call append(4, '---')
+            call append(5, '')
+            call setpos('.', [0, 6, 1, 0]) " Move cursor below the front matter
+
             write
         else
             echo "No file name provided."
@@ -216,6 +226,7 @@ function! visidian#new_md_file()
         echoerr "Cannot create file: Permission denied or file already exists."
     endtry
 endfunction
+
 
 " Create a new folder
 function! visidian#new_folder()
@@ -229,33 +240,12 @@ function! visidian#new_folder()
     endif
 endfunction
 
-" Link notes
+
+" Call Link notes
 function! visidian#link_notes()
-    " Search for YAML front matter
-    let yaml_start = search('^---$', 'nw')
-    if yaml_start == 0
-        return
-    endif
-
-    let yaml_end = search('^---$', 'nW')
-    if yaml_end == 0
-        return
-    endif
-
-    " Extract YAML content
-    let yaml_content = getline(yaml_start + 1, yaml_end - 1)
-
-    " Parse YAML for links (this would need a real YAML parser for robustness)
-    for line in yaml_content
-        if line =~? 'tags:' || line =~? 'links:'
-            " Here you'd parse the actual tags or links.
-            " For simplicity, let's just echo what we find:
-            echo line
-        endif
-    endfor
+    call visidian#link_notes#link_notes()
 endfunction
 
-" TODO: Implement actual linking by searching other files for matching tags or links
 
 " Generate PKM folders using the PARA method
 function! visidian#para()
