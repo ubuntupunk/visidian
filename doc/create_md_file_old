@@ -1,0 +1,30 @@
+" FUNCTION: Create a new markdown file (with YAML front matter)
+function! visidian#new_md_file()
+    if g:visidian_vault_path == ''
+        echoerr "No vault path set. Please create or set a vault first."
+        return
+    endif
+    try
+        let name = input("Enter new markdown file name: ")
+        if name != ''
+            let full_path = g:visidian_vault_path . name . '.md'
+            exe 'edit ' . full_path
+
+            " Insert YAML front matter
+            call append(0, '---')
+            call append(1, 'title: ' . name)
+            call append(2, 'date: ' . strftime('%Y-%m-%d %H:%M:%S'))
+            call append(3, 'tags: []')
+            call append(4, '---')
+            call append(5, '')
+            call setpos('.', [0, 6, 1, 0]) " Move cursor below the front matter
+
+            write
+        else
+            echo "No file name provided."
+        endif
+    catch /^Vim\%((\a\+)\)\=:E484/
+        echoerr "Cannot create file: Permission denied or file already exists."
+    endtry
+endfunction
+

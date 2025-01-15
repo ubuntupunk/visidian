@@ -1,0 +1,19 @@
+## Developing the File and Directory Creation, Tag, Sorting logic
+
+### Explanation:
+Weighted Scoring: A scoring system (s:para_logic) is used to weight tags based on their relevance to each PARA category. Higher weights mean a stronger association.
+GTD Integration: s:gtd_logic maps GTD-specific tags directly to directories, giving them a high score to prioritize these suggestions.
+
+### Suggestion Logic: 
+Tags are scored against both PARA and GTD logic.
+The directory with the highest score is selected. In case of a tie, it follows a preference order.
+Subdirectory Suggestion: For projects, there's a simple logic for suggesting subdirectories based on tags like 'client' or 'team'.
+
+### Notes:
+You might want to expand this system further with more nuanced tag suggestions or user-defined weights.
+
+This system could be made more dynamic by allowing users to customize or expand s:para_logic and s:gtd_logic from their vimrc.
+
+The subdirectory suggestion is basic; you could expand on this by analyzing content or looking for more specific tags or content within notes to suggest even more tailored subdirectories.
+
+

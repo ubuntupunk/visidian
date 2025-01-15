@@ -16,7 +16,7 @@ endif
 " autocmd VimEnter * call visidian#load_vault_path()
 
 
-" Load the vault path from cache or prompt for one 
+"FUNCTION: Load the vault path from cache or prompt for one 
 function! visidian#load_vault_path()
     if !exists('g:visidian_vault_path') || g:visidian_vault_path == ''
         let json_data = s:read_json()
@@ -31,7 +31,7 @@ endfunction
 
 
 " Commands
-" Helper function to cache file information
+" FUNCTION: Helper function to cache file information
 function! s:cache_file_info(file)
     let full_path = g:visidian_vault_path . a:file
     try
@@ -53,7 +53,7 @@ endfunction
 " Constants for JSON handling
 let s:json_file = expand('~/.visidian.json')
 
-" Helper function to write to JSON file
+" FUNCTION: Helper function to write to JSON file
 function! s:write_json(data)
     let lines = ['{']
    " call add(lines, '{')
@@ -73,7 +73,7 @@ function! s:write_json(data)
     endtry
 endfunction
 
-" Helper function to read from JSON file
+" FUNCTION: Helper function to read from JSON file
 function! s:read_json()
     if filereadable(s:json_file)
         let lines = readfile(s:json_file)
@@ -89,7 +89,7 @@ function! s:read_json()
     return {}
 endfunction
 
-" Set the vault path, either from cache, .visidian.json, or new input
+" FUNCTION: Set the vault path, either from cache, .visidian.json, or new input
 function! visidian#set_vault_path()
     " Check if vault path is already cached
     if exists('g:visidian_vault_path') && g:visidian_vault_path != ''
@@ -118,7 +118,7 @@ function! visidian#set_vault_path()
     endif
 endfunction
 
-" Main dashboard
+" FUNCTION: Main dashboard
 function! visidian#dashboard()
   call visidian#load_vault_path() " Ensure vault path is set
   if g:visidian_vault_path == ''
@@ -147,7 +147,7 @@ function! visidian#dashboard()
 
     " Frame the buffer to indicate visidian dashboard
     call append(0, repeat('=', 50))
-    call append(1, ' visidian Dashboard')
+    call append(1, ' Visidian Dashboard')
     call append(2, repeat('=', 50))
     call append(3, 'Vault: ' . g:visidian_vault_path)
 
@@ -178,13 +178,13 @@ function! visidian#dashboard()
 endfunction
 
 
-" Call Search
+" FUNCTION: Call Search
 function! visidian#search()
     call visidian#search#search()
 endfunction
 
 
-" Create a new vault
+" FUNCTION: Create a new vault
 function! visidian#create_vault()
     try
         let vault_name = input("Enter new vault name: ")
@@ -203,42 +203,19 @@ function! visidian#create_vault()
     endtry
 endfunction
 
-" Create a new markdown file (with YAML front matter)
+" FUNCTION: Call Create a new markdown file (with YAML front matter)
+
 function! visidian#new_md_file()
-    if g:visidian_vault_path == ''
-        echoerr "No vault path set. Please create or set a vault first."
-        return
-    endif
-    try
-        let name = input("Enter new markdown file name: ")
-        if name != ''
-            let full_path = g:visidian_vault_path . name . '.md'
-            exe 'edit ' . full_path
-
-            " Insert YAML front matter
-            call append(0, '---')
-            call append(1, 'title: ' . name)
-            call append(2, 'date: ' . strftime('%Y-%m-%d %H:%M:%S'))
-            call append(3, 'tags: []')
-            call append(4, '---')
-            call append(5, '')
-            call setpos('.', [0, 6, 1, 0]) " Move cursor below the front matter
-
-            write
-        else
-            echo "No file name provided."
-        endif
-    catch /^Vim\%((\a\+)\)\=:E484/
-        echoerr "Cannot create file: Permission denied or file already exists."
-    endtry
+    call visidian#file_creation#new_md_file()
 endfunction
 
-"Call Markdown Preview
+
+" FUNCTION: Call Markdown Preview
 function! visidian#toggle_preview()
     call visidian#preview#toggle_preview()
 endfunction
 
-" Create a new folder
+" FUNCTION: Create a new folder
 function! visidian#new_folder()
     let folder_name = input("Enter new folder name: ")
     if folder_name != ''
@@ -251,13 +228,13 @@ function! visidian#new_folder()
 endfunction
 
 
-" Call Link notes
+" FUNCTION: Call Link notes
 function! visidian#link_notes()
     call visidian#link_notes#link_notes()
 endfunction
 
 
-" Generate PKM folders using the PARA method
+" FUNCTION: Generate PKM folders using the PARA method
 function! visidian#para()
     if g:visidian_vault_path == ''
         echoerr "No vault path set. Please create or set a vault first."
@@ -275,7 +252,7 @@ function! visidian#para()
     endfor
 endfunction
 
-" Help
+" FUNCTION: Help
 function! visidian#help()
     let paths = [
         \ '~/.vim/visidian.vim/doc/visidian_help.txt',
@@ -296,12 +273,12 @@ function! visidian#help()
     echoerr "Help file for Visidian not found in any expected locations."
 endfunction
 
-"Call Sync
+" FUNCTION: Call Sync
 function! visidian#sync()
     call visidian#sync#sync()
 endfunction
 
-" Functions to start and stop the auto-sync timer
+" FUNCTIONS TO START AND STOP THE AUTO-SYNC TIMER 
 
 " First Version check for auto-sync functionality
 if v:version >= 800

@@ -1,0 +1,106 @@
+function! visidian#new_md_file()
+    if g:visidian_vault_path == ''
+        echoerr "No vault path set. Please create or set a vault first."
+        return
+    endif
+
+    let name = input("Enter new markdown file name: ")
+    if name == ''
+        echo "No file name provided."
+        return
+    endif
+
+    let tags = input("Enter tags for the file (comma-separated): ")
+    let tags_list = map(split(tags, ','), 'trim(v:val)')
+
+    let suggested_dir = s:suggest_directory(tags_list)
+    let confirmed_dir = input('Save file in directory [' . suggested_dir . ']: ', suggested_dir)
+    if empty(confirmed_dir)
+        let confirmed_dir = suggested_dir
+    endif
+
+    let full_path = g:visidian_vault_path . confirmed_dir . '/' . name . '.md'
+    try
+        exe 'edit ' . full_path
+
+        call append(0, '---')
+        call append(1, 'title: ' . name)
+        call append(2, 'date: ' . strftime('%Y-%m-%d %H:%M:%S'))
+        call append(3, 'tags: ' . json_encode(tags_list))
+        call append(4, '---')
+        call append(5, '')
+        call setpos('.', [0, 6, 1, 0]) " Move cursor below the front matter
+
+        write
+        echo "File created at: " . full_path
+    catch /^Vim\%((\a\+)\)\=:E484/
+        echoerr "Cannot create file: Permission denied or file already exists."
+    endtry
+endfunction
+
+" Dictionary for common tags and their weights for each PARA directory
+let s:para_logic = {
+    \ 'projects': {'project': 10, 'task': 8, 'deadline': 5, 'goal': 7}, 
+    \ 'areas': {'area': 10, 'responsibility': 8, 'habit': 6, 'routine': 6},
+    \ 'resources': {'reference': 10, 'study': 8, 'learning': 7, 'research': 6},
+    \ 'archives': {'archive': 10, 'completed': 8, 'historical': 6}
+\ }
+
+" Additional tags for GTD integration
+let s:gtd_logic = {
+    \ 'nextaction': 'projects', 
+    \ 'waiting': 'projects', 
+    \ 'someday': 'projects',
+    \ 'context': 'areas'
+\ }
+
+function! s:suggest_directory(tags)
+    let scores = {'projects': 0, 'areas': 0, 'resources': 0, 'archives': 0}
+    let default_dir = 'resources'
+
+    " Score based on tags
+    for tag in a:tags
+        for [dir, tag_weights] in items(s:para_logic)
+            if has_key(tag_weights, tolower(tag))
+                let scores[dir] += tag_weights[tolower(tag)]
+            endif
+        endfor
+
+        " GTD tags directly suggest a directory
+        if has_key(s:gtd_logic, tolower(tag))
+            let scores[s:gtd_logic[tolower(tag)]] += 15  " High weight for direct GTD matches
+        endif
+    endfor
+
+    " Determine the highest scored directory
+    let max_score = max(values(scores))
+    let best_dirs = filter(keys(scores), {_, v -> scores[v] == max_score})
+
+    " If there's a tie, choose one based on order of preference (projects > areas > resources > archives)
+    if len(best_dirs) > 1
+        for dir in ['projects', 'areas', 'resources', 'archives']
+            if index(best_dirs, dir) != -1
+                return dir . '/' . s:suggest_subdir(dir, a:tags)
+            endif
+        endfor
+    else
+        return best_dirs[0] . '/' . s:suggest_subdir(best_dirs[0], a:tags)
+    endif
+
+    return default_dir
+endfunction
+
+function! s:suggest_subdir(dir, tags)
+    " Simple logic for suggesting subdirectories within PARA directories
+    if a:dir == 'projects'
+        for tag in a:tags
+            if tag =~? '\vclient|customer'
+                return 'clients/'
+            elseif tag =~? '\vteam|group'
+                return 'teams/'
+            endif
+        endfor
+        return 'general/'
+    endif
+    return ''
+endfunction
