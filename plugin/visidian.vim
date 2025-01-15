@@ -15,14 +15,16 @@ endif
 let g:loaded_visidian_vim = 1
 
 "Exposes the plugins functions for use with following commands: 
-command! -nargs=0 VisidianDashboard call visidian#dashboard()
-command! -nargs=0 VisidianNewFile call visidian#new_md_file()
-command! -nargs=0 VisidianNewFolder call visidian#new_folder()
-command! -nargs=0 VisidianNewVault call visidian#create_vault()
-command! -nargs=0 VisidianLinkNotes call visidian#link_notes()
-command! -nargs=0 VisidianSetVault call visidian#set_vault_path()
-command! -nargs=0 VisidianGenPara call visidian#para()
+command! -nargs=0 VisidianDash call visidian#dashboard()
+command! -nargs=0 VisidianFile call visidian#new_md_file()
+command! -nargs=0 VisidianFolder call visidian#new_folder()
+command! -nargs=0 VisidianVault call visidian#create_vault()
+command! -nargs=0 VisidianLink call visidiani#link_notes()
+command! -nargs=0 VisidianSetPath call visidian#set_vault_path()
+command! -nargs=0 VisidianPara call visidian#para()
 command! -nargs=0 VisidianHelp call visidian#help()
 command! -nargs=0 VisidianSync call visidian#sync()
 command! -nargs=0 VisidianToggleAutoSync call visidian#toggle_auto_sync()
-
+command! -nargs=0 VisidianTogglePreview call visidian#toggle_preview()
+command! -nargs=0 VisidianToggleSidebar call visidian#toggle_sidebar()
+command! -nargs=0 VisidianSearch call visidian#search()

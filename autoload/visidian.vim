@@ -177,6 +177,13 @@ function! visidian#dashboard()
     endfor
 endfunction
 
+
+" Call Search
+function! visidian#search()
+    call visidian#search#search()
+endfunction
+
+
 " Create a new vault
 function! visidian#create_vault()
     try
@@ -194,7 +201,6 @@ function! visidian#create_vault()
     catch /^Vim\%((\a\+)\)\=:E739/
         echoerr "Cannot create directory: Permission denied."
     endtry
-    
 endfunction
 
 " Create a new markdown file (with YAML front matter)
@@ -227,6 +233,10 @@ function! visidian#new_md_file()
     endtry
 endfunction
 
+"Call Markdown Preview
+function! visidian#toggle_preview()
+    call visidian#preview#toggle_preview()
+endfunction
 
 " Create a new folder
 function! visidian#new_folder()

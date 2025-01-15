@@ -56,16 +56,18 @@ Open Vim and run:
 :helptags ~/.vim/pack/visidian/start/visidian.vim/doc
 ```
 ## Commands
-- `:VisidianDashboard` - Open the Visidian dashboard.
-- `:VisidianNewFile` - Create a new markdown file in the vault.
-- `:VisidianNewFolder` - Create a new folder in the vault.
-- `:VisidianNewVault` - Create a new vault.
-- `:VisidianLinkNotes` - Display connections between notes using YAML front matter.
-- `:VisidianSetVault` - Set or reset the vault path.
+- `:VisidianDash` - Open the Visidian dashboard.
+- `:VisidianFile` - Create a new markdown file in the vault.
+- `:VisidianFolder` - Create a new folder in the vault.
+- `:VisidianVault` - Create a new vault.
+- `:VisidianLink` - Display connections between notes using YAML front matter.
+- `:VisidianSetPath` - Set or reset the vault path.
 - `:VisidianPara` - Setup PARA folders in your vault.
 - `:VisidianHelp` - Open this help document.
 - `:VisidianSync` - Sync your Vault with a Remote.
 - `:VisidianToggleAutoSync` - Toggle Auto Sync.
+- `:VisidianTogglePreview` - Toggle Preview.
+- `:VisidianToggleSidebar` - Toggle Sidebar.
 - `:VisidianSearch` - Search for notes in the vault.
 ---
 
