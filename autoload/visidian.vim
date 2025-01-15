@@ -15,6 +15,10 @@ endif
 " You can also add this to your vimrc or init.vim
 " autocmd VimEnter * call visidian#load_vault_path()
 
+" Global variable to control bookmarking, default on
+if !exists('g:visidian_bookmark_last_note')
+    let g:visidian_bookmark_last_note = 1
+endif
 
 "FUNCTION: Load the vault path from JSON or prompt for one 
 function! visidian#load_vault_path()
@@ -132,8 +136,12 @@ function! visidian#dashboard()
     " if used
     if exists(":NERDTree")
          exe 'NERDTree ' . g:visidian_vault_path
+    " Bookmark the last opened note if bookmarking is enabled
+        if g:visidian_bookmark_last_note
+            call s:bookmark_last_note()
+        endif    
     else
-        " Use Vim's built-in Explore as a fallback
+    " Use Vim's built-in Explore as a fallback
          exe 'Explore ' . g:visidian_vault_path
     endif
 
