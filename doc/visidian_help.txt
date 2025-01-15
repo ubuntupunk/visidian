@@ -17,16 +17,20 @@ Contents:
 ------------------------------------------------------------------------------
 1. Commands                                      *visidian-commands*
 
-:VisidianDashboard   - Open the Visidian dashboard.
-:VisidianNewFile     - Create a new markdown file in the vault.
-:VisidianNewFolder   - Create a new folder in the vault.
-:VisidianNewVault    - Create a new vault.
-:VisidianLinkNotes   - Display connections between notes using YAML front matter.
-:VisidianSetVault    - Set or reset the vault path.
-:VisidianPara        - Setup PARA folders in your vault.
+:VisidianDash   - Open the Visidian dashboard.
+:VisidianFile     - Create a new markdown file in the vault.
+:VisidianFolder   - Create a new folder in the vault.
+:VisidianVault    - Create a new vault.
+:VisidianLink   - Display connections between notes using YAML front matter.
+:VisidianVault    - Set or reset the vault path.
+:VisidianParaGen        - Setup PARA folders in your vault.
 :VisidianHelp        - Open this help document.
 :VisidianSync        - Sync vault with remote.
-:VisidianSyncToggleAutoSync - Toggle auto-sync on/off.
+:VisidianToggleAutoSync - Toggle auto-sync on/off.
+:VisidianToggleBookmarking - Toggle bookmarks on/off
+:VisidianTogglePreview - Toggle markdown preview on/off
+:VisidianSearch - Search Vault
+:VisidianSort - Sort Notes by Weights and Balances method.
 ------------------------------------------------------------------------------
 2. PARA Method                                    *visidian-para*
 
@@ -83,6 +87,19 @@ to adjust Visidian's structure to match your personal productivity style.
 
 nnoremap <leader>d :VisidianDashboard<CR>
 nnoremap <leader>n :VisidianNewFile<CR>
+
+-----------------------------------------------------------------------------
+5. Bookmarks
+
+You might want to set up an autocommand to keep track of the last note
+whenever you open or save a markdown file:
+
+In vimrc or init.vim place the following:
+
+autocmd BufEnter,BufWritePost *.md call visidian#bookmarking#set_last_note()  
+
+-----------------------------------------------------------------------------
+6. Naming Conventions
 
 - **Note Naming**: Use consistent naming conventions or a date system for your 
 notes to make searching and sorting easier.
