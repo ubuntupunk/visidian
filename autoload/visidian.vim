@@ -139,7 +139,7 @@ function! visidian#dashboard()
     " Bookmark the last opened note if bookmarking is enabled
         if g:visidian_bookmark_last_note
             call visidian#bookmarking#bookmark_last_note()
-        endif    
+        endif
     else
     " Use Vim's built-in Explore as a fallback
          exe 'Explore ' . g:visidian_vault_path
@@ -251,12 +251,10 @@ function! visidian#new_folder()
     endif
 endfunction
 
-
 " FUNCTION: Call Link notes
 function! visidian#link_notes()
     call visidian#link_notes#link_notes()
 endfunction
-
 
 " FUNCTION: Generate PKM folders using the PARA method
 function! visidian#para()
@@ -337,5 +335,3 @@ else
         autocmd CursorHold * call s:CheckForSync()
     augroup END
 endif
-
-

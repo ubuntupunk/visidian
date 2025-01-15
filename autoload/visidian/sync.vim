@@ -1,5 +1,5 @@
 "These are the sync helper functions called by visidian#sync in
-"autoload/visidiam.vim
+"autoload/visidian.vim
 
 function! visidian#sync#sync()
     if !exists('g:visidian_vault_path') || g:visidian_vault_path == ''

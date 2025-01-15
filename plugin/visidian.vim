@@ -1,18 +1,19 @@
-"Title: Visidian.vim
-" Description: A plugin for vim that imitates obsidian           
-" Last Change: 2024-01-11 
+" Title: Visidian.vim
+" Description: A plugin for vim that imitates obsidian 
+" Last Change: 2024-01-11
 " Maintainer: David Robert Lewis 
 " Email: ubuntupunk at gmail dot com 
 " License: GPL-3.0 
 " License Details: https://www.gnu.org/licenses/gpl-3.0.en.html
 
-"Prevents the plugin from being loaded multiple times                  
+"Prevents the plugin from being loaded multiple times
 
 if exists("g:loaded_visidian_vim")
    runtime! autoload/visidian.vim
  finish
 endif
-ilet g:loaded_visidian_vim = 1
+
+let g:loaded_visidian_vim = 1
 
 "Exposes the plugins functions for use with following commands: 
 command! -nargs=0 VisidianDash call visidian#dashboard()
@@ -30,4 +31,3 @@ command! -nargs=0 VisidianTogglePreview call visidian#toggle_preview()
 command! -nargs=0 VisidianToggleSidebar call visidian#toggle_sidebar()
 command! -nargs=0 VisidianSearch call visidian#search()
 command! -nargs=0 VisidianSort call visidian#sort()
-
