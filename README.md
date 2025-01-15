@@ -62,14 +62,16 @@ Open Vim and run:
 - `:VisidianFolder` - Create a new folder in the vault.
 - `:VisidianVault` - Create a new vault.
 - `:VisidianLink` - Display connections between notes using YAML front matter.
-- `:VisidianSetPath` - Set or reset the vault path.
-- `:VisidianPara` - Setup PARA folders in your vault.
+- `:VisidianPath` - Set or reset the vault path.
+- `:VisidianParaGen` - Setup PARA folders in your vault.
 - `:VisidianHelp` - Open this help document.
 - `:VisidianSync` - Sync your Vault with a Remote.
 - `:VisidianToggleAutoSync` - Toggle Auto Sync.
+- `:VisidianToggleBookmarking` - Toggle Bookmarking.
 - `:VisidianTogglePreview` - Toggle Markdown Preview.
-- `:VisidianToggleSidebar` - Toggle Sidebar.
-- `:VisidianSearch` - Search for notes in the vault.
+- `:VisidianToggleSidebar` - Toggle Sidebar. (TODO)
+- `:VisidianSearch` - Search for notes in the vault.(FIXME)
+- `:VisidianSort` - Intelligent Sorting of Notes (TODO)
 ---
 
 ## PARA Method
