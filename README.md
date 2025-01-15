@@ -66,7 +66,7 @@ Open Vim and run:
 - `:VisidianHelp` - Open this help document.
 - `:VisidianSync` - Sync your Vault with a Remote.
 - `:VisidianToggleAutoSync` - Toggle Auto Sync.
-- `:VisidianTogglePreview` - Toggle Preview.
+- `:VisidianTogglePreview` - Toggle Markdown Preview.
 - `:VisidianToggleSidebar` - Toggle Sidebar.
 - `:VisidianSearch` - Search for notes in the vault.
 ---
@@ -127,6 +127,32 @@ notes to make searching and sorting easier.
 Remember, Visidian is meant to enhance your productivity, not to be a rigid
 system. Experiment with different setups until you find what works best for you.
 
+
+## Requirements
+While Visidian is designed to work out of the box, it's recommended to have the
+following installed: 
+* **Vim 8.2+**: Visidian is tested on Vim 8.2 and above.
+* **A File Explorer**: NERDTree for navigating your vault and managing files.
+* **Markdown Previewer**: For the best experience, install a markdown previewer
+  like [Grip](supports GitHub Flavored Markdown),  [Markdown Preview](https://github.com/iamcco/markdown-preview.nvim)
+  or [Instant Markdown Vim](https://vimawesome.com/plugin/instant-markdown-vim) 
+  -- for live previews in your browser.
+* **Git**: For syncing your vault with a remote repository
+* **Rsync: For syncing your vault with a remote server.
+* **FZF**: For fuzzy searching within your vault.
+* **Ripgrep**: For fast searching within your vault.
+* **Python 3**: For running the markdown previewer.
+* **Pandoc**: For converting markdown files to other formats.
+* **Ctags**: For generating tags for your notes.
+* **YAML parser**: For parsing YAML front matter in your notes.
+* **YAML Front Matter**: For linking notes and adding metadata.
+* **A Markdown Linter**: For checking your markdown files for errors.
+-- Vim-Markdown (https://github.com/preservim/vim-markdown) is a good option.
+* **A Spell Checker**: For catching typos and errors in your notes.
+
+## Contributing
+Contributions are welcome! If you have any suggestions, bug reports, or feature
+requests, please open an issue or submit a pull request.
 
 ## License
 
