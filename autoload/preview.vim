@@ -16,8 +16,12 @@ function! visidian#preview#toggle_preview()
                 MarkdownPreview
                 let s:preview_active = 1
                 echo "Markdown preview started using markdown-preview.nvim."
+            elseif exists(':InstantMarkdownPreview')
+                InstantMarkdownPreview
+                let s:preview_active = 1
+                echo "Markdown preview started using instant-markdown-vim."
             else
-                echo "markdown-preview.nvim not available. Trying grip..."
+                echo "Neither markdown-preview.nvim nor instant-markdown-vim available. Trying grip..."
                 call s:start_grip_preview()
             endif
         else
@@ -29,6 +33,8 @@ endfunction
 function! s:stop_preview()
     if exists(':MarkdownPreviewStop')
         MarkdownPreviewStop
+    elseif exists(':InstantMarkdownStop')
+        InstantMarkdownStop
     elseif exists('s:preview_buf') && bufexists(s:preview_buf)
         execute 'bd ' . s:preview_buf
         unlet s:preview_buf
@@ -56,7 +62,7 @@ function! s:start_grip_preview()
     endif
 endfunction
 
-" Check if Vim supports MarkdownPreview
+" Check if Vim supports either MarkdownPreview or InstantMarkdownPreview
 function! s:supports_markdown_preview()
     return v:version >= 801 || has('nvim')
 endfunction
