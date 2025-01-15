@@ -138,7 +138,7 @@ function! visidian#dashboard()
          exe 'NERDTree ' . g:visidian_vault_path
     " Bookmark the last opened note if bookmarking is enabled
         if g:visidian_bookmark_last_note
-            call s:bookmark_last_note()
+            call visidian#bookmarking#bookmark_last_note()
         endif    
     else
     " Use Vim's built-in Explore as a fallback
@@ -188,12 +188,25 @@ function! visidian#dashboard()
     endfor
 endfunction
 
+" FUNCTION: set the last note
+function! visidian#set_last_note()
+    if &ft == 'markdown'
+        let s:last_note = expand('%:p')
+    else
+        unlet! s:last_note
+    endif
+endfunction
+
+"FUNCTION: toggle bookmarking
+function! visidian#toggle_bookmarking()
+    let g:visidian_bookmark_last_note = !g:visidian_bookmark_last_note
+    echo "Bookmarking last note is now " . (g:visidian_bookmark_last_note ? "enabled" : "disabled")
+endfunction
 
 " FUNCTION: Call Search
 function! visidian#search()
     call visidian#search#search()
 endfunction
-
 
 " FUNCTION: Create a new vault
 function! visidian#create_vault()
