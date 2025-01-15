@@ -16,7 +16,7 @@ endif
 " autocmd VimEnter * call visidian#load_vault_path()
 
 
-"FUNCTION: Load the vault path from cache or prompt for one 
+"FUNCTION: Load the vault path from JSON or prompt for one 
 function! visidian#load_vault_path()
     if !exists('g:visidian_vault_path') || g:visidian_vault_path == ''
         let json_data = s:read_json()
@@ -75,7 +75,8 @@ endfunction
 
 " FUNCTION: Helper function to read from JSON file
 function! s:read_json()
-    if filereadable(s:json_file)
+  let json_file = expand('~/.visidian.json')  
+  if filereadable(s:json_file)
         let lines = readfile(s:json_file)
         let data = {}
         for line in lines
@@ -97,15 +98,16 @@ function! visidian#set_vault_path()
     endif
 
 " Try to read from .visidian.json
-    let json_data = s:read_json()
-    if has_key(json_data, 'vault_path')
-        let g:visidian_vault_path = json_data['vault_path']
-        " Ensure there's exactly one trailing slash for consistency
-        if g:visidian_vault_path[-1:] != '/'
-            let g:visidian_vault_path .= '/'
-        endif
-        return
-    endif
+
+"    let json_data = s:read_json()
+"    if has_key(json_data, 'vault_path')
+"        let g:visidian_vault_path = json_data['vault_path']
+"        " Ensure there's exactly one trailing slash for consistency
+"        if g:visidian_vault_path[-1:] != '/'
+"            let g:visidian_vault_path .= '/'
+"        endif
+"        return
+"    endif
 
 " If no cache or JSON file, prompt user for vault path
     let vault_name = input("Enter existing vault name or path: ")
@@ -136,7 +138,7 @@ function! visidian#dashboard()
     endif
 
     " Only split if not already in a dashboard buffer    
-   " if &buftype != 'nofile' || expand('%:t') != 'visidianDashboard'
+   " if &buftype != 'nofile' || expand('%:t') != 'VisidianDashboard'
     vsplit 
    " endif
 
@@ -145,11 +147,12 @@ function! visidian#dashboard()
     setlocal modifiable
    " silent %delete _
 
-    " Frame the buffer to indicate visidian dashboard
+    " Frame the buffer to indicate Visidian dashboard
     call append(0, repeat('=', 50))
     call append(1, ' Visidian Dashboard')
     call append(2, repeat('=', 50))
-    call append(3, 'Vault: ' . g:visidian_vault_path)
+    "call append(3, 'Vault: ' . g:visidian_vault_path)
+    call append(3, '') 
 
     " Add some useful information or commands here if needed
     if exists(":NERDTree")
