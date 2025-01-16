@@ -214,7 +214,8 @@ function! s:create_popup_menu()
 
     " Check if popup is supported
     if has('popupwin')
-        let popup = popup_create(commands, {
+      let s:visidian_popup_commands = commands  " Store commands for use in callback  
+      let popup = popup_create(commands, {
         \   'line': 'cursor+1',
         \   'col': 'cursor',
         \   'title': 'Visidian Commands',
@@ -232,7 +233,7 @@ endfunction
 
 " FUNCTION: Popup Callback
 function! s:popup_callback(winid, result)
-    if a:result > 0
+    if a:result > 0 && exists('s:visidian_popup_commands')
         let command = get(get(g:, 'visidian_popup_commands', []), a:result - 1, {}).cmd
         if !empty(command)
             execute command
