@@ -189,6 +189,55 @@ function! visidian#dashboard()
     for file in files
         call s:cache_file_info(file)
     endfor
+" Create a popup menu for Visidian commands
+    call s:create_popup_menu()
+endfunction
+
+" FUNCTION: create popup menu
+function! s:create_popup_menu()
+    let commands = [
+        \ {'text': 'Dashboard', 'cmd': ':VisidianDashboard'},
+        \ {'text': 'New File', 'cmd': ':VisidianFile'},
+        \ {'text': 'New Folder', 'cmd': ':VisidianFolder'},
+        \ {'text': 'New Vault', 'cmd': ':VisidianVault'},
+        \ {'text': 'Link Notes', 'cmd': ':VisidianLink'},
+        \ {'text': 'Set Vault', 'cmd': ':VisidianPath'},
+        \ {'text': 'PARA Setup', 'cmd': ':VisidianParaGen'},
+        \ {'text': 'Help', 'cmd': ':VisidianHelp'},
+        \ {'text': 'Sync', 'cmd': ':VisidianSync'},
+        \ {'text': 'Toggle Auto Sync, 'cmd': 'VisidianToggleAutoSync'},
+        \ {'text': 'Search', 'cmd': ':VisidianSearch'},
+        \ {'text': 'Sort', 'cmd': ':VisidianSort'},
+        \ {'text': 'Preview', 'cmd': ':VisidianTogglePreview'},
+        \ {'text': 'Bookmarks', 'cmd': ':VisidianToggleBookmarking'}, 
+    \ ]
+
+    " Check if popup is supported
+    if has('popupwin')
+        let popup = popup_create(commands, {
+        \   'line': 'cursor+1',
+        \   'col': 'cursor',
+        \   'title': 'Visidian Commands',
+        \   'filter': 'popup_filter_menu',
+        \   'callback': 's:popup_callback',
+        \   'border': [],
+        \   'mapping': 0,
+        \   'minwidth': 20,
+        \   'maxwidth': 50
+        \ })
+    else
+        echo "Popup windows not supported in this Vim version."
+    endif
+endfunction
+
+" FUNCTION: Popup Callback
+function! s:popup_callback(winid, result)
+    if a:result > 0
+        let command = get(get(g:, 'visidian_popup_commands', []), a:result - 1, {}).cmd
+        if !empty(command)
+            execute command
+        endif
+    endif
 endfunction
 
 " FUNCTION: clear cache of non-existent files
