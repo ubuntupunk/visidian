@@ -1,5 +1,7 @@
+"file: autload/visidian/search.vim
 "this is the search function called by the VisidianSearch command
 
+"FUNCTION: Search
 function! visidian#search#search()
     if g:visidian_vault_path == ''
         echoerr "No vault path set. Please create or set a vault first."
@@ -19,6 +21,7 @@ function! visidian#search#search()
     endif
 endfunction
 
+"FUNCTION: FZF search query
 function! s:fzf_search(query)
     let files = split(globpath(g:visidian_vault_path, '**/*.md'), '\n')
     let command = printf("fzf --preview='cat {}' --query='%s'", a:query)
@@ -32,6 +35,7 @@ function! s:fzf_search(query)
     endif
 endfunction
 
+"FUNCTION vimgrep search
 function! s:vim_search(query)
     " Use vimgrep for fallback search
     let pattern = escape(a:query, '/\*')

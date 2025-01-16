@@ -122,6 +122,23 @@ by default when the file is opened.
 Vim has inbuilt fold support, you can  open/close folds (e.g., zo, zc, zr, zm)
 consider adding custom key mappings in your vimrc for a more tailored 
 experience.
+-----------------------------------------------------------------------------
+9. TODO Keywords:
+
+This adapts the Org-mode approach to work with Markdown, allowing for custom
+TODO keywords which can be highlighted differently.
+
+Timestamps: The regex for timestamps reflects common formats seen in Markdown
+or task management within Markdown. Adjust if your users use different formats.
+
+Special Words: These patterns are directly borrowed but might need adjustment
+based on where "TODAY" or "Week Agenda" appear in your Markdown documents.
+
+Hyperlinks: This is more akin to Markdown's reference-style links but can be
+adjusted to match inline links if needed (e.g., [text](url)).
+
+DRY (Don't Repeat Yourself): The function s:ReadTodoKeywords avoids repetition
+by dynamically setting up highlight rules for each keyword.
 
 -----------------------------------------------------------------------------
  vim:tw=78:ts=8:ft=help:norl:

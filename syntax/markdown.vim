@@ -71,6 +71,50 @@ syn match visidian_todo_item_with_checkbox '\v(☐|☑|✘)\s+.*$'
     \ containedin=ALL
 hi def link visidian_todo_item_with_checkbox Normal
 
+" TODO keywords similar to Org-mode but adjusted for Markdown
+syn match visidian_todo_key /\[\zs[^]]*\ze\]/
+hi def link visidian_todo_key Identifier
+
+function! s:ReadTodoKeywords(keywords)
+    let l:default_group = 'Todo'
+    for keyword in a:keywords
+        if keyword == '|'
+            let l:default_group = 'Question'
+            continue
+        endif
+
+        " Create syntax match for each keyword
+        exe 'syn match visidian_todo_keyword_' . keyword . ' /\<' . keyword . '\>/ containedin=ALL'
+        " Link to a highlight group, default to 'Todo' unless changed by '|'
+        exe 'hi def link visidian_todo_keyword_' . keyword . ' ' . l:default_group
+    endfor
+endfunction
+
+" Example usage with custom keywords
+if !exists('g:visidian_todo_keywords')
+    let g:visidian_todo_keywords = ['TODO', 'DONE', 'FIXME', 'XXX', '|', 'NOTE']
+endif
+call s:ReadTodoKeywords(g:visidian_todo_keywords)
+
+" Timestamps for Markdown
+syn match visidian_timestamp /<\d\{4\}-\d\{2\}-\d\{2\}\s\+\w*/  " <YYYY-MM-DD Day>
+syn match visidian_timestamp /<\d\{4\}-\d\{2\}-\d\{2\}\s\+\w\+\s\+\d\{2\}:\d\{2}\(>\|\s*-\s*\d\{2\}:\d\{2}>\)/  " <YYYY-MM-DD Day HH:MM> or <YYYY-MM-DD Day HH:MM-HH:MM>
+hi def link visidian_timestamp PreProc
+
+" Special words for today and week agenda
+syn match today /TODAY$/
+hi def link today PreProc
+
+syn match week_agenda /^Week Agenda:$/
+hi def link week_agenda PreProc
+
+" Hyperlinks, adapted for Markdown's syntax
+syntax match visidian_hyperlink '\[\{2}[^][]*\(\]\[[^][]*\)\?\]\{2}' contains=visidian_hyperlinkBracketsLeft,visidian_hyperlinkURL,visidian_hyperlinkBracketsRight containedin=ALL
+syntax match visidian_hyperlinkBracketsLeft contained '\[\{2}' conceal
+syntax match visidian_hyperlinkURL contained '[^][]*\]\[' conceal
+syntax match visidian_hyperlinkBracketsRight contained '\]\{2}' conceal
+hi def link visidian_hyperlink Underlined
+
 "FOLDS SECTION
 
 " Define fold markers for headings

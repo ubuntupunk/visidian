@@ -1,4 +1,6 @@
-" FUNCTION: Create a new markdown file (with YAML front matter) and suggest
+" file autoload/visidian/file_creation.vim:
+
+" Create a new markdown file (with YAML front matter) and suggest
 " directory based upon tags and PARA formula
 
 " Dictionary for common tags and their weights for each PARA directory
@@ -17,6 +19,7 @@ let s:gtd_logic = {
     \ 'context': 'areas'
 \ }
 
+"FUNCTION: Create File
 function! visidian#file_creation#new_md_file()
     if g:visidian_vault_path == ''
         echoerr "No vault path set. Please create or set a vault first."
@@ -76,6 +79,7 @@ function! visidian#file_creation#new_md_file()
     endtry
 endfunction
 
+" FUNCTION: Suggest Directory
 function! s:suggest_directory(tags)
     let scores = {'projects': 0, 'areas': 0, 'resources': 0, 'archives': 0}
     let default_dir = 'resources'
@@ -112,7 +116,7 @@ function! s:suggest_directory(tags)
     return default_dir
 endfunction
 
-" Simple logic for suggesting subdirectories within PARA directories
+"FUNCTION: Simple logic for suggesting subdirectories within PARA directories
 function! s:suggest_subdir(dir, tags)
     if a:dir == 'projects'
         for tag in a:tags

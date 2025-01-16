@@ -1,7 +1,10 @@
+"file autoload/visidian/preview.vim:
+
 "This is the markdown preview functionality for Vim. It uses
 "markdown-preview.nvim if available, otherwise it falls back to using grip.
 "Requires Vim 8.1 or Neovim.
 
+"FUNCTION: preview toggle
 function! visidian#preview#toggle_preview()
     if &filetype != 'markdown'
         echo "This command only works with Markdown files."
@@ -30,6 +33,7 @@ function! visidian#preview#toggle_preview()
     endif
 endfunction
 
+"FUNCTION: Stop Preview
 function! s:stop_preview()
     if exists(':MarkdownPreviewStop')
         MarkdownPreviewStop
@@ -43,6 +47,7 @@ function! s:stop_preview()
     echo "Markdown preview stopped."
 endfunction
 
+" FUNCTION: Stop GRIP Preview
 function! s:start_grip_preview()
     if executable('grip')
         vsplit new
@@ -62,7 +67,7 @@ function! s:start_grip_preview()
     endif
 endfunction
 
-" Check if Vim supports either MarkdownPreview or InstantMarkdownPreview
+"FUNCTION: Check if Vim supports either MarkdownPreview or InstantMarkdownPreview
 function! s:supports_markdown_preview()
     return v:version >= 801 || has('nvim')
 endfunction

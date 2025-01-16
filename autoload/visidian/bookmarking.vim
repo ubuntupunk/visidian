@@ -1,4 +1,4 @@
-" FUNCTION autoload/visidian/bookmarking.vim:
+" autoload/visidian/bookmarking.vim:
 
 " Global variable to control bookmarking, default on
 if !exists('g:visidian_bookmark_last_note')

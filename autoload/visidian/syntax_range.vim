@@ -1,4 +1,6 @@
-" SyntaxRange-like function for Visidian
+"autoload/visidian/syntax_range.vim
+
+"FUNCTION: SyntaxRange-like function for Visidian
 function! visidian#syntax_range#include(start, end, syntax)
     let b:current_syntax = 'markdown'
 

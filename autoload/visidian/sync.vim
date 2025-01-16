@@ -1,6 +1,9 @@
+"file autoload/visidan/sync.vim:
+
 "These are the sync helper functions called by visidian#sync in
 "autoload/visidian.vim
 
+"FUNCTION: Sync
 function! visidian#sync#sync()
     if !exists('g:visidian_vault_path') || g:visidian_vault_path == ''
         echoerr "No vault path set. Please set a vault first."
@@ -34,6 +37,7 @@ function! visidian#sync#sync()
     endif
 endfunction
 
+"FUNCTION: Git
 function! s:sync_git()
     let cmd = [
         \ 'cd ' . shellescape(g:visidian_vault_path),
@@ -59,6 +63,7 @@ function! s:sync_git()
     endif
 endfunction
 
+"FUNCTION: Rsync
 function! s:sync_rsync()
     let cmd = 'rsync -avz --delete ' . shellescape(g:visidian_vault_path) . ' ' . shellescape(g:visidian_rsync_target)
     let result = system(cmd)

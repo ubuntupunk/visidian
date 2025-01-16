@@ -215,7 +215,9 @@ endfunction
 
 " FUNCTION: Helper to cache file information, ignoring errors for missing files
 function! s:cache_file_info(file)
-    let full_path = g:visidian_vault_path . a:file
+" Ensure the file path is relative to the vault
+  let file_path = substitute(a:file, '^' . g:visidian_vault_path, '', '')
+  let full_path = g:visidian_vault_path . a:file
     echomsg "Caching: " . full_path
     try
         let lines = readfile(full_path)
@@ -289,6 +291,11 @@ endfunction
 function! visidian#link_notes()
     call visidian#link_notes#link_notes()
 endfunction
+
+"FUNCTION: Call Sort notes
+function! visidian#sort()
+  call visidian#sort#sort()
+endfunction  
 
 " FUNCTION: Generate PKM folders using the PARA method
 function! visidian#para()
