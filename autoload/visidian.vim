@@ -182,10 +182,46 @@ function! visidian#dashboard()
     nnoremap <buffer> <silent> q :bd<CR>  " Close the dashboard buffer with 'q'
 
     " Populate cache
+    call visidian#clear_cache()  " Clear old cache entries
     let files = globpath(g:visidian_vault_path, '**/*.md', 0, 1)
     for file in files
         call s:cache_file_info(file)
     endfor
+endfunction
+
+" FUNCTION: clear cache of non-existent files
+function! visidian#clear_cache()
+    if !exists('g:visidian_cache')
+        let g:visidian_cache = {}
+        return
+    endif
+
+    for file in keys(g:visidian_cache)
+        let full_path = g:visidian_vault_path . file
+        if !filereadable(full_path)
+            call remove(g:visidian_cache, file)
+        endif
+    endfor
+endfunction
+
+" FUNCTION: Helper to cache file information, ignoring errors for missing files
+function! s:cache_file_info(file)
+    let full_path = g:visidian_vault_path . a:file
+    try
+        let lines = readfile(full_path)
+        let yaml_start = match(lines, '^---$')
+        let yaml_end = match(lines, '^---$', yaml_start + 1)
+        if yaml_start != -1 && yaml_end != -1
+            let g:visidian_cache[a:file] = {
+            \   'yaml': lines[yaml_start+1 : yaml_end-1]
+            \}
+        else
+            let g:visidian_cache[a:file] = {'yaml': []}
+        endif
+    catch /^Vim\%((\a\+)\)\=:E484/
+        " Ignore errors for files that no longer exist
+        call remove(g:visidian_cache, a:file)
+    endtry
 endfunction
 
 " FUNCTION: Call Search
