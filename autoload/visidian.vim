@@ -224,7 +224,9 @@ function! s:create_popup_menu()
         \   'border': [],
         \   'mapping': 0,
         \   'minwidth': 20,
-        \   'maxwidth': 50
+        \   'maxwidth': 50,
+        \   'zindex': 300, " Ensure its above other windows"
+        \   'mousemoved': 'all'
         \ })
     else
         echo "Popup windows not supported in this Vim version."
