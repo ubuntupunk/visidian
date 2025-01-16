@@ -205,11 +205,11 @@ function! s:create_popup_menu()
         \ {'text': 'PARA Setup', 'cmd': ':VisidianParaGen'},
         \ {'text': 'Help', 'cmd': ':VisidianHelp'},
         \ {'text': 'Sync', 'cmd': ':VisidianSync'},
-        \ {'text': 'Toggle Auto Sync, 'cmd': 'VisidianToggleAutoSync'},
+        \ {'text': 'Toggle Auto Sync', 'cmd': 'VisidianToggleAutoSync'},
         \ {'text': 'Search', 'cmd': ':VisidianSearch'},
         \ {'text': 'Sort', 'cmd': ':VisidianSort'},
-        \ {'text': 'Preview', 'cmd': ':VisidianTogglePreview'},
-        \ {'text': 'Bookmarks', 'cmd': ':VisidianToggleBookmarking'}, 
+        \ {'text': 'Preview On/Off', 'cmd': ':VisidianTogglePreview'},
+        \ {'text': 'Bookmarks On/Off', 'cmd': ':VisidianToggleBookmarking'}, 
     \ ]
 
     " Check if popup is supported
@@ -239,6 +239,20 @@ function! s:popup_callback(winid, result)
         endif
     endif
 endfunction
+
+" FUNCTION: define menu
+function! visidian#menu()
+    if exists('s:popup_menu')
+        call popup_close(s:popup_menu)
+    endif
+    let s:popup_menu = s:create_popup_menu()
+endfunction
+
+" map key to call dashboard
+nnoremap <silent> <leader>v :call visidian#dashboard()<CR>
+
+" If you want to open only the menu without the full dashboard:
+nnoremap <silent> <leader>vm :call visidian#menu()<CR>
 
 " FUNCTION: clear cache of non-existent files
 function! visidian#clear_cache()
