@@ -200,17 +200,17 @@ function! s:create_popup_menu()
         \ {'text': 'New File', 'cmd': ':VisidianFile', 'key': 'f'},
         \ {'text': 'New Folder', 'cmd': ':VisidianFolder', 'key': 'o'},
         \ {'text': 'New Vault', 'cmd': ':VisidianVault', 'key': 'v'},
-        \ {'text': 'Link Notes', 'cmd': ':VisidianLink', 'key': 'l'},
         \ {'text': 'Set Vault', 'cmd': ':VisidianPath', 'key': 's'},
-        \ {'text': 'PARA Setup', 'cmd': ':VisidianParaGen', 'key': 'p'},
-        \ {'text': 'Help', 'cmd': ':VisidianHelp', 'key': 'h'},
-        \ {'text': 'Sync', 'cmd': ':VisidianSync'},
-        \ {'text': 'Toggle Auto Sync', 'cmd': 'VisidianToggleAutoSync'},
+        \ {'text': 'Link Notes', 'cmd': ':VisidianLink', 'key': 'l'},
         \ {'text': 'Search', 'cmd': ':VisidianSearch', 'key': 'e'},
         \ {'text': 'Sort', 'cmd': ':VisidianSort', 'key': 'y'},
+        \ {'text': 'Generate PARA folders', 'cmd': ':VisidianParaGen', 'key': 'p'},
+        \ {'text': 'Sync', 'cmd': ':VisidianSync'},
+        \ {'text': 'Toggle Auto Sync', 'cmd': 'VisidianToggleAutoSync'},
         \ {'text': 'Preview On/Off', 'cmd': ':VisidianTogglePreview', 'key': 'r'},
         \ {'text': 'Bookmarks On/Off', 'cmd': ':VisidianToggleBookmarking', 'key': 'b'}, 
-    \ ]
+        \ {'text': 'Help', 'cmd': ':VisidianHelp', 'key': 'h'},
+        \ ]
 
     " Check if popup is supported
     if has('popupwin')
@@ -225,8 +225,11 @@ function! s:create_popup_menu()
         \   'mapping': 0,
         \   'minwidth': 20,
         \   'maxwidth': 50,
-        \   'zindex': 300, " Ensure its above other windows
-        \   'mousemoved': 'all'
+        \   'zindex': 300, 
+        \   'drag': 1,
+        \   'resize':1,
+        \   'scrollbar':1,
+        \   'close': 'button'
         \ })
     else
         echo "Popup windows not supported in this Vim version."
