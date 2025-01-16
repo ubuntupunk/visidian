@@ -181,9 +181,11 @@ function! visidian#dashboard()
     setlocal nomodifiable
     nnoremap <buffer> <silent> q :bd<CR>  " Close the dashboard buffer with 'q'
 
-    " Populate cache
+    " Populate cache, ignoring non-existant files
     call visidian#clear_cache()  " Clear old cache entries
+    echomsg "Cache after clear: " . string(g:visidian_cache)
     let files = globpath(g:visidian_vault_path, '**/*.md', 0, 1)
+    echomsg "Files found: " . string(files)
     for file in files
         call s:cache_file_info(file)
     endfor
@@ -195,18 +197,26 @@ function! visidian#clear_cache()
         let g:visidian_cache = {}
         return
     endif
-
-    for file in keys(g:visidian_cache)
+    
+    echomsg "Starting cache clear with keys: " . string(keys(g:visidian_cache))
+    let new_cache = {}
+    for path in keys(g:visidian_cache)
         let full_path = g:visidian_vault_path . file
+        echomsg "Checking file: " . full_path
         if !filereadable(full_path)
-            call remove(g:visidian_cache, file)
+            let new_cache[path] = g:visidian_cache[path]
+        else
+          echomsg "Removing non-existent file from cache: " . path
         endif
     endfor
+    let g:visidian_cache = new_cache
+    echomsg "Cache cleared to: " . string(keys(g:visidian_cache))
 endfunction
 
 " FUNCTION: Helper to cache file information, ignoring errors for missing files
 function! s:cache_file_info(file)
     let full_path = g:visidian_vault_path . a:file
+    echomsg "Caching: " . full_path
     try
         let lines = readfile(full_path)
         let yaml_start = match(lines, '^---$')
@@ -215,10 +225,13 @@ function! s:cache_file_info(file)
             let g:visidian_cache[a:file] = {
             \   'yaml': lines[yaml_start+1 : yaml_end-1]
             \}
+        echomsg "Added to cache: " . a:file
         else
             let g:visidian_cache[a:file] = {'yaml': []}
+            echomsg "Added empty YAML to cache: " . a:file
         endif
     catch /^Vim\%((\a\+)\)\=:E484/
+        echomsg "File not found, removing from cache: " . a:file 
         " Ignore errors for files that no longer exist
         call remove(g:visidian_cache, a:file)
     endtry

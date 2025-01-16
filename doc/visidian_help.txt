@@ -70,7 +70,7 @@ Combining PARA and GTD:
   outdated projects.
 
 ------------------------------------------------------------------------------
-4. Tips for Using Visidian                        *visidian-tips*
+4. Tips for Using Visidian Front Matter                      *visidian-tips*
 
 - **Use YAML front matter** effectively to link notes. For instance:
 
@@ -89,7 +89,7 @@ nnoremap <leader>d :VisidianDashboard<CR>
 nnoremap <leader>n :VisidianNewFile<CR>
 
 -----------------------------------------------------------------------------
-5. Bookmarks
+5. Bookmarksn                                            visidian-bookmarks
 
 You might want to set up an autocommand to keep track of the last note
 whenever you open or save a markdown file:
@@ -99,7 +99,7 @@ In vimrc or init.vim place the following:
 autocmd BufEnter,BufWritePost *.md call visidian#bookmarking#set_last_note()  
 
 -----------------------------------------------------------------------------
-6. Naming Conventions
+6. Naming Conventions                                    visidian-conventions
 
 - **Note Naming**: Use consistent naming conventions or a date system for your 
 notes to make searching and sorting easier.
@@ -108,4 +108,20 @@ Remember, Visidian is meant to enhance your productivity, not to be a rigid
 system. Experiment with different setups until you find what works best for you.
 
 ------------------------------------------------------------------------------
+7. Emoji Support                                               visidian-emoji
+
+Ensure that Vim or Neovim is configured to display emojis correctly,
+Install a Nerd Font from NerdFonts, ensure Unicode support is enabled.
+
+-----------------------------------------------------------------------------
+8. Folds Support
+Folding Method: By setting foldmethod=syntax, Vim will use the syntax regions 
+Visidian has defined for folding. foldlevel=1 means all folds will be open
+by default when the file is opened.
+
+Vim has inbuilt fold support, you can  open/close folds (e.g., zo, zc, zr, zm)
+consider adding custom key mappings in your vimrc for a more tailored 
+experience.
+
+-----------------------------------------------------------------------------
  vim:tw=78:ts=8:ft=help:norl:
