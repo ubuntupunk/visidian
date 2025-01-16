@@ -196,20 +196,20 @@ endfunction
 " FUNCTION: create popup menu
 function! s:create_popup_menu()
     let commands = [
-        \ {'text': 'Dashboard', 'cmd': ':VisidianDashboard'},
-        \ {'text': 'New File', 'cmd': ':VisidianFile'},
-        \ {'text': 'New Folder', 'cmd': ':VisidianFolder'},
-        \ {'text': 'New Vault', 'cmd': ':VisidianVault'},
-        \ {'text': 'Link Notes', 'cmd': ':VisidianLink'},
-        \ {'text': 'Set Vault', 'cmd': ':VisidianPath'},
-        \ {'text': 'PARA Setup', 'cmd': ':VisidianParaGen'},
-        \ {'text': 'Help', 'cmd': ':VisidianHelp'},
+        \ {'text': 'Dashboard', 'cmd': ':VisidianDashboard', 'key': 'd'},
+        \ {'text': 'New File', 'cmd': ':VisidianFile', 'key': 'f'},
+        \ {'text': 'New Folder', 'cmd': ':VisidianFolder', 'key': 'o'},
+        \ {'text': 'New Vault', 'cmd': ':VisidianVault', 'key': 'v'},
+        \ {'text': 'Link Notes', 'cmd': ':VisidianLink', 'key': 'l'},
+        \ {'text': 'Set Vault', 'cmd': ':VisidianPath', 'key': 's'},
+        \ {'text': 'PARA Setup', 'cmd': ':VisidianParaGen', 'key': 'p'},
+        \ {'text': 'Help', 'cmd': ':VisidianHelp', 'key': 'h'},
         \ {'text': 'Sync', 'cmd': ':VisidianSync'},
         \ {'text': 'Toggle Auto Sync', 'cmd': 'VisidianToggleAutoSync'},
-        \ {'text': 'Search', 'cmd': ':VisidianSearch'},
-        \ {'text': 'Sort', 'cmd': ':VisidianSort'},
-        \ {'text': 'Preview On/Off', 'cmd': ':VisidianTogglePreview'},
-        \ {'text': 'Bookmarks On/Off', 'cmd': ':VisidianToggleBookmarking'}, 
+        \ {'text': 'Search', 'cmd': ':VisidianSearch', 'key': 'e'},
+        \ {'text': 'Sort', 'cmd': ':VisidianSort', 'key': 'y'},
+        \ {'text': 'Preview On/Off', 'cmd': ':VisidianTogglePreview', 'key': 'r'},
+        \ {'text': 'Bookmarks On/Off', 'cmd': ':VisidianToggleBookmarking', 'key': 'b'}, 
     \ ]
 
     " Check if popup is supported
@@ -225,13 +225,26 @@ function! s:create_popup_menu()
         \   'mapping': 0,
         \   'minwidth': 20,
         \   'maxwidth': 50,
-        \   'zindex': 300, " Ensure its above other windows"
+        \   'zindex': 300, " Ensure its above other windows
         \   'mousemoved': 'all'
         \ })
     else
         echo "Popup windows not supported in this Vim version."
     endif
 endfunction
+
+" FUNCTION Popup Filter
+function! s:popup_filter(winid, key)
+    if a:key =~? '[a-z]'  " Check if key is a letter
+        let idx = index(map(copy(s:visidian_popup_commands), 'tolower(v:val.key)'), tolower(a:key))
+        if idx != -1
+            call popup_close(a:winid, idx + 1)
+            return 1
+        endif
+    endif
+    return popup_filter_menu(a:winid, a:key)
+endfunction
+
 
 " FUNCTION: Popup Callback
 function! s:popup_callback(winid, result)
