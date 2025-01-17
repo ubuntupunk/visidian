@@ -402,9 +402,10 @@ function! visidian#help()
     let paths = [
         \ '~/.vim/visidian.vim/doc/visidian_help.txt',
         \ '~/.vim/plugins/visidian.vim/doc/visidian_help.txt',
-        \ '$VIMRUNTIME/sources_non_forked/visidian.vim/doc/visidian_help.txt',
+        \ '$VIMRUNTIME/visidian.vim/doc/visidian_help.txt',
         \ '$HOME/.vim/plugged/visidian.vim/doc/visidian_help.txt',
-        \ '$HOME/.vim/bundle/visidian.vim/doc/visidian_help.txt'
+        \ '$HOME/.vim/bundle/visidian.vim/doc/visidian_help.txt',
+        \ '$HOME/.vim_runtime/sources_non_forked/visidian.vim/doc/visidian_help.txt'
     \ ]
 
     for path in paths
