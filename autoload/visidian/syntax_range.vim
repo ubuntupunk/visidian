@@ -21,8 +21,9 @@ function! visidian#syntax_range#include(start, end, syntax)
         " Apply the syntax highlighting
         if end_line > start_line
             let b:current_syntax = a:syntax
-            execute start_line . ',' . end_line . 'syntax include @' . a:syntax . ' syntax/' . a:syntax . '.vim'
-            execute start_line . ',' . end_line . 'syntax region ' . a:syntax . 'Region start="' . start_pattern . '" end="' . end_pattern . '" contains=@' . a:syntax
+            " Include the syntax without specifying line ranges directly
+            execute 'syntax include @' . a:syntax . ' syntax/' . a:syntax . '.vim'
+            execute 'syntax region ' . a:syntax . 'Region start="' . start_pattern . '" end="' . end_pattern . '" contains=@' . a:syntax
             unlet b:current_syntax
         endif
 
