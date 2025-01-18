@@ -20,18 +20,36 @@ if !exists('g:visidian_bookmark_last_note')
     let g:visidian_bookmark_last_note = 1
 endif
 
+" FUNCTION: ensure the vault path is within the user's home directory
+function! visidian#ensure_home_directory(path)
+    let home_dir = expand('~')
+    if stridx(fnamemodify(a:path, ':p'), home_dir) == 0
+        return a:path
+    else
+        echoerr "Vault path must be within the home directory: " . a:path
+        return ''
+    endif
+endfunction
+
 "FUNCTION: Load the vault path from JSON or prompt for one 
 function! visidian#load_vault_path()
     if !exists('g:visidian_vault_path') || g:visidian_vault_path == ''
         let json_data = s:read_json()
         if has_key(json_data, 'vault_path')
-            let g:visidian_vault_path = json_data['vault_path']
+           let safe_path = visidian#ensure_home_directory(json_data['vault_path'])
+            if !empty(safe_path)
+                let g:visidian_vault_path = safe_path
+            else
+                call visidian#set_vault_path()
+            endif
         else
             " If no path found, prompt for one or handle accordingly
             call visidian#set_vault_path()
         endif
     endif
-endfunction
+    " Ensure path is safe even if set manually
+    let g:visidian_vault_path = visidian#ensure_home_directory(g:visidian_vault_path)
+endfunction 
 
 
 " Commands
@@ -168,7 +186,7 @@ function! visidian#dashboard()
     else
         call append(4, ' - Navigate using Netrw')
     endif
-    call append(5, ' - Use :VisidianLink to see connections')
+    call append(5, ' - Use :VisidianMenu to call PopUp Menu')
     call append(6, ' - Use :VisidianFile for new notes')
     call append(7, ' - Use :VisidianFolder for new folders')
     call append(8, ' - Use :VisidianVault for new vaults')
@@ -283,6 +301,11 @@ function! visidian#clear_cache()
     echomsg "Starting cache clear with keys: " . string(keys(g:visidian_cache))
     let new_cache = {}
     for path in keys(g:visidian_cache)
+        if empty(g:visidian_vault_path)
+            echoerr "Vault path not set or invalid."
+            return
+        endif
+
         let full_path = g:visidian_vault_path . file
         echomsg "Checking file: " . full_path
         if !filereadable(full_path)
