@@ -120,7 +120,9 @@ function! visidian#create_vault() abort
         echo "New vault created at " . vault_path
 
         " Ask about PARA folders
-        let setup_para = input("Would you like to set up PARA folders? (y/n): ")
+        echo "\nWould you like to set up PARA folders? (y/n): "
+        let setup_para = nr2char(getchar())
+        echo setup_para
         if setup_para =~? '^y'
             call s:create_para_folders()
             echo "PARA folders created with README files"
@@ -137,7 +139,14 @@ function! visidian#create_vault() abort
             echo "- PARA folders created"
         endif
         echo "- Initial session saved"
-        echo "\nUse :VisidianDash to start working with your vault"
+        
+        " Change to vault directory
+        execute 'cd ' . g:visidian_vault_path
+        
+        " Open NERDTree if available
+        if exists(':NERDTree')
+            NERDTree
+        endif
         
         return 1
     catch
@@ -238,8 +247,15 @@ function! visidian#dashboard() abort
         return
     endif
 
+    " Change to vault directory
+    execute 'cd ' . g:visidian_vault_path
+
     " Try to load existing session first
     if s:load_session()
+        " Open NERDTree if available and not already open
+        if exists(':NERDTree') && !exists('g:NERDTree') 
+            NERDTree
+        endif
         return
     endif
 
@@ -269,65 +285,10 @@ function! visidian#dashboard() abort
     " Save initial session
     call s:save_session()
 
-    " Check if NERDTree is installed, use 'silent' to suppress NERDTree messages
-    " if used
-    if exists(":NERDTree")
-         exe 'NERDTree ' . g:visidian_vault_path
-         " Bookmark the last opened note if bookmarking is enabled
-        if g:visidian_bookmark_last_note
-            call visidian#bookmarking#bookmark_last_note()
-        endif
-    else
-    " Use Vim's built-in Explore as a fallback
-         exe 'Explore ' . g:visidian_vault_path
+    " Open NERDTree if available
+    if exists(':NERDTree')
+        NERDTree
     endif
-
-    " Only split if not already in a dashboard buffer    
-   " if &buftype != 'nofile' || expand('%:t') != 'VisidianDashboard'
-    vsplit 
-   " endif
-
-    " Set up the dashboard buffer
-   " setlocal buftype=nofile bufhidden=hide noswapfile nowrap
-    setlocal modifiable
-   " silent %delete _
-
-    " Frame the buffer to indicate Visidian dashboard
-    call append(0, repeat('=', 50))
-    call append(1, ' Visidian Dashboard')
-    call append(2, repeat('=', 50))
-    "call append(3, 'Vault: ' . g:visidian_vault_path)
-    call append(3, '') 
-
-    " Add some useful information or commands here if needed
-    if exists(":NERDTree")
-        call append(4, ' - Navigate using NERDTree')
-    else
-        call append(4, ' - Navigate using Netrw')
-    endif
-    call append(5, ' - Use :VisidianMenu to call PopUp Menu')
-    call append(6, ' - Use :VisidianFile for new notes')
-    call append(7, ' - Use :VisidianFolder for new folders')
-    call append(8, ' - Use :VisidianVault for new vaults')
-    call append(9, ' - Use :VisidianParaGen to setup PARA')
-    call append(10, ' - Use :VisidianDash to refresh this buffer')
-    call append(11, ' - Use q to close this buffer')
-    call append(12, ' - Use :VisidianHelp for more information')
-    call append(13, ' - set mouse=a to enable mouse support')
-
-    setlocal nomodifiable
-    nnoremap <buffer> <silent> q :bd<CR>  " Close the dashboard buffer with 'q'
-
-    " Populate cache, ignoring non-existant files
-    call visidian#clear_cache()  " Clear old cache entries
-    echomsg "Cache after clear: " . string(g:visidian_cache)
-    let files = globpath(g:visidian_vault_path, '**/*.md', 0, 1)
-    echomsg "Files found: " . string(files)
-    for file in files
-        call s:cache_file_info(file)
-    endfor
-" Create a popup menu for Visidian commands
-    call s:create_popup_menu()
 endfunction
 
 " FUNCTION: create popup menu
@@ -345,7 +306,6 @@ function! s:create_popup_menu()
         \ {'text': 'Sync', 'cmd': ':VisidianSync'},
         \ {'text': 'Toggle Auto Sync', 'cmd': 'VisidianToggleAutoSync'},
         \ {'text': 'Preview On/Off', 'cmd': ':VisidianTogglePreview', 'key': 'r'},
-        \ {'text': 'Bookmarks On/Off', 'cmd': ':VisidianToggleBookmarking', 'key': 'b'}, 
         \ {'text': 'Help', 'cmd': ':VisidianHelp', 'key': 'h'},
         \ ]
 
