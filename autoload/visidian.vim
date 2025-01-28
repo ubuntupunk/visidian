@@ -18,8 +18,9 @@ endif
 " FUNCTION: Helper function to ensure path is within home directory
 function! s:ensure_home_directory(path) abort
     let home_dir = expand('~')
-    if stridx(fnamemodify(a:path, ':p'), home_dir) == 0
-        return a:path
+    let full_path = fnamemodify(a:path, ':p')
+    if stridx(full_path, home_dir) == 0
+        return full_path
     else
         throw "Vault path must be within the home directory: " . a:path
     endif
@@ -50,7 +51,7 @@ function! visidian#write_json(data) abort
     try
         let lines = ['{']
         for key in keys(a:data)
-            let escaped_value = substitute(a:data[key], '\(["\\]\)', '\\\\\1', 'g')
+            let escaped_value = substitute(a:data[key], '\(["\\]\)', '\\\1', 'g')
             call add(lines, printf('  "%s": "%s",', key, escaped_value))
         endfor
         if !empty(lines)
@@ -61,7 +62,7 @@ function! visidian#write_json(data) abort
         return 1
     catch
         echohl ErrorMsg
-        echo "Failed to write configuration: " . v:exception
+        echo "Failed to write configuration to " . g:visidian_config_file . ": " . v:exception
         echohl None
         return 0
     endtry
@@ -110,8 +111,9 @@ function! visidian#create_vault() abort
         
         " Set and save vault path
         let g:visidian_vault_path = vault_path
-        let config = {'vault_path': vault_path}
-        if !visidian#write_json(config)
+        
+        " Save configuration
+        if !visidian#write_json({'vault_path': vault_path})
             throw "Failed to save vault configuration"
         endif
         
@@ -130,7 +132,7 @@ function! visidian#create_vault() abort
         execute 'mksession! ' . session_file
         
         echo "\nVault setup complete!"
-        echo "- Configuration saved"
+        echo "- Configuration saved to " . g:visidian_config_file
         if setup_para =~? '^y'
             echo "- PARA folders created"
         endif
@@ -476,7 +478,9 @@ function! visidian#create_vault()
             let g:visidian_vault_path = vault_path
             echo "New vault created at " . vault_path
             " Save to JSON for future use
-            call visidian#write_json({'vault_path': g:visidian_vault_path})
+            if !visidian#write_json({'vault_path': g:visidian_vault_path})
+                throw "Failed to save vault configuration"
+            endif
         else
             echo "No vault name provided."
         endif
