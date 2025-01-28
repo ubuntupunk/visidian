@@ -88,40 +88,6 @@ function! visidian#load_vault_path() abort
     return 1
 endfunction
 
-" FUNCTION: Create PARA folders
-function! s:create_para_folders() abort
-    let para_folders = ['Projects', 'Areas', 'Resources', 'Archive']
-    for folder in para_folders
-        let folder_path = g:visidian_vault_path . '/' . folder
-        if !isdirectory(folder_path)
-            call mkdir(folder_path, 'p')
-        endif
-    endfor
-    
-    " Create a README in each folder
-    for folder in para_folders
-        let readme_path = g:visidian_vault_path . '/' . folder . '/README.md'
-        if !filereadable(readme_path)
-            let content = [
-                \ '# ' . folder,
-                \ '',
-                \ '## Purpose',
-                \ ''
-            \]
-            if folder ==# 'Projects'
-                let content += ['For tasks with a defined goal and deadline.']
-            elseif folder ==# 'Areas'
-                let content += ['For ongoing responsibilities without a deadline.']
-            elseif folder ==# 'Resources'
-                let content += ['For topics of interest or areas of study, not tied to immediate action.']
-            elseif folder ==# 'Archive'
-                let content += ['For completed projects, expired areas, or old resources.']
-            endif
-            call writefile(content, readme_path)
-        endif
-    endfor
-endfunction
-
 " FUNCTION: Set up a new vault
 function! visidian#create_vault() abort
     " Get vault name from user
@@ -178,6 +144,40 @@ function! visidian#create_vault() abort
         echohl None
         return 0
     endtry
+endfunction
+
+" FUNCTION: Create PARA folders
+function! s:create_para_folders() abort
+    let para_folders = ['Projects', 'Areas', 'Resources', 'Archive']
+    for folder in para_folders
+        let folder_path = g:visidian_vault_path . '/' . folder
+        if !isdirectory(folder_path)
+            call mkdir(folder_path, 'p')
+        endif
+    endfor
+    
+    " Create a README in each folder
+    for folder in para_folders
+        let readme_path = g:visidian_vault_path . '/' . folder . '/README.md'
+        if !filereadable(readme_path)
+            let content = [
+                \ '# ' . folder,
+                \ '',
+                \ '## Purpose',
+                \ ''
+            \]
+            if folder ==# 'Projects'
+                let content += ['For tasks with a defined goal and deadline.']
+            elseif folder ==# 'Areas'
+                let content += ['For ongoing responsibilities without a deadline.']
+            elseif folder ==# 'Resources'
+                let content += ['For topics of interest or areas of study, not tied to immediate action.']
+            elseif folder ==# 'Archive'
+                let content += ['For completed projects, expired areas, or old resources.']
+            endif
+            call writefile(content, readme_path)
+        endif
+    endfor
 endfunction
 
 " FUNCTION: Helper function to manage sessions
@@ -476,7 +476,7 @@ function! visidian#create_vault()
             let g:visidian_vault_path = vault_path
             echo "New vault created at " . vault_path
             " Save to JSON for future use
-            call s:write_json({'vault_path': g:visidian_vault_path})
+            call visidian#write_json({'vault_path': g:visidian_vault_path})
         else
             echo "No vault name provided."
         endif
