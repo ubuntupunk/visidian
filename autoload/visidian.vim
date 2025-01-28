@@ -89,6 +89,81 @@ function! visidian#load_vault_path() abort
     return 1
 endfunction
 
+" FUNCTION: Helper function to manage sessions
+function! visidian#ensure_session_dir() abort
+    if !isdirectory(g:visidian_session_dir)
+        call mkdir(g:visidian_session_dir, 'p')
+        echo "Created session directory at: " . g:visidian_session_dir
+    endif
+endfunction
+
+function! visidian#get_session_file() abort
+    let safe_name = substitute(g:visidian_vault_path, '[\/]', '_', 'g')
+    return g:visidian_session_dir . safe_name . '.vim'
+endfunction
+
+function! visidian#save_session() abort
+    if g:visidian_auto_save_session && !empty(g:visidian_vault_path)
+        call visidian#ensure_session_dir()
+        let session_file = visidian#get_session_file()
+        execute 'mksession! ' . session_file
+        echo "Session saved to: " . session_file
+        return 1
+    endif
+    return 0
+endfunction
+
+function! visidian#load_session() abort
+    if !empty(g:visidian_vault_path)
+        let session_file = visidian#get_session_file()
+        if filereadable(session_file)
+            execute 'source ' . session_file
+            echo "Session loaded from: " . session_file
+            return 1
+        else
+            echo "No existing session found at: " . session_file
+        endif
+    endif
+    return 0
+endfunction
+
+" FUNCTION: Create PARA folders
+function! visidian#create_para_folders() abort
+    let para_folders = ['Projects', 'Areas', 'Resources', 'Archive']
+    for folder in para_folders
+        let folder_path = g:visidian_vault_path . '/' . folder
+        if !isdirectory(folder_path)
+            call mkdir(folder_path, 'p')
+            echo "Created folder: " . folder_path
+        endif
+    endfor
+    
+    " Create a README in each folder
+    for folder in para_folders
+        let readme_path = g:visidian_vault_path . '/' . folder . '/README.md'
+        if !filereadable(readme_path)
+            let content = [
+                \ '# ' . folder,
+                \ '',
+                \ '## Purpose',
+                \ ''
+            \]
+            if folder ==# 'Projects'
+                let content += ['For tasks with a defined goal and deadline.']
+            elseif folder ==# 'Areas'
+                let content += ['For ongoing responsibilities without a deadline.']
+            elseif folder ==# 'Resources'
+                let content += ['For topics of interest or areas of study, not tied to immediate action.']
+            elseif folder ==# 'Archive'
+                let content += ['For completed projects, expired areas, or old resources.']
+            endif
+            call writefile(content, readme_path)
+            echo "Created README: " . readme_path
+        endif
+    endfor
+    return 1
+endfunction
+
 " FUNCTION: Set up a new vault
 function! visidian#create_vault() abort
     " Get vault name from user
@@ -124,24 +199,15 @@ function! visidian#create_vault() abort
         let setup_para = nr2char(getchar())
         echo setup_para
         if setup_para =~? '^y'
-            call s:create_para_folders()
+            call visidian#create_para_folders()
             echo "PARA folders created with README files"
         endif
 
-        " Create and save initial session
-        call s:ensure_session_dir()
-        let session_file = s:get_session_file()
-        execute 'mksession! ' . session_file
-        
-        echo "\nVault setup complete!"
-        echo "- Configuration saved to " . g:visidian_config_file
-        if setup_para =~? '^y'
-            echo "- PARA folders created"
-        endif
-        echo "- Initial session saved"
-        
         " Change to vault directory
         execute 'cd ' . g:visidian_vault_path
+        
+        " Create and save initial session
+        call visidian#save_session()
         
         " Open NERDTree if available
         if exists(':NERDTree')
@@ -155,70 +221,6 @@ function! visidian#create_vault() abort
         echohl None
         return 0
     endtry
-endfunction
-
-" FUNCTION: Create PARA folders
-function! s:create_para_folders() abort
-    let para_folders = ['Projects', 'Areas', 'Resources', 'Archive']
-    for folder in para_folders
-        let folder_path = g:visidian_vault_path . '/' . folder
-        if !isdirectory(folder_path)
-            call mkdir(folder_path, 'p')
-        endif
-    endfor
-    
-    " Create a README in each folder
-    for folder in para_folders
-        let readme_path = g:visidian_vault_path . '/' . folder . '/README.md'
-        if !filereadable(readme_path)
-            let content = [
-                \ '# ' . folder,
-                \ '',
-                \ '## Purpose',
-                \ ''
-            \]
-            if folder ==# 'Projects'
-                let content += ['For tasks with a defined goal and deadline.']
-            elseif folder ==# 'Areas'
-                let content += ['For ongoing responsibilities without a deadline.']
-            elseif folder ==# 'Resources'
-                let content += ['For topics of interest or areas of study, not tied to immediate action.']
-            elseif folder ==# 'Archive'
-                let content += ['For completed projects, expired areas, or old resources.']
-            endif
-            call writefile(content, readme_path)
-        endif
-    endfor
-endfunction
-
-" FUNCTION: Helper function to manage sessions
-function! s:ensure_session_dir()
-    if !isdirectory(g:visidian_session_dir)
-        call mkdir(g:visidian_session_dir, 'p')
-    endif
-endfunction
-
-function! s:get_session_file()
-    return g:visidian_session_dir . substitute(g:visidian_vault_path, '[\/]', '_', 'g') . '.vim'
-endfunction
-
-function! s:save_session()
-    if g:visidian_auto_save_session && !empty(g:visidian_vault_path)
-        call s:ensure_session_dir()
-        let session_file = s:get_session_file()
-        execute 'mksession! ' . session_file
-    endif
-endfunction
-
-function! s:load_session()
-    if !empty(g:visidian_vault_path)
-        let session_file = s:get_session_file()
-        if filereadable(session_file)
-            execute 'source ' . session_file
-            return 1
-        endif
-    endif
-    return 0
 endfunction
 
 " FUNCTION: Main dashboard
@@ -251,7 +253,7 @@ function! visidian#dashboard() abort
     execute 'cd ' . g:visidian_vault_path
 
     " Try to load existing session first
-    if s:load_session()
+    if visidian#load_session()
         " Open NERDTree if available and not already open
         if exists(':NERDTree') && !exists('g:NERDTree') 
             NERDTree
@@ -283,7 +285,7 @@ function! visidian#dashboard() abort
     setlocal nomodifiable
     
     " Save initial session
-    call s:save_session()
+    call visidian#save_session()
 
     " Open NERDTree if available
     if exists(':NERDTree')
@@ -567,5 +569,5 @@ endif
 " Auto-save session on exit
 augroup VisidianSession
     autocmd!
-    autocmd VimLeave * call s:save_session()
+    autocmd VimLeave * call visidian#save_session()
 augroup END
