@@ -627,77 +627,134 @@ function! visidian#create_vault() abort
     endtry
 endfunction
 
-" FUNCTION: create popup menu
-function! s:create_popup_menu()
-    let commands = [
-        \ {'text': 'Dashboard', 'cmd': ':VisidianDashboard', 'key': 'd'},
-        \ {'text': 'New File', 'cmd': ':VisidianFile', 'key': 'f'},
-        \ {'text': 'New Folder', 'cmd': ':VisidianFolder', 'key': 'o'},
-        \ {'text': 'New Vault', 'cmd': ':VisidianVault', 'key': 'v'},
-        \ {'text': 'Set Vault', 'cmd': ':VisidianPath', 'key': 's'},
-        \ {'text': 'Link Notes', 'cmd': ':VisidianLink', 'key': 'l'},
-        \ {'text': 'Search', 'cmd': ':VisidianSearch', 'key': 'e'},
-        \ {'text': 'Sort', 'cmd': ':VisidianSort', 'key': 'y'},
-        \ {'text': 'Generate PARA folders', 'cmd': ':VisidianParaGen', 'key': 'p'},
-        \ {'text': 'Sync', 'cmd': ':VisidianSync'},
-        \ {'text': 'Toggle Auto Sync', 'cmd': 'VisidianToggleAutoSync'},
-        \ {'text': 'Preview On/Off', 'cmd': ':VisidianTogglePreview', 'key': 'r'},
-        \ {'text': 'Help', 'cmd': ':VisidianHelp', 'key': 'h'},
-        \ ]
+" FUNCTION: Create popup menu
+function! visidian#menu() abort
+    " Check if popup feature is available
+    if !has('popupwin')
+        echohl ErrorMsg
+        echo "Popup windows not supported in this version of Vim"
+        echohl None
+        return
+    endif
 
-    " Check if popup is supported
-    if has('popupwin')
-      let s:visidian_popup_commands = commands  " Store commands for use in callback  
-      let popup = popup_create(commands, {
-        \   'line': 'cursor+1',
-        \   'col': 'cursor',
-        \   'title': 'Visidian Commands',
-        \   'filter': 'popup_filter_menu',
-        \   'callback': 's:popup_callback',
-        \   'border': [],
-        \   'mapping': 0,
-        \   'minwidth': 20,
-        \   'maxwidth': 50,
-        \   'zindex': 300, 
-        \   'drag': 1,
-        \   'resize':1,
-        \   'scrollbar':1,
-        \   'close': 'button'
+    " Define menu items with descriptions and commands
+    let menu_items = [
+        \ {'id': 1,  'text': '📝 New Note',          'cmd': 'VisidianFile',         'desc': 'Create a new markdown note'},
+        \ {'id': 2,  'text': '📁 New Folder',        'cmd': 'VisidianFolder',       'desc': 'Create a new folder'},
+        \ {'id': 3,  'text': '🔍 Search Notes',      'cmd': 'VisidianSearch',       'desc': 'Search through your notes'},
+        \ {'id': 4,  'text': '🔗 Link Notes',        'cmd': 'VisidianLink',         'desc': 'Create links between notes'},
+        \ {'id': 5,  'text': '📊 PARA Folders',      'cmd': 'VisidianParaGen',      'desc': 'Generate PARA folder structure'},
+        \ {'id': 6,  'text': '💾 Save Session',      'cmd': 'VisidianSaveSession',  'desc': 'Save current session'},
+        \ {'id': 7,  'text': '📂 Load Session',      'cmd': 'VisidianLoadSession',  'desc': 'Load saved session'},
+        \ {'id': 8,  'text': '📜 List Sessions',     'cmd': 'VisidianListSessions', 'desc': 'View available sessions'},
+        \ {'id': 9,  'text': '📋 Choose Session',    'cmd': 'VisidianChooseSession','desc': 'Select a previous session'},
+        \ {'id': 10, 'text': '🗑️  Clear Sessions',   'cmd': 'VisidianClearSessions','desc': 'Clear session history'},
+        \ {'id': 11, 'text': '🔄 Toggle AutoSync',   'cmd': 'VisidianToggleAutoSync', 'desc': 'Toggle auto-sync feature'},
+        \ {'id': 12, 'text': '👁️  Toggle Preview',   'cmd': 'VisidianTogglePreview', 'desc': 'Toggle markdown preview'},
+        \ {'id': 13, 'text': '📑 Toggle Sidebar',    'cmd': 'VisidianToggleSidebar', 'desc': 'Toggle sidebar visibility'},
+        \ {'id': 14, 'text': '❓ Help',              'cmd': 'VisidianHelp',         'desc': 'Show help documentation'},
+        \ {'id': 15, 'text': '❌ Close Menu',        'cmd': 'close',                'desc': 'Close this menu'}
+    \ ]
+
+    " Calculate menu dimensions
+    let max_text_len = max(map(copy(menu_items), 'strwidth(v:val.text)'))
+    let max_desc_len = max(map(copy(menu_items), 'strwidth(v:val.desc)'))
+    let menu_width = max_text_len + max_desc_len + 6
+    let menu_height = len(menu_items) + 2
+
+    " Calculate position (center of screen)
+    let pos_x = ((&columns - menu_width) / 2)
+    let pos_y = ((&lines - menu_height) / 2)
+
+    " Create the menu content
+    let menu_content = []
+    for item in menu_items
+        let padding = repeat(' ', max_text_len - strwidth(item.text) + 2)
+        call add(menu_content, printf('%s%s%s', item.text, padding, item.desc))
+    endfor
+
+    " Create the popup window
+    let popup_winid = popup_create(menu_content, {
+        \ 'title': ' Visidian Menu ',
+        \ 'pos': 'center',
+        \ 'line': pos_y,
+        \ 'col': pos_x,
+        \ 'minwidth': menu_width,
+        \ 'minheight': menu_height,
+        \ 'border': [1,1,1,1],
+        \ 'borderchars': ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
+        \ 'padding': [0,1,0,1],
+        \ 'mapping': 0,
+        \ 'filter': function('s:menu_filter'),
+        \ 'callback': function('s:menu_callback')
         \ })
-    else
-        echo "Popup windows not supported in this Vim version."
-    endif
+
+    " Store menu items for the filter function
+    let s:current_menu_items = menu_items
+    let s:current_popup_id = popup_winid
+
+    " Add highlighting
+    call win_execute(popup_winid, 'syntax match VisidianMenuIcon /[📝📁🔍🔗📊💾📂📜📋🗑️🔄👁️📑❓❌]/')
+    call win_execute(popup_winid, 'syntax match VisidianMenuText /\S\+\s\+\zs.*$/')
+    call win_execute(popup_winid, 'highlight VisidianMenuIcon ctermfg=214 guifg=#fabd2f')
+    call win_execute(popup_winid, 'highlight VisidianMenuText ctermfg=223 guifg=#ebdbb2')
+    
+    " Set current line highlight
+    call win_execute(popup_winid, 'highlight CursorLine ctermbg=237 guibg=#3c3836')
+    call win_execute(popup_winid, 'setlocal cursorline')
 endfunction
 
-" FUNCTION Popup Filter
-function! s:popup_filter(winid, key)
-    if a:key =~? '[a-z]'  " Check if key is a letter
-        let idx = index(map(copy(s:visidian_popup_commands), 'tolower(v:val.key)'), tolower(a:key))
-        if idx != -1
-            call popup_close(a:winid, idx + 1)
-            return 1
+" FUNCTION: Menu filter
+function! s:menu_filter(winid, key) abort
+    " Get current line number
+    let current_line = line('.', a:winid) - 1
+    let max_line = len(s:current_menu_items)
+
+    " Handle key input
+    if a:key == 'j' || a:key == "\<Down>"
+        call win_execute(a:winid, 'normal! j')
+        return 1
+    elseif a:key == 'k' || a:key == "\<Up>"
+        call win_execute(a:winid, 'normal! k')
+        return 1
+    elseif a:key == "\<CR>" || a:key == ' '
+        " Execute the command for the current line
+        let item = s:current_menu_items[current_line]
+        if item.cmd == 'close'
+            call popup_close(a:winid)
+        else
+            call popup_close(a:winid)
+            execute item.cmd
         endif
+        return 1
+    elseif a:key == 'q' || a:key == "\<Esc>"
+        call popup_close(a:winid)
+        return 1
     endif
-    return popup_filter_menu(a:winid, a:key)
-endfunction
 
-
-" FUNCTION: Popup Callback
-function! s:popup_callback(winid, result)
-    if a:result > 0 && exists('s:visidian_popup_commands')
-        let command = get(get(g:, 'visidian_popup_commands', []), a:result - 1, {}).cmd
-        if !empty(command)
-            execute command
+    " Handle number keys for quick selection
+    let num = str2nr(a:key)
+    if num > 0 && num <= max_line
+        let item = s:current_menu_items[num - 1]
+        call popup_close(a:winid)
+        if item.cmd != 'close'
+            execute item.cmd
         endif
+        return 1
     endif
+
+    return 0
 endfunction
 
-" FUNCTION: define menu
-function! visidian#menu()
-    if exists('s:popup_menu')
-        call popup_close(s:popup_menu)
+" FUNCTION: Menu callback
+function! s:menu_callback(winid, result) abort
+    " Clean up menu items
+    if exists('s:current_menu_items')
+        unlet s:current_menu_items
     endif
-    let s:popup_menu = s:create_popup_menu()
+    if exists('s:current_popup_id')
+        unlet s:current_popup_id
+    endif
 endfunction
 
 " map key to call dashboard
