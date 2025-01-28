@@ -896,10 +896,141 @@ endfunction
 
 " FUNCTION: Call Create a new markdown file (with YAML front matter)
 
-function! visidian#new_md_file()
-    call visidian#file_creation#new_md_file()
-endfunction
+function! visidian#new_md_file() abort
+    " Check if vault exists
+    if empty(g:visidian_vault_path)
+        echohl ErrorMsg
+        echo "No vault path set. Please create or set a vault first."
+        echohl None
+        return 0
+    endif
 
+    " Normalize vault path
+    let vault_path = substitute(g:visidian_vault_path, '[\/]\+$', '', '')
+
+    " Define PARA folders (case-sensitive)
+    let para_folders = ['Projects', 'Areas', 'Resources', 'Archive']
+
+    " Get filename
+    let filename = input('Enter filename (without .md): ')
+    if empty(filename)
+        echo "\nCancelled."
+        return 0
+    endif
+
+    " Add .md extension if not present
+    if filename !~? '\.md$'
+        let filename = filename . '.md'
+    endif
+
+    " Get folder category
+    let category_msg = "Choose category:\n"
+    let i = 1
+    for folder in para_folders
+        let category_msg .= printf("%d) %s\n", i, folder)
+        let i += 1
+    endfor
+    let category_choice = input(category_msg . 'Enter number (1-' . len(para_folders) . '): ')
+    
+    if empty(category_choice) || category_choice < 1 || category_choice > len(para_folders)
+        echo "\nInvalid category. Cancelled."
+        return 0
+    endif
+
+    let category = para_folders[category_choice - 1]
+
+    " Get subcategory if needed
+    let subcategory = input('Enter subcategory (optional, press Enter to skip): ')
+
+    " Construct the full path
+    let file_path = vault_path . '/' . category
+    if !empty(subcategory)
+        " Convert subcategory to title case to match PARA style
+        let subcategory_parts = split(subcategory, '\s\+\|[_-]\+')
+        let subcategory_titled = map(subcategory_parts, 'toupper(v:val[0]) . tolower(v:val[1:])')
+        let subcategory = join(subcategory_titled, '')
+        
+        " Check if a similar directory exists (case-insensitive)
+        let found_existing = 0
+        if isdirectory(file_path)
+            for existing_dir in glob(file_path . '/*', 0, 1)
+                if isdirectory(existing_dir) && tolower(fnamemodify(existing_dir, ':t')) ==# tolower(subcategory)
+                    let subcategory = fnamemodify(existing_dir, ':t')
+                    let found_existing = 1
+                    break
+                endif
+            endfor
+        endif
+
+        let file_path .= '/' . subcategory
+    endif
+
+    " Create directory if it doesn't exist
+    if !isdirectory(file_path)
+        try
+            call mkdir(file_path, 'p')
+        catch
+            echohl ErrorMsg
+            echo "Error creating directory: " . file_path
+            echo v:exception
+            echohl None
+            return 0
+        endtry
+    endif
+
+    " Add filename to path
+    let file_path .= '/' . filename
+
+    " Check if file already exists
+    if filereadable(file_path)
+        echohl WarningMsg
+        echo "File already exists: " . file_path
+        echohl None
+        let choice = input('Overwrite? [y/N]: ')
+        if choice !~? '^y'
+            echo "\nCancelled."
+            return 0
+        endif
+    endif
+
+    " Create the file with YAML frontmatter
+    try
+        let current_time = strftime('%Y-%m-%d %H:%M:%S')
+        let content = [
+            \ '---',
+            \ 'title: ' . fnamemodify(filename, ':r'),
+            \ 'date: ' . current_time,
+            \ 'category: ' . category,
+            \ ]
+
+        if !empty(subcategory)
+            let content += ['subcategory: ' . subcategory]
+        endif
+
+        let content += [
+            \ 'tags: []',
+            \ 'status: active',
+            \ 'links: []',
+            \ '---',
+            \ '',
+            \ '# ' . fnamemodify(filename, ':r'),
+            \ '',
+            \ '## Overview',
+            \ '',
+            \ ]
+
+        call writefile(content, file_path)
+        execute 'edit ' . fnameescape(file_path)
+        echo "Created file: " . file_path
+        return 1
+    catch
+        echohl ErrorMsg
+        echo "Error creating file: " . file_path
+        echo v:exception
+        echohl None
+        return 0
+    endtry
+endfunction
 
 " FUNCTION: Call Markdown Preview
 function! visidian#toggle_preview()
