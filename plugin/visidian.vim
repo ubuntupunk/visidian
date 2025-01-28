@@ -6,10 +6,9 @@
 " License: GPL-3.0 
 " License Details: https://www.gnu.org/licenses/gpl-3.0.en.html
 
-"Prevents the plugin from being loaded multiple times
+" Prevents the plugin from being loaded multiple times
 if exists("g:loaded_visidian_vim")
-   runtime! autoload/visidian.vim
-   finish
+    finish
 endif
 
 let g:loaded_visidian_vim = 1
@@ -17,7 +16,10 @@ let g:loaded_visidian_vim = 1
 " Set up session options
 set sessionoptions=blank,buffers,curdir,folds,help,tabpages,winsize,terminal
 
-"Exposes the plugins functions for use with following commands: 
+" Load autoload functions
+runtime! autoload/visidian.vim
+
+" Exposes the plugins functions for use with following commands: 
 command! -nargs=0 VisidianDash call visidian#dashboard()
 command! -nargs=0 VisidianFile call visidian#new_md_file()
 command! -nargs=0 VisidianFolder call visidian#new_folder()

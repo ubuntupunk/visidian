@@ -11,6 +11,112 @@ endif
 if !exists('g:visidian_auto_save_session')
     let g:visidian_auto_save_session = 1
 endif
+if !exists('g:visidian_config_file')
+    let g:visidian_config_file = expand('~/.visidian.json')
+endif
+
+" FUNCTION: Helper function to ensure path is within home directory
+function! s:ensure_home_directory(path) abort
+    let home_dir = expand('~')
+    if stridx(fnamemodify(a:path, ':p'), home_dir) == 0
+        return a:path
+    else
+        throw "Vault path must be within the home directory: " . a:path
+    endif
+endfunction
+
+" FUNCTION: Helper function to read JSON config
+function! s:read_json() abort
+    if filereadable(g:visidian_config_file)
+        try
+            let lines = readfile(g:visidian_config_file)
+            let data = {}
+            for line in lines
+                let match = matchlist(line, '\v\s*"([^"]+)":\s*"([^"]+)"')
+                if !empty(match)
+                    let data[match[1]] = match[2]
+                endif
+            endfor
+            return data
+        catch
+            return {}
+        endtry
+    endif
+    return {}
+endfunction
+
+" FUNCTION: Helper function to write JSON config
+function! s:write_json(data) abort
+    try
+        let lines = ['{']
+        for key in keys(a:data)
+            let escaped_value = substitute(a:data[key], '\(["\\]\)', '\\\\\1', 'g')
+            call add(lines, printf('  "%s": "%s",', key, escaped_value))
+        endfor
+        if !empty(lines)
+            let lines[-1] = substitute(lines[-1], ',$', '', '')
+        endif
+        call add(lines, '}')
+        call writefile(lines, g:visidian_config_file)
+        return 1
+    catch
+        echohl ErrorMsg
+        echo "Failed to write configuration: " . v:exception
+        echohl None
+        return 0
+    endtry
+endfunction
+
+" FUNCTION: Load the vault path from JSON or prompt for one 
+function! visidian#load_vault_path() abort
+    if !exists('g:visidian_vault_path') || g:visidian_vault_path == ''
+        let json_data = s:read_json()
+        if !empty(json_data) && has_key(json_data, 'vault_path')
+            try
+                let safe_path = s:ensure_home_directory(json_data['vault_path'])
+                if !empty(safe_path)
+                    let g:visidian_vault_path = safe_path
+                    return 1
+                endif
+            catch
+                " Fall through to manual setup
+            endtry
+        endif
+        " If we get here, we need to set up the vault
+        return 0
+    endif
+    return 1
+endfunction
+
+" FUNCTION: Set up a new vault
+function! visidian#create_vault() abort
+    let path = input("Enter path for new vault (within home directory): ", "~/", "dir")
+    if empty(path)
+        echohl WarningMsg
+        echo "No path provided. Vault creation cancelled."
+        echohl None
+        return 0
+    endif
+
+    try
+        let safe_path = s:ensure_home_directory(path)
+        if !isdirectory(safe_path)
+            call mkdir(safe_path, 'p')
+        endif
+        let g:visidian_vault_path = safe_path
+        let data = {'vault_path': safe_path}
+        if s:write_json(data)
+            echo "Vault created successfully at: " . safe_path
+            return 1
+        endif
+    catch
+        echohl ErrorMsg
+        echo "Failed to create vault: " . v:exception
+        echohl None
+        return 0
+    endtry
+    return 0
+endfunction
 
 " FUNCTION: Helper function to manage sessions
 function! s:ensure_session_dir()
@@ -42,62 +148,29 @@ function! s:load_session()
     return 0
 endfunction
 
-" FUNCTION: Load the vault path from JSON or prompt for one 
-function! visidian#load_vault_path()
-    if !exists('g:visidian_vault_path') || g:visidian_vault_path == ''
-        let json_data = s:read_json()
-        if has_key(json_data, 'vault_path')
-           let safe_path = visidian#ensure_home_directory(json_data['vault_path'])
-            if !empty(safe_path)
-                let g:visidian_vault_path = safe_path
-            else
-                call visidian#set_vault_path()
-            endif
+" FUNCTION: Main dashboard
+function! visidian#dashboard() abort
+    " Check if vault path is set
+    if !visidian#load_vault_path()
+        echohl WarningMsg
+        echo "No vault configured. Let's set one up!"
+        echohl None
+        if visidian#create_vault()
+            echo "Vault created. Opening dashboard..."
         else
-            " If no path found, prompt for one or handle accordingly
-            call visidian#set_vault_path()
+            echohl ErrorMsg
+            echo "Failed to create vault. Please try again with :VisidianVault"
+            echohl None
+            return
         endif
     endif
-    " Ensure path is safe even if set manually
-    let g:visidian_vault_path = visidian#ensure_home_directory(g:visidian_vault_path)
-endfunction 
 
-
-" FUNCTION: Set the vault path, either from cache, .visidian.json, or new input
-function! visidian#set_vault_path()
-    " Check if vault path is already cached
-    if exists('g:visidian_vault_path') && g:visidian_vault_path != ''
-        return
-    endif
-
-" Try to read from .visidian.json
-
-"    let json_data = s:read_json()
-"    if has_key(json_data, 'vault_path')
-"        let g:visidian_vault_path = json_data['vault_path']
-"        " Ensure there's exactly one trailing slash for consistency
-"        if g:visidian_vault_path[-1:] != '/'
-"            let g:visidian_vault_path .= '/'
-"        endif
-"        return
-"    endif
-
-" If no cache or JSON file, prompt user for vault path
-    let vault_name = input("Enter existing vault name or path: ")
-    if vault_name != ''
-        let g:visidian_vault_path = expand(vault_name . '/')
-        " Save to JSON for future use
-        call s:write_json({'vault_path': g:visidian_vault_path})
-    else
-        echo "No vault path provided."
-    endif
-endfunction
-
-" FUNCTION: Main dashboard
-function! visidian#dashboard()
-    call visidian#load_vault_path() " Ensure vault path is set
-    if g:visidian_vault_path == ''
-        echoerr "No vault path set. Please create a vault first."
+    " Ensure vault path exists
+    if !isdirectory(g:visidian_vault_path)
+        echohl ErrorMsg
+        echo "Vault directory does not exist: " . g:visidian_vault_path
+        echo "Please create it or set a new path with :VisidianVault"
+        echohl None
         return
     endif
 
