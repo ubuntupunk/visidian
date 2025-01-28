@@ -46,7 +46,7 @@ function! s:read_json() abort
 endfunction
 
 " FUNCTION: Helper function to write JSON config
-function! s:write_json(data) abort
+function! visidian#write_json(data) abort
     try
         let lines = ['{']
         for key in keys(a:data)
@@ -88,34 +88,96 @@ function! visidian#load_vault_path() abort
     return 1
 endfunction
 
+" FUNCTION: Create PARA folders
+function! s:create_para_folders() abort
+    let para_folders = ['Projects', 'Areas', 'Resources', 'Archive']
+    for folder in para_folders
+        let folder_path = g:visidian_vault_path . '/' . folder
+        if !isdirectory(folder_path)
+            call mkdir(folder_path, 'p')
+        endif
+    endfor
+    
+    " Create a README in each folder
+    for folder in para_folders
+        let readme_path = g:visidian_vault_path . '/' . folder . '/README.md'
+        if !filereadable(readme_path)
+            let content = [
+                \ '# ' . folder,
+                \ '',
+                \ '## Purpose',
+                \ ''
+            \]
+            if folder ==# 'Projects'
+                let content += ['For tasks with a defined goal and deadline.']
+            elseif folder ==# 'Areas'
+                let content += ['For ongoing responsibilities without a deadline.']
+            elseif folder ==# 'Resources'
+                let content += ['For topics of interest or areas of study, not tied to immediate action.']
+            elseif folder ==# 'Archive'
+                let content += ['For completed projects, expired areas, or old resources.']
+            endif
+            call writefile(content, readme_path)
+        endif
+    endfor
+endfunction
+
 " FUNCTION: Set up a new vault
 function! visidian#create_vault() abort
-    let path = input("Enter path for new vault (within home directory): ", "~/", "dir")
-    if empty(path)
+    " Get vault name from user
+    let vault_name = input("Enter new vault name: ")
+    if empty(vault_name)
         echohl WarningMsg
-        echo "No path provided. Vault creation cancelled."
+        echo "No vault name provided. Vault creation cancelled."
         echohl None
         return 0
     endif
 
+    " Create full path in home directory
+    let vault_path = expand('~/' . vault_name)
+    
     try
-        let safe_path = s:ensure_home_directory(path)
-        if !isdirectory(safe_path)
-            call mkdir(safe_path, 'p')
+        " Create vault directory
+        if !isdirectory(vault_path)
+            call mkdir(vault_path, 'p')
         endif
-        let g:visidian_vault_path = safe_path
-        let data = {'vault_path': safe_path}
-        if s:write_json(data)
-            echo "Vault created successfully at: " . safe_path
-            return 1
+        
+        " Set and save vault path
+        let g:visidian_vault_path = vault_path
+        let config = {'vault_path': vault_path}
+        if !visidian#write_json(config)
+            throw "Failed to save vault configuration"
         endif
+        
+        echo "New vault created at " . vault_path
+
+        " Ask about PARA folders
+        let setup_para = input("Would you like to set up PARA folders? (y/n): ")
+        if setup_para =~? '^y'
+            call s:create_para_folders()
+            echo "PARA folders created with README files"
+        endif
+
+        " Create and save initial session
+        call s:ensure_session_dir()
+        let session_file = s:get_session_file()
+        execute 'mksession! ' . session_file
+        
+        echo "\nVault setup complete!"
+        echo "- Configuration saved"
+        if setup_para =~? '^y'
+            echo "- PARA folders created"
+        endif
+        echo "- Initial session saved"
+        echo "\nUse :VisidianDash to start working with your vault"
+        
+        return 1
     catch
         echohl ErrorMsg
         echo "Failed to create vault: " . v:exception
         echohl None
         return 0
     endtry
-    return 0
 endfunction
 
 " FUNCTION: Helper function to manage sessions
