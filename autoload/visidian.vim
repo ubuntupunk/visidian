@@ -382,19 +382,38 @@ endfunction
 
 " FUNCTION: Create PARA folders
 function! visidian#create_para_folders() abort
+    " Ensure vault path exists and is normalized
+    if empty(g:visidian_vault_path)
+        echohl ErrorMsg
+        echo "No vault path set. Please create or set a vault first."
+        echohl None
+        return 0
+    endif
+
+    " Normalize vault path (remove trailing slash)
+    let vault_path = substitute(g:visidian_vault_path, '[\/]\+$', '', '')
+
     let para_folders = ['Projects', 'Areas', 'Resources', 'Archive']
     for folder in para_folders
-        let folder_path = g:visidian_vault_path . '/' . folder
+        " Create folder path without double slashes
+        let folder_path = vault_path . '/' . folder
         if !isdirectory(folder_path)
-            call mkdir(folder_path, 'p')
-            echo "Created folder: " . folder_path
+            try
+                call mkdir(folder_path, 'p')
+                echo "Created folder: " . folder_path
+            catch
+                echohl ErrorMsg
+                echo "Error creating folder: " . folder_path
+                echo v:exception
+                echohl None
+                continue
+            endtry
         endif
-        
-        " Create a README and example note in each folder
-        for folder in para_folders
-            " Create README
-            let readme_path = g:visidian_vault_path . '/' . folder . '/README.md'
-            if !filereadable(readme_path)
+
+        " Create README
+        let readme_path = folder_path . '/README.md'
+        if !filereadable(readme_path)
+            try
                 let content = [
                     \ '# ' . folder,
                     \ '',
@@ -412,11 +431,19 @@ function! visidian#create_para_folders() abort
                 endif
                 call writefile(content, readme_path)
                 echo "Created README: " . readme_path
-            endif
+            catch
+                echohl ErrorMsg
+                echo "Error creating README: " . readme_path
+                echo v:exception
+                echohl None
+                continue
+            endtry
+        endif
 
-            " Create example note
-            let example_path = g:visidian_vault_path . '/' . folder . '/example.md'
-            if !filereadable(example_path)
+        " Create example note
+        let example_path = folder_path . '/example.md'
+        if !filereadable(example_path)
+            try
                 let current_time = strftime('%Y-%m-%d %H:%M:%S')
                 let content = []
 
@@ -529,11 +556,16 @@ function! visidian#create_para_folders() abort
 
                 call writefile(content, example_path)
                 echo "Created example note: " . example_path
-            endif
-        endfor
-        return 1
+            catch
+                echohl ErrorMsg
+                echo "Error creating example note: " . example_path
+                echo v:exception
+                echohl None
+                continue
+            endtry
+        endif
     endfor
-    return 0
+    return 1
 endfunction
 
 " FUNCTION: Set up a new vault
