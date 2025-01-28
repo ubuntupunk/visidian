@@ -677,20 +677,20 @@ function! visidian#menu() abort
 
     " Define menu items with descriptions and commands
     let menu_items = [
-        \ {'id': 1,  'text': icons.note . ' New Note',          'cmd': 'VisidianFile',         'desc': 'Create a new markdown note'},
-        \ {'id': 2,  'text': icons.folder . ' New Folder',      'cmd': 'VisidianFolder',       'desc': 'Create a new folder'},
-        \ {'id': 3,  'text': icons.search . ' Search Notes',    'cmd': 'VisidianSearch',       'desc': 'Search through your notes'},
-        \ {'id': 4,  'text': icons.link . ' Link Notes',        'cmd': 'VisidianLink',         'desc': 'Create links between notes'},
-        \ {'id': 5,  'text': icons.para . ' PARA Folders',      'cmd': 'VisidianParaGen',      'desc': 'Generate PARA folder structure'},
-        \ {'id': 6,  'text': icons.save . ' Save Session',      'cmd': 'VisidianSaveSession',  'desc': 'Save current session'},
-        \ {'id': 7,  'text': icons.load . ' Load Session',      'cmd': 'VisidianLoadSession',  'desc': 'Load saved session'},
-        \ {'id': 8,  'text': icons.list . ' List Sessions',     'cmd': 'VisidianListSessions', 'desc': 'View available sessions'},
-        \ {'id': 9,  'text': icons.choose . ' Choose Session',  'cmd': 'VisidianChooseSession','desc': 'Select a previous session'},
-        \ {'id': 10, 'text': icons.clear . ' Clear Sessions',   'cmd': 'VisidianClearSessions','desc': 'Clear session history'},
-        \ {'id': 11, 'text': icons.sync . ' Toggle AutoSync',   'cmd': 'VisidianToggleAutoSync', 'desc': 'Toggle auto-sync feature'},
-        \ {'id': 12, 'text': icons.preview . ' Toggle Preview', 'cmd': 'VisidianTogglePreview', 'desc': 'Toggle markdown preview'},
-        \ {'id': 13, 'text': icons.sidebar . ' Toggle Sidebar', 'cmd': 'VisidianToggleSidebar', 'desc': 'Toggle sidebar visibility'},
-        \ {'id': 14, 'text': icons.help . ' Help',              'cmd': 'VisidianHelp',         'desc': 'Show help documentation'},
+        \ {'id': 1,  'text': icons.note . ' New Note',          'cmd': ':call visidian#new_md_file()',         'desc': 'Create a new markdown note'},
+        \ {'id': 2,  'text': icons.folder . ' New Folder',      'cmd': ':call visidian#new_folder()',       'desc': 'Create a new folder'},
+        \ {'id': 3,  'text': icons.search . ' Search Notes',    'cmd': ':call visidian#search()',       'desc': 'Search through your notes'},
+        \ {'id': 4,  'text': icons.link . ' Link Notes',        'cmd': ':call visidian#link_notes()',         'desc': 'Create links between notes'},
+        \ {'id': 5,  'text': icons.para . ' PARA Folders',      'cmd': ':call visidian#create_para_folders()',      'desc': 'Generate PARA folder structure'},
+        \ {'id': 6,  'text': icons.save . ' Save Session',      'cmd': ':call visidian#save_session()',  'desc': 'Save current session'},
+        \ {'id': 7,  'text': icons.load . ' Load Session',      'cmd': ':call visidian#load_session()',  'desc': 'Load saved session'},
+        \ {'id': 8,  'text': icons.list . ' List Sessions',     'cmd': ':call visidian#list_sessions()', 'desc': 'View available sessions'},
+        \ {'id': 9,  'text': icons.choose . ' Choose Session',  'cmd': ':call visidian#choose_session()','desc': 'Select a previous session'},
+        \ {'id': 10, 'text': icons.clear . ' Clear Sessions',   'cmd': ':call visidian#clear_sessions()','desc': 'Clear session history'},
+        \ {'id': 11, 'text': icons.sync . ' Toggle AutoSync',   'cmd': ':call visidian#toggle_auto_sync()', 'desc': 'Toggle auto-sync feature'},
+        \ {'id': 12, 'text': icons.preview . ' Toggle Preview', 'cmd': ':call visidian#toggle_preview()', 'desc': 'Toggle markdown preview'},
+        \ {'id': 13, 'text': icons.sidebar . ' Toggle Sidebar', 'cmd': ':call visidian#toggle_sidebar()', 'desc': 'Toggle sidebar visibility'},
+        \ {'id': 14, 'text': icons.help . ' Help',              'cmd': ':call visidian#help()',         'desc': 'Show help documentation'},
         \ {'id': 15, 'text': icons.close . ' Close Menu',       'cmd': 'close',                'desc': 'Close this menu'}
     \ ]
 
