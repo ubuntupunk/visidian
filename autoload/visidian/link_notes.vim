@@ -57,38 +57,29 @@ function! visidian#link_notes#link_notes()
 
     " Get YAML front matter from current file
     let current_yaml = s:get_yaml_front_matter(current_file)
-    if empty(current_yaml)
-        echo "No YAML front matter found in the current file."
-        return
-    endif
-
-    let links = get(current_yaml, 'links', [])
-    let tags = get(current_yaml, 'tags', [])
-
-    call s:search_and_link(links, tags)
-
     let weighted_links = s:weight_and_sort_links(current_yaml, vault_files)
 
-    if !empty(weighted_links)
-        enew
-        setlocal buftype=nofile bufhidden=wipe nobuflisted noswapfile nowrap
+    " Initialize display files list
+    let display_files = []
+    let counter = 1
 
-        call append(0, 'Linked Notes:')
-    for [file, score] in items(weighted_links)
-        " Get relative path from vault root
-        let rel_path = substitute(file, escape(vault_path . '/', '/\'), '', '')
-        " Add number prefix, score, and make it look nice
-        call add(display_files, printf('%2d) %-50s [Score: %d]', i, rel_path, score))
-        let i += 1
-    endfor
+    " If we have weighted links, show them with scores
+    if !empty(weighted_links)
+        for [file, score] in items(weighted_links)
+            " Get relative path from vault root
+            let rel_path = substitute(file, escape(vault_path . '/', '/\'), '', '')
+            " Add number prefix, score, and make it look nice
+            call add(display_files, printf('%2d) %-50s [Score: %d]', counter, rel_path, score))
+            let counter += 1
+        endfor
+    endif
 
     " If no weighted links, show all files
     if empty(display_files)
-        let i = 1
         for file in vault_files
             let rel_path = substitute(file, escape(vault_path . '/', '/\'), '', '')
-            call add(display_files, printf('%2d) %s', i, rel_path))
-            let i += 1
+            call add(display_files, printf('%2d) %s', counter, rel_path))
+            let counter += 1
         endfor
     endif
 
