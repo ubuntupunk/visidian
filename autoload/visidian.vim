@@ -79,19 +79,17 @@ function! visidian#load_session() abort
             silent! bufdo bwipeout
             
             " Change to vault directory
-            execute 'cd ' . g:visidian_vault_path
+            execute 'cd ' . fnameescape(g:visidian_vault_path)
             
             " Load the session
-            execute 'source ' . session_file
+            execute 'source ' . fnameescape(session_file)
             
             " Open NERDTree with vault as root
-            if exists(':NERDTree')
-                NERDTree g:visidian_vault_path
-            endif
+            call s:open_nerdtree()
             
             " Open last note if it exists
             if !empty(g:visidian_last_note) && filereadable(g:visidian_last_note)
-                execute 'edit ' . g:visidian_last_note
+                execute 'edit ' . fnameescape(g:visidian_last_note)
                 normal! zz
             endif
             
@@ -102,6 +100,27 @@ function! visidian#load_session() abort
         endif
     endif
     return 0
+endfunction
+
+" FUNCTION: Helper function to open NERDTree at vault root
+function! s:open_nerdtree() abort
+    if exists(':NERDTree')
+        " Ensure NERDTree is not already open
+        if exists('t:NERDTreeBufName') && bufwinnr(t:NERDTreeBufName) != -1
+            NERDTreeClose
+        endif
+        
+        " Escape spaces and special characters in path
+        let escaped_path = fnameescape(g:visidian_vault_path)
+        
+        " Open NERDTree at vault path
+        execute 'NERDTree ' . escaped_path
+        
+        " Focus back on the main window if we have a file open
+        if !empty(g:visidian_last_note)
+            wincmd p
+        endif
+    endif
 endfunction
 
 " FUNCTION: Main dashboard
@@ -131,7 +150,7 @@ function! visidian#dashboard() abort
     endif
 
     " Change to vault directory
-    execute 'cd ' . g:visidian_vault_path
+    execute 'cd ' . fnameescape(g:visidian_vault_path)
 
     " Try to load existing session first
     if !visidian#load_session()
@@ -166,9 +185,7 @@ function! visidian#dashboard() abort
         setlocal nomodifiable
         
         " Open NERDTree with vault as root
-        if exists(':NERDTree')
-            NERDTree g:visidian_vault_path
-        endif
+        call s:open_nerdtree()
         
         " Save initial session
         call visidian#save_session()
