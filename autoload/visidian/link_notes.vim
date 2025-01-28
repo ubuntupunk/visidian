@@ -131,6 +131,7 @@ function! s:weight_and_sort_links(current_yaml, all_files)
     let tags = get(a:current_yaml, 'tags', [])
     let links = get(a:current_yaml, 'links', [])
 
+    " Calculate weights for each file
     for file in a:all_files
         let file_yaml = s:get_yaml_front_matter(file)
         let file_score = 0
@@ -150,16 +151,43 @@ function! s:weight_and_sort_links(current_yaml, all_files)
                 endif
             endfor
 
-            " Add other weighting strategies here (e.g., recency, frequency)
+            " Weight by category match
+            if get(file_yaml, 'category', '') == get(a:current_yaml, 'category', '')
+                let file_score += 5  " Medium weight for category matches
+            endif
 
+            " Weight by subcategory match
+            if get(file_yaml, 'subcategory', '') == get(a:current_yaml, 'subcategory', '')
+                let file_score += 8  " Medium-high weight for subcategory matches
+            endif
+
+            " Store score if greater than 0
             if file_score > 0
                 let weights[file] = file_score
             endif
         endif
     endfor
 
+    " Convert dictionary to list of [file, score] pairs
+    let weighted_list = []
+    for [file, score] in items(weights)
+        call add(weighted_list, [file, score])
+    endfor
+
     " Sort by score in descending order
-    return reverse(sort(weights, 'v:val'))
+    function! s:compare_scores(a, b)
+        return a:b[1] - a:a[1]
+    endfunction
+
+    call sort(weighted_list, function('s:compare_scores'))
+
+    " Convert back to dictionary preserving sort order
+    let sorted_weights = {}
+    for [file, score] in weighted_list
+        let sorted_weights[file] = score
+    endfor
+
+    return sorted_weights
 endfunction
 
 "FUNCTION: Parse YAML front matter
