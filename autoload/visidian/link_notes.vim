@@ -57,11 +57,23 @@ function! visidian#link_notes#link_notes()
 
     " Get YAML front matter from current file
     let current_yaml = s:get_yaml_front_matter(current_file)
+    if empty(current_yaml)
+        echo "No YAML front matter found in the current file."
+        return
+    endif
+
+    let links = get(current_yaml, 'links', [])
+    let tags = get(current_yaml, 'tags', [])
+
+    call s:search_and_link(links, tags)
+
     let weighted_links = s:weight_and_sort_links(current_yaml, vault_files)
 
-    " Create list of file options with relative paths for display
-    let display_files = []
-    let i = 1
+    if !empty(weighted_links)
+        enew
+        setlocal buftype=nofile bufhidden=wipe nobuflisted noswapfile nowrap
+
+        call append(0, 'Linked Notes:')
     for [file, score] in items(weighted_links)
         " Get relative path from vault root
         let rel_path = substitute(file, escape(vault_path . '/', '/\'), '', '')
@@ -138,24 +150,16 @@ function! s:weight_and_sort_links(current_yaml, all_files)
                 endif
             endfor
 
-            " Weight by category match
-            if get(file_yaml, 'category', '') == get(a:current_yaml, 'category', '')
-                let file_score += 5  " Medium weight for category matches
-            endif
+            " Add other weighting strategies here (e.g., recency, frequency)
 
-            " Weight by subcategory match
-            if get(file_yaml, 'subcategory', '') == get(a:current_yaml, 'subcategory', '')
-                let file_score += 8  " Medium-high weight for subcategory matches
-            endif
-
-            " Add file to weights if it has any score
             if file_score > 0
                 let weights[file] = file_score
             endif
         endif
     endfor
 
-    return weights
+    " Sort by score in descending order
+    return reverse(sort(weights, 'v:val'))
 endfunction
 
 "FUNCTION: Parse YAML front matter
@@ -189,5 +193,44 @@ function! s:get_yaml_front_matter(file)
             endif
         endfor
         return yaml_dict
+    endif
+endfunction
+
+"FUNCTION: Search and link notes
+function! s:search_and_link(links, tags)
+    let vault_files = globpath(g:visidian_vault_path, '**/*.md', 0, 1)
+    let linked_notes = {}
+
+    for file in vault_files
+        let file_yaml = s:get_yaml_front_matter(file)
+        if !empty(file_yaml)
+            let file_links = get(file_yaml, 'links', [])
+            let file_tags = get(file_yaml, 'tags', [])
+
+            " Check for matching tags
+            for tag in a:tags
+                if index(file_tags, tag) != -1
+                    let linked_notes[file] = 'Tag match: ' . tag
+                endif
+            endfor
+
+            " Check for direct links
+            if !empty(a:links) && index(file_links, fnamemodify(expand('%'), ':t')) != -1
+                let linked_notes[file] = 'Direct link'
+            endif
+        endif
+    endfor
+
+    if !empty(linked_notes)
+        enew
+        setlocal buftype=nofile bufhidden=wipe nobuflisted noswapfile nowrap
+
+        call append(0, 'Linked Notes:')
+        for [file, reason] in items(linked_notes)
+            call append(line('$'), substitute(file, g:visidian_vault_path, '', '') . ' - ' . reason)
+        endfor
+        normal! gg
+    else
+        echo "No links or tag matches found."
     endif
 endfunction

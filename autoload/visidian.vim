@@ -895,7 +895,6 @@ function! visidian#create_vault()
 endfunction
 
 " FUNCTION: Call Create a new markdown file (with YAML front matter)
-
 function! visidian#new_md_file() abort
     " Check if vault exists
     if empty(g:visidian_vault_path)
