@@ -637,23 +637,61 @@ function! visidian#menu() abort
         return
     endif
 
+    " Check if we can use Nerd Font icons
+    let has_nerdfont = s:has_nerdfont()
+    
+    " Define icons based on font support
+    let icons = has_nerdfont ? {
+        \ 'note': '',
+        \ 'folder': '',
+        \ 'search': '',
+        \ 'link': '',
+        \ 'para': '',
+        \ 'save': '',
+        \ 'load': '',
+        \ 'list': '',
+        \ 'choose': '',
+        \ 'clear': '',
+        \ 'sync': '',
+        \ 'preview': '',
+        \ 'sidebar': '',
+        \ 'help': '',
+        \ 'close': ''
+    \ } : {
+        \ 'note': '[+]',
+        \ 'folder': '[D]',
+        \ 'search': '[S]',
+        \ 'link': '[L]',
+        \ 'para': '[P]',
+        \ 'save': '[W]',
+        \ 'load': '[R]',
+        \ 'list': '[LS]',
+        \ 'choose': '[C]',
+        \ 'clear': '[X]',
+        \ 'sync': '[Y]',
+        \ 'preview': '[V]',
+        \ 'sidebar': '[B]',
+        \ 'help': '[?]',
+        \ 'close': '[Q]'
+    \ }
+
     " Define menu items with descriptions and commands
     let menu_items = [
-        \ {'id': 1,  'text': '📝 New Note',          'cmd': 'VisidianFile',         'desc': 'Create a new markdown note'},
-        \ {'id': 2,  'text': '📁 New Folder',        'cmd': 'VisidianFolder',       'desc': 'Create a new folder'},
-        \ {'id': 3,  'text': '🔍 Search Notes',      'cmd': 'VisidianSearch',       'desc': 'Search through your notes'},
-        \ {'id': 4,  'text': '🔗 Link Notes',        'cmd': 'VisidianLink',         'desc': 'Create links between notes'},
-        \ {'id': 5,  'text': '📊 PARA Folders',      'cmd': 'VisidianParaGen',      'desc': 'Generate PARA folder structure'},
-        \ {'id': 6,  'text': '💾 Save Session',      'cmd': 'VisidianSaveSession',  'desc': 'Save current session'},
-        \ {'id': 7,  'text': '📂 Load Session',      'cmd': 'VisidianLoadSession',  'desc': 'Load saved session'},
-        \ {'id': 8,  'text': '📜 List Sessions',     'cmd': 'VisidianListSessions', 'desc': 'View available sessions'},
-        \ {'id': 9,  'text': '📋 Choose Session',    'cmd': 'VisidianChooseSession','desc': 'Select a previous session'},
-        \ {'id': 10, 'text': '🗑️  Clear Sessions',   'cmd': 'VisidianClearSessions','desc': 'Clear session history'},
-        \ {'id': 11, 'text': '🔄 Toggle AutoSync',   'cmd': 'VisidianToggleAutoSync', 'desc': 'Toggle auto-sync feature'},
-        \ {'id': 12, 'text': '👁️  Toggle Preview',   'cmd': 'VisidianTogglePreview', 'desc': 'Toggle markdown preview'},
-        \ {'id': 13, 'text': '📑 Toggle Sidebar',    'cmd': 'VisidianToggleSidebar', 'desc': 'Toggle sidebar visibility'},
-        \ {'id': 14, 'text': '❓ Help',              'cmd': 'VisidianHelp',         'desc': 'Show help documentation'},
-        \ {'id': 15, 'text': '❌ Close Menu',        'cmd': 'close',                'desc': 'Close this menu'}
+        \ {'id': 1,  'text': icons.note . ' New Note',          'cmd': 'VisidianFile',         'desc': 'Create a new markdown note'},
+        \ {'id': 2,  'text': icons.folder . ' New Folder',      'cmd': 'VisidianFolder',       'desc': 'Create a new folder'},
+        \ {'id': 3,  'text': icons.search . ' Search Notes',    'cmd': 'VisidianSearch',       'desc': 'Search through your notes'},
+        \ {'id': 4,  'text': icons.link . ' Link Notes',        'cmd': 'VisidianLink',         'desc': 'Create links between notes'},
+        \ {'id': 5,  'text': icons.para . ' PARA Folders',      'cmd': 'VisidianParaGen',      'desc': 'Generate PARA folder structure'},
+        \ {'id': 6,  'text': icons.save . ' Save Session',      'cmd': 'VisidianSaveSession',  'desc': 'Save current session'},
+        \ {'id': 7,  'text': icons.load . ' Load Session',      'cmd': 'VisidianLoadSession',  'desc': 'Load saved session'},
+        \ {'id': 8,  'text': icons.list . ' List Sessions',     'cmd': 'VisidianListSessions', 'desc': 'View available sessions'},
+        \ {'id': 9,  'text': icons.choose . ' Choose Session',  'cmd': 'VisidianChooseSession','desc': 'Select a previous session'},
+        \ {'id': 10, 'text': icons.clear . ' Clear Sessions',   'cmd': 'VisidianClearSessions','desc': 'Clear session history'},
+        \ {'id': 11, 'text': icons.sync . ' Toggle AutoSync',   'cmd': 'VisidianToggleAutoSync', 'desc': 'Toggle auto-sync feature'},
+        \ {'id': 12, 'text': icons.preview . ' Toggle Preview', 'cmd': 'VisidianTogglePreview', 'desc': 'Toggle markdown preview'},
+        \ {'id': 13, 'text': icons.sidebar . ' Toggle Sidebar', 'cmd': 'VisidianToggleSidebar', 'desc': 'Toggle sidebar visibility'},
+        \ {'id': 14, 'text': icons.help . ' Help',              'cmd': 'VisidianHelp',         'desc': 'Show help documentation'},
+        \ {'id': 15, 'text': icons.close . ' Close Menu',       'cmd': 'close',                'desc': 'Close this menu'}
     \ ]
 
     " Calculate menu dimensions
@@ -668,9 +706,12 @@ function! visidian#menu() abort
 
     " Create the menu content
     let menu_content = []
+    let i = 1
     for item in menu_items
         let padding = repeat(' ', max_text_len - strwidth(item.text) + 2)
-        call add(menu_content, printf('%s%s%s', item.text, padding, item.desc))
+        let num_prefix = printf('%2d. ', i)
+        call add(menu_content, printf('%s%s%s%s', num_prefix, item.text, padding, item.desc))
+        let i += 1
     endfor
 
     " Create the popup window
@@ -684,7 +725,8 @@ function! visidian#menu() abort
         \ 'border': [1,1,1,1],
         \ 'borderchars': ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
         \ 'padding': [0,1,0,1],
-        \ 'mapping': 0,
+        \ 'mapping': 1,
+        \ 'cursorline': 1,
         \ 'filter': function('s:menu_filter'),
         \ 'callback': function('s:menu_callback')
         \ })
@@ -694,32 +736,35 @@ function! visidian#menu() abort
     let s:current_popup_id = popup_winid
 
     " Add highlighting
-    call win_execute(popup_winid, 'syntax match VisidianMenuIcon /[📝📁🔍🔗📊💾📂📜📋🗑️🔄👁️📑❓❌]/')
+    if has_nerdfont
+        call win_execute(popup_winid, 'syntax match VisidianMenuIcon /[' . join(values(icons), '') . ']/')
+    else
+        call win_execute(popup_winid, 'syntax match VisidianMenuIcon /\[\w\+\]/')
+    endif
+    call win_execute(popup_winid, 'syntax match VisidianMenuNumber /^\d\+\. /')
     call win_execute(popup_winid, 'syntax match VisidianMenuText /\S\+\s\+\zs.*$/')
     call win_execute(popup_winid, 'highlight VisidianMenuIcon ctermfg=214 guifg=#fabd2f')
+    call win_execute(popup_winid, 'highlight VisidianMenuNumber ctermfg=109 guifg=#83a598')
     call win_execute(popup_winid, 'highlight VisidianMenuText ctermfg=223 guifg=#ebdbb2')
-    
-    " Set current line highlight
-    call win_execute(popup_winid, 'highlight CursorLine ctermbg=237 guibg=#3c3836')
-    call win_execute(popup_winid, 'setlocal cursorline')
+    call win_execute(popup_winid, 'highlight PopupSelected ctermfg=208 guifg=#fe8019 gui=bold')
 endfunction
 
 " FUNCTION: Menu filter
 function! s:menu_filter(winid, key) abort
     " Get current line number
-    let current_line = line('.', a:winid) - 1
+    let current_line = popup_getpos(a:winid).firstline
     let max_line = len(s:current_menu_items)
 
     " Handle key input
     if a:key == 'j' || a:key == "\<Down>"
-        call win_execute(a:winid, 'normal! j')
+        call popup_filter_menu(a:winid, "\<Down>")
         return 1
     elseif a:key == 'k' || a:key == "\<Up>"
-        call win_execute(a:winid, 'normal! k')
+        call popup_filter_menu(a:winid, "\<Up>")
         return 1
     elseif a:key == "\<CR>" || a:key == ' '
         " Execute the command for the current line
-        let item = s:current_menu_items[current_line]
+        let item = s:current_menu_items[current_line - 1]
         if item.cmd == 'close'
             call popup_close(a:winid)
         else
@@ -743,7 +788,7 @@ function! s:menu_filter(winid, key) abort
         return 1
     endif
 
-    return 0
+    return popup_filter_menu(a:winid, a:key)
 endfunction
 
 " FUNCTION: Menu callback
@@ -755,6 +800,13 @@ function! s:menu_callback(winid, result) abort
     if exists('s:current_popup_id')
         unlet s:current_popup_id
     endif
+endfunction
+
+" FUNCTION: Check if Nerd Fonts are available
+function! s:has_nerdfont() abort
+    " Try to display a nerd font character and check if its width is correct
+    let test_char = ''
+    return strwidth(test_char) == 1
 endfunction
 
 " map key to call dashboard
