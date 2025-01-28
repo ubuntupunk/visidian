@@ -14,6 +14,175 @@ endif
 if !exists('g:visidian_config_file')
     let g:visidian_config_file = expand('~/.visidian.json')
 endif
+if !exists('g:visidian_last_note')
+    let g:visidian_last_note = ''
+endif
+
+" FUNCTION: Helper function to manage sessions
+function! visidian#ensure_session_dir() abort
+    if !isdirectory(g:visidian_session_dir)
+        call mkdir(g:visidian_session_dir, 'p')
+        echo "Created session directory at: " . g:visidian_session_dir
+    endif
+endfunction
+
+function! visidian#get_session_file() abort
+    let safe_name = substitute(g:visidian_vault_path, '[\/]', '_', 'g')
+    return g:visidian_session_dir . safe_name . '.vim'
+endfunction
+
+function! visidian#save_session() abort
+    if g:visidian_auto_save_session && !empty(g:visidian_vault_path)
+        call visidian#ensure_session_dir()
+        let session_file = visidian#get_session_file()
+        
+        " Save current buffer name if it's a markdown file in the vault
+        let current_file = expand('%:p')
+        if current_file =~# '^' . escape(g:visidian_vault_path, '/\') . '.*\.md$'
+            let g:visidian_last_note = current_file
+        endif
+        
+        " Save session
+        execute 'mksession! ' . session_file
+        
+        " Save additional state
+        let state = {
+            \ 'last_note': g:visidian_last_note,
+            \ 'vault_path': g:visidian_vault_path,
+            \ 'vault_name': g:visidian_vault_name
+        \ }
+        call writefile([json_encode(state)], session_file . '.state')
+        
+        echo "Session saved to: " . session_file
+        return 1
+    endif
+    return 0
+endfunction
+
+function! visidian#load_session() abort
+    if !empty(g:visidian_vault_path)
+        let session_file = visidian#get_session_file()
+        let state_file = session_file . '.state'
+        
+        " Load session state if it exists
+        if filereadable(state_file)
+            let state_content = join(readfile(state_file), '')
+            let state = json_decode(state_content)
+            let g:visidian_last_note = get(state, 'last_note', '')
+            let g:visidian_vault_path = get(state, 'vault_path', g:visidian_vault_path)
+            let g:visidian_vault_name = get(state, 'vault_name', g:visidian_vault_name)
+        endif
+        
+        " Load session if it exists
+        if filereadable(session_file)
+            " Clear all buffers first
+            silent! bufdo bwipeout
+            
+            " Change to vault directory
+            execute 'cd ' . g:visidian_vault_path
+            
+            " Load the session
+            execute 'source ' . session_file
+            
+            " Open NERDTree with vault as root
+            if exists(':NERDTree')
+                NERDTree g:visidian_vault_path
+            endif
+            
+            " Open last note if it exists
+            if !empty(g:visidian_last_note) && filereadable(g:visidian_last_note)
+                execute 'edit ' . g:visidian_last_note
+                normal! zz
+            endif
+            
+            echo "Session loaded from: " . session_file
+            return 1
+        else
+            echo "No existing session found at: " . session_file
+        endif
+    endif
+    return 0
+endfunction
+
+" FUNCTION: Main dashboard
+function! visidian#dashboard() abort
+    " Check if vault path is set
+    if !visidian#load_vault_path()
+        echohl WarningMsg
+        echo "No vault configured. Let's set one up!"
+        echohl None
+        if visidian#create_vault()
+            echo "Vault created. Opening dashboard..."
+        else
+            echohl ErrorMsg
+            echo "Failed to create vault. Please try again with :VisidianVault"
+            echohl None
+            return
+        endif
+    endif
+
+    " Ensure vault path exists
+    if !isdirectory(g:visidian_vault_path)
+        echohl ErrorMsg
+        echo "Vault directory does not exist: " . g:visidian_vault_path
+        echo "Please create it or set a new path with :VisidianVault"
+        echohl None
+        return
+    endif
+
+    " Change to vault directory
+    execute 'cd ' . g:visidian_vault_path
+
+    " Try to load existing session first
+    if !visidian#load_session()
+        " If no session exists, set up a new dashboard
+        " Clear all buffers first
+        silent! bufdo bwipeout
+        
+        " Create dashboard buffer
+        enew
+        setlocal buftype=nofile
+        setlocal bufhidden=hide
+        setlocal noswapfile
+        
+        " Set up dashboard layout
+        let header = [
+            \ '  Visidian - Obsidian for Vim',
+            \ '',
+            \ '  Current Vault: ' . g:visidian_vault_path,
+            \ '',
+            \ '  Commands:',
+            \ '  [n] :VisidianFile    - New Note',
+            \ '  [f] :VisidianFolder  - New Folder',
+            \ '  [s] :VisidianSearch  - Search Notes',
+            \ '  [l] :VisidianLink    - Link Notes',
+            \ '  [p] :VisidianParaGen - Generate PARA Folders',
+            \ '  [h] :VisidianHelp    - Help',
+            \ ''
+            \ ]
+        
+        call append(0, header)
+        normal! gg
+        setlocal nomodifiable
+        
+        " Open NERDTree with vault as root
+        if exists(':NERDTree')
+            NERDTree g:visidian_vault_path
+        endif
+        
+        " Save initial session
+        call visidian#save_session()
+    endif
+
+    " Set up autocommands for session management
+    augroup VisidianSession
+        autocmd!
+        " Save session when leaving Vim
+        autocmd VimLeave * call visidian#save_session()
+        " Save session when switching buffers
+        autocmd BufEnter *.md call visidian#save_session()
+    augroup END
+endfunction
 
 " FUNCTION: Helper function to ensure path is within home directory
 function! s:ensure_home_directory(path) abort
@@ -89,44 +258,6 @@ function! visidian#load_vault_path() abort
     return 1
 endfunction
 
-" FUNCTION: Helper function to manage sessions
-function! visidian#ensure_session_dir() abort
-    if !isdirectory(g:visidian_session_dir)
-        call mkdir(g:visidian_session_dir, 'p')
-        echo "Created session directory at: " . g:visidian_session_dir
-    endif
-endfunction
-
-function! visidian#get_session_file() abort
-    let safe_name = substitute(g:visidian_vault_path, '[\/]', '_', 'g')
-    return g:visidian_session_dir . safe_name . '.vim'
-endfunction
-
-function! visidian#save_session() abort
-    if g:visidian_auto_save_session && !empty(g:visidian_vault_path)
-        call visidian#ensure_session_dir()
-        let session_file = visidian#get_session_file()
-        execute 'mksession! ' . session_file
-        echo "Session saved to: " . session_file
-        return 1
-    endif
-    return 0
-endfunction
-
-function! visidian#load_session() abort
-    if !empty(g:visidian_vault_path)
-        let session_file = visidian#get_session_file()
-        if filereadable(session_file)
-            execute 'source ' . session_file
-            echo "Session loaded from: " . session_file
-            return 1
-        else
-            echo "No existing session found at: " . session_file
-        endif
-    endif
-    return 0
-endfunction
-
 " FUNCTION: Create PARA folders
 function! visidian#create_para_folders() abort
     let para_folders = ['Projects', 'Areas', 'Resources', 'Archive']
@@ -136,150 +267,151 @@ function! visidian#create_para_folders() abort
             call mkdir(folder_path, 'p')
             echo "Created folder: " . folder_path
         endif
-    endfor
-    
-    " Create a README and example note in each folder
-    for folder in para_folders
-        " Create README
-        let readme_path = g:visidian_vault_path . '/' . folder . '/README.md'
-        if !filereadable(readme_path)
-            let content = [
-                \ '# ' . folder,
-                \ '',
-                \ '## Purpose',
-                \ ''
-            \]
-            if folder ==# 'Projects'
-                let content += ['For tasks with a defined goal and deadline.']
-            elseif folder ==# 'Areas'
-                let content += ['For ongoing responsibilities without a deadline.']
-            elseif folder ==# 'Resources'
-                let content += ['For topics of interest or areas of study, not tied to immediate action.']
-            elseif folder ==# 'Archive'
-                let content += ['For completed projects, expired areas, or old resources.']
-            endif
-            call writefile(content, readme_path)
-            echo "Created README: " . readme_path
-        endif
-
-        " Create example note
-        let example_path = g:visidian_vault_path . '/' . folder . '/example.md'
-        if !filereadable(example_path)
-            let current_time = strftime('%Y-%m-%d %H:%M:%S')
-            let content = []
-
-            " Add YAML frontmatter based on folder type
-            if folder ==# 'Projects'
+        
+        " Create a README and example note in each folder
+        for folder in para_folders
+            " Create README
+            let readme_path = g:visidian_vault_path . '/' . folder . '/README.md'
+            if !filereadable(readme_path)
                 let content = [
-                    \ '---',
-                    \ 'title: Example Project',
-                    \ 'date: ' . current_time,
-                    \ 'tags: [project, example, task]',
-                    \ 'status: active',
-                    \ 'deadline: ' . strftime('%Y-%m-%d', localtime() + 86400 * 7),
-                    \ 'links: []',
-                    \ '---',
+                    \ '# ' . folder,
                     \ '',
-                    \ '# Example Project',
-                    \ '',
-                    \ '## Overview',
-                    \ 'This is an example project note. Projects should have:',
-                    \ '',
-                    \ '- Clear objectives',
-                    \ '- Defined timeline',
-                    \ '- Measurable outcomes',
-                    \ '',
-                    \ '## Tasks',
-                    \ '- [ ] First task',
-                    \ '- [ ] Second task',
-                    \ '- [ ] Third task',
-                    \ '',
-                    \ '## Resources',
-                    \ '- Link to related resources',
-                    \ '- Link to reference materials',
+                    \ '## Purpose',
+                    \ ''
                 \]
-            elseif folder ==# 'Areas'
-                let content = [
-                    \ '---',
-                    \ 'title: Example Area',
-                    \ 'date: ' . current_time,
-                    \ 'tags: [area, example, responsibility]',
-                    \ 'status: ongoing',
-                    \ 'review_frequency: weekly',
-                    \ 'links: []',
-                    \ '---',
-                    \ '',
-                    \ '# Example Area',
-                    \ '',
-                    \ '## Description',
-                    \ 'This is an example area note. Areas represent:',
-                    \ '',
-                    \ '- Ongoing responsibilities',
-                    \ '- Long-term commitments',
-                    \ '- Standards to maintain',
-                    \ '',
-                    \ '## Current Focus',
-                    \ '- Key aspect 1',
-                    \ '- Key aspect 2',
-                    \ '- Key aspect 3',
-                \]
-            elseif folder ==# 'Resources'
-                let content = [
-                    \ '---',
-                    \ 'title: Example Resource',
-                    \ 'date: ' . current_time,
-                    \ 'tags: [resource, example, reference]',
-                    \ 'type: reference',
-                    \ 'topics: [example, learning]',
-                    \ 'links: []',
-                    \ '---',
-                    \ '',
-                    \ '# Example Resource',
-                    \ '',
-                    \ '## Summary',
-                    \ 'This is an example resource note. Resources are for:',
-                    \ '',
-                    \ '- Topic research',
-                    \ '- Reference materials',
-                    \ '- Learning notes',
-                    \ '',
-                    \ '## Key Points',
-                    \ '1. First key point',
-                    \ '2. Second key point',
-                    \ '3. Third key point',
-                \]
-            elseif folder ==# 'Archive'
-                let content = [
-                    \ '---',
-                    \ 'title: Example Archive',
-                    \ 'date: ' . current_time,
-                    \ 'tags: [archive, example, completed]',
-                    \ 'status: archived',
-                    \ 'archive_date: ' . strftime('%Y-%m-%d'),
-                    \ 'links: []',
-                    \ '---',
-                    \ '',
-                    \ '# Example Archive',
-                    \ '',
-                    \ '## Archive Details',
-                    \ 'This is an example archive note. Archives contain:',
-                    \ '',
-                    \ '- Completed projects',
-                    \ '- Past areas',
-                    \ '- Old resources',
-                    \ '',
-                    \ '## Archive Context',
-                    \ '- Original creation date',
-                    \ '- Reason for archiving',
-                    \ '- Related active notes',
-                \]
+                if folder ==# 'Projects'
+                    let content += ['For tasks with a defined goal and deadline.']
+                elseif folder ==# 'Areas'
+                    let content += ['For ongoing responsibilities without a deadline.']
+                elseif folder ==# 'Resources'
+                    let content += ['For topics of interest or areas of study, not tied to immediate action.']
+                elseif folder ==# 'Archive'
+                    let content += ['For completed projects, expired areas, or old resources.']
+                endif
+                call writefile(content, readme_path)
+                echo "Created README: " . readme_path
             endif
 
-            call writefile(content, example_path)
-            echo "Created example note: " . example_path
-        endif
+            " Create example note
+            let example_path = g:visidian_vault_path . '/' . folder . '/example.md'
+            if !filereadable(example_path)
+                let current_time = strftime('%Y-%m-%d %H:%M:%S')
+                let content = []
+
+                " Add YAML frontmatter based on folder type
+                if folder ==# 'Projects'
+                    let content = [
+                        \ '---',
+                        \ 'title: Example Project',
+                        \ 'date: ' . current_time,
+                        \ 'tags: [project, example, task]',
+                        \ 'status: active',
+                        \ 'deadline: ' . strftime('%Y-%m-%d', localtime() + 86400 * 7),
+                        \ 'links: []',
+                        \ '---',
+                        \ '',
+                        \ '# Example Project',
+                        \ '',
+                        \ '## Overview',
+                        \ 'This is an example project note. Projects should have:',
+                        \ '',
+                        \ '- Clear objectives',
+                        \ '- Defined timeline',
+                        \ '- Measurable outcomes',
+                        \ '',
+                        \ '## Tasks',
+                        \ '- [ ] First task',
+                        \ '- [ ] Second task',
+                        \ '- [ ] Third task',
+                        \ '',
+                        \ '## Resources',
+                        \ '- Link to related resources',
+                        \ '- Link to reference materials',
+                    \]
+                elseif folder ==# 'Areas'
+                    let content = [
+                        \ '---',
+                        \ 'title: Example Area',
+                        \ 'date: ' . current_time,
+                        \ 'tags: [area, example, responsibility]',
+                        \ 'status: ongoing',
+                        \ 'review_frequency: weekly',
+                        \ 'links: []',
+                        \ '---',
+                        \ '',
+                        \ '# Example Area',
+                        \ '',
+                        \ '## Description',
+                        \ 'This is an example area note. Areas represent:',
+                        \ '',
+                        \ '- Ongoing responsibilities',
+                        \ '- Long-term commitments',
+                        \ '- Standards to maintain',
+                        \ '',
+                        \ '## Current Focus',
+                        \ '- Key aspect 1',
+                        \ '- Key aspect 2',
+                        \ '- Key aspect 3',
+                    \]
+                elseif folder ==# 'Resources'
+                    let content = [
+                        \ '---',
+                        \ 'title: Example Resource',
+                        \ 'date: ' . current_time,
+                        \ 'tags: [resource, example, reference]',
+                        \ 'type: reference',
+                        \ 'topics: [example, learning]',
+                        \ 'links: []',
+                        \ '---',
+                        \ '',
+                        \ '# Example Resource',
+                        \ '',
+                        \ '## Summary',
+                        \ 'This is an example resource note. Resources are for:',
+                        \ '',
+                        \ '- Topic research',
+                        \ '- Reference materials',
+                        \ '- Learning notes',
+                        \ '',
+                        \ '## Key Points',
+                        \ '1. First key point',
+                        \ '2. Second key point',
+                        \ '3. Third key point',
+                    \]
+                elseif folder ==# 'Archive'
+                    let content = [
+                        \ '---',
+                        \ 'title: Example Archive',
+                        \ 'date: ' . current_time,
+                        \ 'tags: [archive, example, completed]',
+                        \ 'status: archived',
+                        \ 'archive_date: ' . strftime('%Y-%m-%d'),
+                        \ 'links: []',
+                        \ '---',
+                        \ '',
+                        \ '# Example Archive',
+                        \ '',
+                        \ '## Archive Details',
+                        \ 'This is an example archive note. Archives contain:',
+                        \ '',
+                        \ '- Completed projects',
+                        \ '- Past areas',
+                        \ '- Old resources',
+                        \ '',
+                        \ '## Archive Context',
+                        \ '- Original creation date',
+                        \ '- Reason for archiving',
+                        \ '- Related active notes',
+                    \]
+                endif
+
+                call writefile(content, example_path)
+                echo "Created example note: " . example_path
+            endif
+        endfor
+        return 1
     endfor
-    return 1
+    return 0
 endfunction
 
 " FUNCTION: Set up a new vault
@@ -339,76 +471,6 @@ function! visidian#create_vault() abort
         echohl None
         return 0
     endtry
-endfunction
-
-" FUNCTION: Main dashboard
-function! visidian#dashboard() abort
-    " Check if vault path is set
-    if !visidian#load_vault_path()
-        echohl WarningMsg
-        echo "No vault configured. Let's set one up!"
-        echohl None
-        if visidian#create_vault()
-            echo "Vault created. Opening dashboard..."
-        else
-            echohl ErrorMsg
-            echo "Failed to create vault. Please try again with :VisidianVault"
-            echohl None
-            return
-        endif
-    endif
-
-    " Ensure vault path exists
-    if !isdirectory(g:visidian_vault_path)
-        echohl ErrorMsg
-        echo "Vault directory does not exist: " . g:visidian_vault_path
-        echo "Please create it or set a new path with :VisidianVault"
-        echohl None
-        return
-    endif
-
-    " Change to vault directory
-    execute 'cd ' . g:visidian_vault_path
-
-    " Try to load existing session first
-    if visidian#load_session()
-        " Open NERDTree if available and not already open
-        if exists(':NERDTree') && !exists('g:NERDTree') 
-            NERDTree
-        endif
-        return
-    endif
-
-    " If no session exists, set up a new dashboard
-    enew
-    setlocal buftype=nofile
-    setlocal bufhidden=hide
-    setlocal noswapfile
-    
-    " Set up dashboard layout
-    let header = [
-        \ '  Visidian - Obsidian for Vim',
-        \ '',
-        \ '  [n] New Note',
-        \ '  [f] New Folder',
-        \ '  [s] Search Notes',
-        \ '  [l] Link Notes',
-        \ '  [h] Help',
-        \ '  [q] Quit',
-        \ ''
-        \ ]
-    
-    call append(0, header)
-    normal! gg
-    setlocal nomodifiable
-    
-    " Save initial session
-    call visidian#save_session()
-
-    " Open NERDTree if available
-    if exists(':NERDTree')
-        NERDTree
-    endif
 endfunction
 
 " FUNCTION: create popup menu
