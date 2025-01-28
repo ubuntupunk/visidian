@@ -17,6 +17,9 @@ endif
 if !exists('g:visidian_last_note')
     let g:visidian_last_note = ''
 endif
+if !exists('g:visidian_max_sessions')
+    let g:visidian_max_sessions = 5
+endif
 
 " FUNCTION: Helper function to manage sessions
 function! visidian#ensure_session_dir() abort
@@ -29,6 +32,104 @@ endfunction
 function! visidian#get_session_file() abort
     let safe_name = substitute(g:visidian_vault_path, '[\/]', '_', 'g')
     return g:visidian_session_dir . safe_name . '.vim'
+endfunction
+
+function! visidian#get_session_history_file() abort
+    let safe_name = substitute(g:visidian_vault_path, '[\/]', '_', 'g')
+    return g:visidian_session_dir . safe_name . '.history'
+endfunction
+
+function! s:rotate_session_history(new_session) abort
+    let history_file = visidian#get_session_history_file()
+    let sessions = []
+    
+    " Load existing history
+    if filereadable(history_file)
+        let sessions = readfile(history_file)
+    endif
+    
+    " Add new session to front
+    call insert(sessions, a:new_session)
+    
+    " Keep only the most recent sessions
+    let sessions = sessions[0:g:visidian_max_sessions-1]
+    
+    " Save history
+    call writefile(sessions, history_file)
+endfunction
+
+function! visidian#list_sessions() abort
+    let history_file = visidian#get_session_history_file()
+    if !filereadable(history_file)
+        echo "No session history found."
+        return []
+    endif
+    
+    let sessions = readfile(history_file)
+    if empty(sessions)
+        echo "No sessions in history."
+        return []
+    endif
+    
+    echo "Available sessions (most recent first):"
+    let i = 0
+    for session in sessions
+        let session_data = json_decode(session)
+        let timestamp = strftime('%Y-%m-%d %H:%M:%S', session_data.timestamp)
+        echo printf('%d: %s - Last note: %s', 
+            \ i, 
+            \ timestamp, 
+            \ empty(session_data.last_note) ? '[none]' : fnamemodify(session_data.last_note, ':t'))
+        let i += 1
+    endfor
+    
+    return sessions
+endfunction
+
+function! visidian#choose_session() abort
+    let sessions = visidian#list_sessions()
+    if empty(sessions)
+        return 0
+    endif
+    
+    let choice = input('Enter session number (0-' . (len(sessions)-1) . ') or [Enter] to cancel: ')
+    if empty(choice)
+        echo "\nCancelled."
+        return 0
+    endif
+    
+    let choice_num = str2nr(choice)
+    if choice_num < 0 || choice_num >= len(sessions)
+        echohl ErrorMsg
+        echo "\nInvalid session number."
+        echohl None
+        return 0
+    endif
+    
+    let session_data = json_decode(sessions[choice_num])
+    let g:visidian_last_note = session_data.last_note
+    let g:visidian_vault_path = session_data.vault_path
+    let g:visidian_vault_name = session_data.vault_name
+    
+    " Load the chosen session
+    call visidian#load_session()
+    return 1
+endfunction
+
+function! visidian#clear_sessions() abort
+    let history_file = visidian#get_session_history_file()
+    if !filereadable(history_file)
+        echo "No session history to clear."
+        return
+    endif
+    
+    let choice = input('Clear all session history? [y/N]: ')
+    if choice =~? '^y'
+        call delete(history_file)
+        echo "\nSession history cleared."
+    else
+        echo "\nOperation cancelled."
+    endif
 endfunction
 
 function! visidian#save_session() abort
@@ -45,13 +146,17 @@ function! visidian#save_session() abort
         " Save session
         execute 'mksession! ' . session_file
         
-        " Save additional state
+        " Create session state
         let state = {
             \ 'last_note': g:visidian_last_note,
             \ 'vault_path': g:visidian_vault_path,
-            \ 'vault_name': g:visidian_vault_name
+            \ 'vault_name': g:visidian_vault_name,
+            \ 'timestamp': localtime()
         \ }
+        
+        " Save state and add to history
         call writefile([json_encode(state)], session_file . '.state')
+        call s:rotate_session_history(json_encode(state))
         
         echo "Session saved to: " . session_file
         return 1

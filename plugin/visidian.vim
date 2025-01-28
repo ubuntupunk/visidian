@@ -38,3 +38,6 @@ command! -nargs=0 VisidianMenu call visidian#menu()
 " Session management commands
 command! -nargs=0 VisidianSaveSession call visidian#save_session()
 command! -nargs=0 VisidianLoadSession call visidian#load_session()
+command! -nargs=0 VisidianListSessions call visidian#list_sessions()
+command! -nargs=0 VisidianChooseSession call visidian#choose_session()
+command! -nargs=0 VisidianClearSessions call visidian#clear_sessions()
