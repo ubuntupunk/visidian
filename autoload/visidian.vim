@@ -138,8 +138,9 @@ function! visidian#create_para_folders() abort
         endif
     endfor
     
-    " Create a README in each folder
+    " Create a README and example note in each folder
     for folder in para_folders
+        " Create README
         let readme_path = g:visidian_vault_path . '/' . folder . '/README.md'
         if !filereadable(readme_path)
             let content = [
@@ -159,6 +160,123 @@ function! visidian#create_para_folders() abort
             endif
             call writefile(content, readme_path)
             echo "Created README: " . readme_path
+        endif
+
+        " Create example note
+        let example_path = g:visidian_vault_path . '/' . folder . '/example.md'
+        if !filereadable(example_path)
+            let current_time = strftime('%Y-%m-%d %H:%M:%S')
+            let content = []
+
+            " Add YAML frontmatter based on folder type
+            if folder ==# 'Projects'
+                let content = [
+                    \ '---',
+                    \ 'title: Example Project',
+                    \ 'date: ' . current_time,
+                    \ 'tags: [project, example, task]',
+                    \ 'status: active',
+                    \ 'deadline: ' . strftime('%Y-%m-%d', localtime() + 86400 * 7),
+                    \ 'links: []',
+                    \ '---',
+                    \ '',
+                    \ '# Example Project',
+                    \ '',
+                    \ '## Overview',
+                    \ 'This is an example project note. Projects should have:',
+                    \ '',
+                    \ '- Clear objectives',
+                    \ '- Defined timeline',
+                    \ '- Measurable outcomes',
+                    \ '',
+                    \ '## Tasks',
+                    \ '- [ ] First task',
+                    \ '- [ ] Second task',
+                    \ '- [ ] Third task',
+                    \ '',
+                    \ '## Resources',
+                    \ '- Link to related resources',
+                    \ '- Link to reference materials',
+                \]
+            elseif folder ==# 'Areas'
+                let content = [
+                    \ '---',
+                    \ 'title: Example Area',
+                    \ 'date: ' . current_time,
+                    \ 'tags: [area, example, responsibility]',
+                    \ 'status: ongoing',
+                    \ 'review_frequency: weekly',
+                    \ 'links: []',
+                    \ '---',
+                    \ '',
+                    \ '# Example Area',
+                    \ '',
+                    \ '## Description',
+                    \ 'This is an example area note. Areas represent:',
+                    \ '',
+                    \ '- Ongoing responsibilities',
+                    \ '- Long-term commitments',
+                    \ '- Standards to maintain',
+                    \ '',
+                    \ '## Current Focus',
+                    \ '- Key aspect 1',
+                    \ '- Key aspect 2',
+                    \ '- Key aspect 3',
+                \]
+            elseif folder ==# 'Resources'
+                let content = [
+                    \ '---',
+                    \ 'title: Example Resource',
+                    \ 'date: ' . current_time,
+                    \ 'tags: [resource, example, reference]',
+                    \ 'type: reference',
+                    \ 'topics: [example, learning]',
+                    \ 'links: []',
+                    \ '---',
+                    \ '',
+                    \ '# Example Resource',
+                    \ '',
+                    \ '## Summary',
+                    \ 'This is an example resource note. Resources are for:',
+                    \ '',
+                    \ '- Topic research',
+                    \ '- Reference materials',
+                    \ '- Learning notes',
+                    \ '',
+                    \ '## Key Points',
+                    \ '1. First key point',
+                    \ '2. Second key point',
+                    \ '3. Third key point',
+                \]
+            elseif folder ==# 'Archive'
+                let content = [
+                    \ '---',
+                    \ 'title: Example Archive',
+                    \ 'date: ' . current_time,
+                    \ 'tags: [archive, example, completed]',
+                    \ 'status: archived',
+                    \ 'archive_date: ' . strftime('%Y-%m-%d'),
+                    \ 'links: []',
+                    \ '---',
+                    \ '',
+                    \ '# Example Archive',
+                    \ '',
+                    \ '## Archive Details',
+                    \ 'This is an example archive note. Archives contain:',
+                    \ '',
+                    \ '- Completed projects',
+                    \ '- Past areas',
+                    \ '- Old resources',
+                    \ '',
+                    \ '## Archive Context',
+                    \ '- Original creation date',
+                    \ '- Reason for archiving',
+                    \ '- Related active notes',
+                \]
+            endif
+
+            call writefile(content, example_path)
+            echo "Created example note: " . example_path
         endif
     endfor
     return 1
