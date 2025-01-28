@@ -7,13 +7,15 @@
 " License Details: https://www.gnu.org/licenses/gpl-3.0.en.html
 
 "Prevents the plugin from being loaded multiple times
-
 if exists("g:loaded_visidian_vim")
    runtime! autoload/visidian.vim
- finish
+   finish
 endif
 
 let g:loaded_visidian_vim = 1
+
+" Set up session options
+set sessionoptions=blank,buffers,curdir,folds,help,tabpages,winsize,terminal
 
 "Exposes the plugins functions for use with following commands: 
 command! -nargs=0 VisidianDash call visidian#dashboard()
@@ -32,3 +34,7 @@ command! -nargs=0 VisidianToggleSidebar call visidian#toggle_sidebar()
 command! -nargs=0 VisidianSearch call visidian#search()
 command! -nargs=0 VisidianSort call visidian#sort()
 command! -nargs=0 VisidianMenu call visidian#menu()
+
+" Session management commands
+command! -nargs=0 VisidianSaveSession call s:save_session()
+command! -nargs=0 VisidianLoadSession call s:load_session()

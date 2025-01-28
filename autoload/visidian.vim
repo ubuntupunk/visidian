@@ -1,37 +1,48 @@
 " Global variables
-if !exists('g:visidian_cache')
-    let g:visidian_cache = {}
-endif
 if !exists('g:visidian_vault_path')
     let g:visidian_vault_path = ''
 endif
 if !exists('g:visidian_vault_name')
     let g:visidian_vault_name = ''
 endif
-"if !exists('g:visidian#load_vault_path')
-"    let g:visidian#load_vault_path = 1
-"endif
-
-" You can also add this to your vimrc or init.vim
-" autocmd VimEnter * call visidian#load_vault_path()
-
-" Global variable to control bookmarking, default on
-if !exists('g:visidian_bookmark_last_note')
-    let g:visidian_bookmark_last_note = 1
+if !exists('g:visidian_session_dir')
+    let g:visidian_session_dir = expand('~/.vim/sessions/visidian/')
+endif
+if !exists('g:visidian_auto_save_session')
+    let g:visidian_auto_save_session = 1
 endif
 
-" FUNCTION: ensure the vault path is within the user's home directory
-function! visidian#ensure_home_directory(path)
-    let home_dir = expand('~')
-    if stridx(fnamemodify(a:path, ':p'), home_dir) == 0
-        return a:path
-    else
-        echoerr "Vault path must be within the home directory: " . a:path
-        return ''
+" FUNCTION: Helper function to manage sessions
+function! s:ensure_session_dir()
+    if !isdirectory(g:visidian_session_dir)
+        call mkdir(g:visidian_session_dir, 'p')
     endif
 endfunction
 
-"FUNCTION: Load the vault path from JSON or prompt for one 
+function! s:get_session_file()
+    return g:visidian_session_dir . substitute(g:visidian_vault_path, '[\/]', '_', 'g') . '.vim'
+endfunction
+
+function! s:save_session()
+    if g:visidian_auto_save_session && !empty(g:visidian_vault_path)
+        call s:ensure_session_dir()
+        let session_file = s:get_session_file()
+        execute 'mksession! ' . session_file
+    endif
+endfunction
+
+function! s:load_session()
+    if !empty(g:visidian_vault_path)
+        let session_file = s:get_session_file()
+        if filereadable(session_file)
+            execute 'source ' . session_file
+            return 1
+        endif
+    endif
+    return 0
+endfunction
+
+" FUNCTION: Load the vault path from JSON or prompt for one 
 function! visidian#load_vault_path()
     if !exists('g:visidian_vault_path') || g:visidian_vault_path == ''
         let json_data = s:read_json()
@@ -51,66 +62,6 @@ function! visidian#load_vault_path()
     let g:visidian_vault_path = visidian#ensure_home_directory(g:visidian_vault_path)
 endfunction 
 
-
-" Commands
-" FUNCTION: Helper function to cache file information
-function! s:cache_file_info(file)
-    let full_path = g:visidian_vault_path . a:file
-    try
-        let lines = readfile(full_path)
-        let yaml_start = match(lines, '^---$')
-        let yaml_end = match(lines, '^---$', yaml_start + 1)
-        if yaml_start != -1 && yaml_end != -1
-            let g:visidian_cache[a:file] = {
-            \   'yaml': lines[yaml_start+1 : yaml_end-1]
-            \}
-        else
-            let g:visidian_cache[a:file] = {'yaml': []}
-        endif
-    catch /^Vim\%((\a\+)\)\=:E484/
-        echoerr "Error reading file: " . full_path
-    endtry
-endfunction
-
-" Constants for JSON handling
-let s:json_file = expand('~/.visidian.json')
-
-" FUNCTION: Helper function to write to JSON file
-function! s:write_json(data)
-    let lines = ['{']
-   " call add(lines, '{')
-    for key in keys(a:data)
-        " Ensure the JSON string is properly escaped
-        let escaped_value = substitute(a:data[key], '\(["\\]\)', '\\\\\1', 'g')
-        call add(lines, printf('  "%s": "%s",', key, escaped_value))
-    endfor
-    if !empty(lines)
-        let lines[-1] = substitute(lines[-1], ',$', '', '')  " Remove trailing comma
-    endif
-    call add(lines, '}')
-    try
-        call writefile(lines, s:json_file, 'b')
-    catch /^Vim\%((\a\+)\)\=:E484/
-     echoerr "Error writing to " . s:json_file . ": " . v:exception
-    endtry
-endfunction
-
-" FUNCTION: Helper function to read from JSON file
-function! s:read_json()
-  let json_file = expand('~/.visidian.json')  
-  if filereadable(s:json_file)
-        let lines = readfile(s:json_file)
-        let data = {}
-        for line in lines
-            let match = matchlist(line, '\v\s*"([^"]+)":\s*"([^"]+)"')
-            if !empty(match)
-                let data[match[1]] = match[2]
-            endif
-        endfo
-        return data
-    endif
-    return {}
-endfunction
 
 " FUNCTION: Set the vault path, either from cache, .visidian.json, or new input
 function! visidian#set_vault_path()
@@ -144,11 +95,42 @@ endfunction
 
 " FUNCTION: Main dashboard
 function! visidian#dashboard()
-  call visidian#load_vault_path() " Ensure vault path is set
-  if g:visidian_vault_path == ''
+    call visidian#load_vault_path() " Ensure vault path is set
+    if g:visidian_vault_path == ''
         echoerr "No vault path set. Please create a vault first."
         return
     endif
+
+    " Try to load existing session first
+    if s:load_session()
+        return
+    endif
+
+    " If no session exists, set up a new dashboard
+    enew
+    setlocal buftype=nofile
+    setlocal bufhidden=hide
+    setlocal noswapfile
+    
+    " Set up dashboard layout
+    let header = [
+        \ '  Visidian - Obsidian for Vim',
+        \ '',
+        \ '  [n] New Note',
+        \ '  [f] New Folder',
+        \ '  [s] Search Notes',
+        \ '  [l] Link Notes',
+        \ '  [h] Help',
+        \ '  [q] Quit',
+        \ ''
+        \ ]
+    
+    call append(0, header)
+    normal! gg
+    setlocal nomodifiable
+    
+    " Save initial session
+    call s:save_session()
 
     " Check if NERDTree is installed, use 'silent' to suppress NERDTree messages
     " if used
@@ -482,3 +464,9 @@ else
         autocmd CursorHold * call s:CheckForSync()
     augroup END
 endif
+
+" Auto-save session on exit
+augroup VisidianSession
+    autocmd!
+    autocmd VimLeave * call s:save_session()
+augroup END

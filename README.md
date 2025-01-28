@@ -10,6 +10,7 @@ This is currently just a markdown note-taking tool. If you want a more establish
 2. [PARA Method](#para-method)
 3. [Combining GTD with Visidian](#combining-gtd-with-visidian)
 4. [Tips for Using Visidian](#tips-for-using-visidian)
+5. [Session Management](#session-management)
 
 ---
 ## Installation
@@ -72,7 +73,20 @@ Open Vim and run:
 - `:VisidianToggleSidebar` - Toggle Sidebar. (TODO)
 - `:VisidianSearch` - Search for notes in the vault.(FIXME)
 - `:VisidianSort` - Intelligent Sorting of Notes (TODO)
----
+- `:VisidianSaveSession` - Manually save the current session state
+- `:VisidianLoadSession` - Manually load a saved session state
+
+## Session Management
+
+Visidian now uses Vim's native session management to preserve your workspace state. This means:
+
+- Your window layouts, open files, and Vim state are automatically saved
+- Sessions are saved per vault in `~/.vim/sessions/visidian/`
+- Sessions are automatically saved when you exit Vim
+- Sessions are automatically loaded when you open the dashboard
+- You can manually save/load sessions using the commands above
+
+This feature ensures that you can pick up exactly where you left off in each vault, maintaining your workflow continuity.
 
 ## PARA Method
 
@@ -160,4 +174,3 @@ requests, please open an issue or submit a pull request.
 ## License
 
 This project is licensed under the GPL General Public License - see the [LICENSE](LICENSE) file for details.
-
