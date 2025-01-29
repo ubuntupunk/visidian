@@ -62,17 +62,15 @@ Open Vim and run:
 - `:VisidianFile` - Create a new markdown file in the vault.
 - `:VisidianFolder` - Create a new folder in the vault.
 - `:VisidianVault` - Create a new vault.
-- `:VisidianLink` - Display connections between notes using YAML front matter.
-- `:VisidianPath` - Set or reset the vault path.
+- `:VisidianLink` - Display connections between notes using YAML front matter (FIXME)
 - `:VisidianParaGen` - Setup PARA folders in your vault.
 - `:VisidianHelp` - Open this help document.
-- `:VisidianSync` - Sync your Vault with a Remote.
+- `:VisidianSync` - Sync your Vault with a Remote (FIXME)
 - `:VisidianToggleAutoSync` - Toggle Auto Sync.
-- `:VisidianToggleBookmarking` - Toggle Bookmarking.
-- `:VisidianTogglePreview` - Toggle Markdown Preview.
+- `:VisidianTogglePreview` - Toggle Markdown Preview.(FIXME)
 - `:VisidianToggleSidebar` - Toggle Sidebar. (TODO)
-- `:VisidianSearch` - Search for notes in the vault.(FIXME)
-- `:VisidianSort` - Intelligent Sorting of Notes (TODO)
+- `:VisidianSearch` - Search for notes in the vault.
+- `:VisidianSort` - Intelligent Sorting of Notes (FIXME)
 - `:VisidianSaveSession` - Manually save the current session state
 - `:VisidianLoadSession` - Manually load a saved session state
 
@@ -135,15 +133,14 @@ to adjust Visidian's structure to match your personal productivity style.
 - **Keyboard Shortcuts**: Map commands to shortcuts for efficiency. For example:
 
 ```
-nnoremap <leader>d :VisidianDashboard<CR>
-nnoremap <leader>n :VisidianNewFile<CR>
+nnoremap <leader>d :VisidianDash<CR>
+nnoremap <leader>n :VisidianFile<CR>
 ```
 - **Note Naming**: Use consistent naming conventions or a date system for your
 notes to make searching and sorting easier.
 
 Remember, Visidian is meant to enhance your productivity, not to be a rigid
 system. Experiment with different setups until you find what works best for you.
-
 
 ## Requirements
 While Visidian is designed to work out of the box, it's recommended to have the
@@ -155,7 +152,7 @@ following installed:
   or [Instant Markdown Vim](https://vimawesome.com/plugin/instant-markdown-vim) 
   -- for live previews in your browser.
 * **Git**: For syncing your vault with a remote repository
-* **Rsync: For syncing your vault with a remote server.
+* **Rsync**: For syncing your vault with a remote server.
 * **FZF**: For fuzzy searching within your vault.
 * **Ripgrep**: For fast searching within your vault.
 * **Python 3**: For running the markdown previewer.
@@ -164,7 +161,7 @@ following installed:
 * **YAML parser**: For parsing YAML front matter in your notes.
 * **YAML Front Matter**: For linking notes and adding metadata.
 * **A Markdown Linter**: For checking your markdown files for errors.
--- Vim-Markdown (https://github.com/preservim/vim-markdown) is a good option.
+* **Vim-Markdown** (https://github.com/preservim/vim-markdown) is a good option.
 * **A Spell Checker**: For catching typos and errors in your notes.
 
 ## Contributing
