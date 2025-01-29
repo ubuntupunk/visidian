@@ -1037,15 +1037,112 @@ function! visidian#toggle_preview()
 endfunction
 
 " FUNCTION: Create a new folder
-function! visidian#new_folder()
-    let folder_name = input("Enter new folder name: ")
-    if folder_name != ''
-        let full_path = g:visidian_vault_path . folder_name
-        call mkdir(full_path, 'p')
-        echo "Folder created at " . full_path
-    else
-        echo "No folder name provided."
+function! visidian#new_folder() abort
+    " Check if vault exists
+    if empty(g:visidian_vault_path)
+        echohl ErrorMsg
+        echo "No vault path set. Please create or set a vault first."
+        echohl None
+        return 0
     endif
+
+    " Normalize vault path
+    let vault_path = substitute(g:visidian_vault_path, '[\/]\+$', '', '')
+
+    " Define PARA folders (case-sensitive)
+    let para_folders = ['Projects', 'Areas', 'Resources', 'Archive']
+
+    " Get folder category
+    let category_msg = "Choose category:\n"
+    let i = 1
+    for folder in para_folders
+        let category_msg .= printf("%d) %s\n", i, folder)
+        let i += 1
+    endfor
+    let category_choice = input(category_msg . 'Enter number (1-' . len(para_folders) . '): ')
+    
+    if empty(category_choice)
+        echo "\nCancelled."
+        return 0
+    endif
+
+    let choice_num = str2nr(category_choice)
+    if choice_num < 1 || choice_num > len(para_folders)
+        echo "\nInvalid category. Cancelled."
+        return 0
+    endif
+
+    let category = para_folders[choice_num - 1]
+
+    " Get folder name
+    let folder_name = input('Enter folder name: ')
+    if empty(folder_name)
+        echo "\nCancelled."
+        return 0
+    endif
+
+    " Convert folder name to title case
+    let folder_parts = split(folder_name, '\s\+\|[_-]\+')
+    let folder_titled = map(folder_parts, 'toupper(v:val[0]) . tolower(v:val[1:])')
+    let folder_name = join(folder_titled, '')
+
+    " Construct the full path
+    let folder_path = vault_path . '/' . category . '/' . folder_name
+
+    " Check if folder already exists
+    if isdirectory(folder_path)
+        echohl WarningMsg
+        echo "\nFolder already exists: " . folder_path
+        echohl None
+        return 0
+    endif
+
+    " Create the folder
+    try
+        call mkdir(folder_path, 'p')
+        echo "\nCreated folder: " . folder_path
+
+        " Create example note in the new folder
+        let example_path = folder_path . '/README.md'
+        let current_time = strftime('%Y-%m-%d %H:%M:%S')
+        let content = [
+            \ '---',
+            \ 'title: ' . folder_name . ' Overview',
+            \ 'date: ' . current_time,
+            \ 'category: ' . category,
+            \ 'subcategory: ' . folder_name,
+            \ 'tags: []',
+            \ 'status: active',
+            \ 'links: []',
+            \ '---',
+            \ '',
+            \ '# ' . folder_name . ' Overview',
+            \ '',
+            \ '## Purpose',
+            \ '',
+            \ 'Describe the purpose of this folder here.',
+            \ '',
+            \ '## Contents',
+            \ '',
+            \ '- List important files and subfolders',
+            \ '- Add brief descriptions',
+            \ '',
+            \ ]
+
+        call writefile(content, example_path)
+        echo "Created README.md in new folder"
+        
+        " Open the new README in the current window
+        execute 'edit ' . fnameescape(example_path)
+        
+        return 1
+    catch
+        echohl ErrorMsg
+        echo "\nError creating folder: " . folder_path
+        echo v:exception
+        echohl None
+        return 0
+    endtry
 endfunction
 
 " FUNCTION: Call Link notes
