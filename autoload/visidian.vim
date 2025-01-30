@@ -901,7 +901,7 @@ function! visidian#new_md_file() abort
     " Check if vault exists
     if empty(g:visidian_vault_path)
         echohl ErrorMsg
-        echo "No vault path set. Please create or set a vault first."
+        echo "No vault path set. Please create or load a vault first."
         echohl None
         return 0
     endif
@@ -1043,7 +1043,7 @@ function! visidian#new_folder() abort
     " Check if vault exists
     if empty(g:visidian_vault_path)
         echohl ErrorMsg
-        echo "No vault path set. Please create or set a vault first."
+        echo "No vault path set. Please create or load a vault first."
         echohl None
         return 0
     endif
@@ -1160,7 +1160,7 @@ endfunction
 " FUNCTION: Generate PKM folders using the PARA method
 function! visidian#para()
     if g:visidian_vault_path == ''
-        echoerr "No vault path set. Please create or set a vault first."
+        echoerr "No vault path set. Please create or load a vault first."
         return
     endif
 
