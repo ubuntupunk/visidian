@@ -812,10 +812,10 @@ function! s:has_nerdfont() abort
 endfunction
 
 " map key to call dashboard
-nnoremap <silent> <leader>v :call visidian#dashboard()<CR>
+nnoremap <silent> <leader>1 :call visidian#dashboard()<CR>
 
 " If you want to open only the menu without the full dashboard:
-nnoremap <silent> <leader>vm :call visidian#menu()<CR>
+nnoremap <silent> <leader>2 :call visidian#menu()<CR>
 
 " FUNCTION: clear cache of non-existent files
 function! visidian#clear_cache()
