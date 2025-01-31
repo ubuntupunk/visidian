@@ -1,0 +1,6 @@
+.aider*
+.env
+--read-only=*
+prompt.md
+rules.md
+
