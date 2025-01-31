@@ -752,7 +752,7 @@ endfunction
 " FUNCTION: Menu filter
 function! s:menu_filter(winid, key) abort
     " Get current line number
-    let current_line = popup_getpos(a:winid).firstline
+    "let current_line = popup_getpos(a:winid).firstline
     let max_line = len(s:current_menu_items)
 
     " Handle key input
@@ -802,6 +802,41 @@ function! s:menu_callback(winid, result) abort
     if exists('s:current_popup_id')
         unlet s:current_popup_id
     endif
+endfunction
+
+" FUNCTION SIGN-TODO
+ function! SignTodo()  
+ execute(":sign define todo text=!! texth1=Todo")
+ execute(":sign place ".line(".")." line=".line(".")." name=todo file=".expand("%:p"))
+ endfunction
+ map <F3> :call SignTodo()<CR>
+
+" FUNCTION SIGN-ALL-TODO-LINES
+function! SignLines() range
+  let n = a:firstline
+  execute(":sign define todo text=!! texthl=Todo")
+  while n <= a:lastline
+    if getline(n) =~ '\(TODO\)'
+      execute(":sign place ".n." line=".n." name=todo file=".expand("%:p"))
+    endif
+    let n = n + 1
+  endwhile  
+endfunction
+map <F4> :call SignLines()<CR>
+
+" FUNCTION VisidianToggleSidebar
+function! visidian#toggle_sidebar()
+"  if exists('g:visidian_sidebar_open') && g:visidian_sidebar_open
+"    let g:visidian_sidebar_open = 0
+"    wincmd w
+"    vertical resize -40
+"  else
+"    let g:visidian_sidebar_open = 1
+"    wincmd w
+"    vertical resize +40
+"  elseif 
+  NERDTreeToggle
+"  endif
 endfunction
 
 " FUNCTION: Check if Nerd Fonts are available
