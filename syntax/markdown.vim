@@ -61,6 +61,11 @@ endfunction
 let g:visidian_todo_keywords = ['TODO', 'DONE', 'FIXME', 'XXX', '|', 'NOTE']
 call s:ReadTodoKeywords(g:visidian_todo_keywords)
 
+" GTD-style token highlighting
+syntax match TodoDate       '\d\{2,4\}-\d\{2\}-\d\{2\}'       contains=VisidianTodo
+syntax match TodoDueDate    'due:\d\{2,4\}-\d\{2\}-\d\{2\}'   contains=VisidianTodo
+syntax match TodoProject    '\(^\|\W\)+[^[:blank:]]\+'        contains=VisidianTodo
+syntax match TodoContext    '\(^\|\W\)@[^[:blank:]]\+'        contains=VisidianTodo
 
 " Emoji tickbox support for TODO lists
 syn match visidian_todo_checkbox '\v(☐|☑|✘)'
@@ -125,4 +130,4 @@ syn region todoFold start="\v(☐|☑|✘|TODO|DONE|FIXME|XXX)\s+" end="\n\ze\n"
 
 setlocal foldmethod=syntax
 setlocal foldlevel=1  " Start with all folds open
-
+setlocal foldtext=visidian#foldtext#MarkdownFoldText()

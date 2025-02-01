@@ -839,21 +839,33 @@ endfunction
 
 " FUNCTION to set custom statusline for markdown files
 function! s:SetMarkdownStatusline()
+   echomsg "Setting markdown statusline..."
     if s:IsMarkdownFile()
+      echomsg "File is markdown, setting statusline..."
         " Set statusline:
         " - %m: modified flag
         " - %{strftime('%c', getftime(expand('%')))}: File last modified timestamp
         " - Plugin name
-        setlocal statusline=%m%{strftime('%c',getftime(expand('%')))}\ Visidian\ Project
+      call timer_start(10, {-> execute('setlocal statusline=%m%{strftime('%c',getftime(expand('%')))}\ Visidian\ Project')})
     endif
 endfunction
 
 " Autocommand to set statusline when entering a buffer or when the filetype changes
 augroup markdown_statusline
     autocmd!
-    autocmd BufEnter,FileType * call s:SetMarkdownStatusline()
+    autocmd FileType markdown call SetMarkdownStatusline()
 augroup END
 
+" Function to check if the current buffer is a markdown file (global version)
+function! SetMarkdownStatusline()
+    if &filetype == 'markdown'
+        " Set statusline:
+        " - %m: modified flag
+        " - %{strftime('%c', getftime(expand('%')))}: File last modified timestamp
+        " - Plugin name
+        setlocal statusline=%m%{strftime('%c',getftime(expand('%')))}\ Visidian\ Plugin
+    endif
+endfunction
 
 " FUNCTION VisidianToggleSidebar
 function! visidian#toggle_sidebar()
@@ -1242,6 +1254,33 @@ function! visidian#para()
     endfor
 endfunction
 
+" Custom command for generating tags for Markdown and YAML
+" command! -nargs=0 VisidianGenerateTags call VisidianGenerateTags()
+
+" FUNCTION: Generate tags for Markdown and YAML files
+function! VisidianGenerateTags()
+  let ctags_file = expand('%:p:h') . '/tags'
+  let ctags_config = tempname()
+  call writefile([
+      \ '--langdef=markdownyaml',
+      \ '--langmap=markdownyaml:.md',
+      \ '--regex-markdownyaml=/^---$(.*?)---$/m,metadata/',
+      \ '--regex-markdownyaml=/^#+\s+(.*)/\1/h,heading/',
+      \ '--regex-markdownyaml=/^[ \t]*```[a-z]*\s*$/\n/,codeblock/',
+      \ '--regex-markdownyaml=/^>{3}\s+(.*)/1/,pullquote/',
+      \ '--regex-markdownyaml=/!\[(.*?)\]\((.*?)\)/2/,image/',
+      \ '--regex-markdownyaml/\[(.*?)\]\((.*?)\)/2/,link/'
+      \ ], ctags_config)
+
+  let cmd = '[ctags -R](https://x.com/i/grok?text=ctags%20-R) --languages=markdownyaml [--fields=+l](https://x.com/i/grok?text=--fields%3D%2Bl) --extra=+q -f ' . ctags_file . ' ' . expand('%:p:h') . ' --options=' . ctags_config
+  echo 'Generating tags...'
+  [silent execute](https://x.com/i/grok?text=silent%20execute) '!' . cmd
+  echo 'Tags generated in ' . ctags_file
+  call [delete(ctags_config)](https://x.com/i/grok?text=delete(ctags_config))
+  silent! execute 'set tags=' . ctags_file
+endfunction
+
+
 " FUNCTION: Help
 function! visidian#help()
     let paths = [
@@ -1310,3 +1349,5 @@ augroup VisidianSession
     autocmd!
     autocmd VimLeave * call visidian#save_session()
 augroup END
+
+
