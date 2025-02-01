@@ -1280,13 +1280,13 @@ function! VisidianGenerateTags()
       \ '--regex-markdownyaml/\[(.*?)\]\((.*?)\)/2/,link/'
       \ ], ctags_config)
 
+  "FIXME: enter the vault_root variable instead of expand('%:p:h')
   echo 'Generating tags...'
-  let cmd = '[ctags -R] --languages=markdownyaml [--fields=+l] --extra=+q -f ' . ctags_file . ' ' . expand('%:p:h') . ' --options=' . ctags_config
-  let output = system(cmd)
+  let cmd = 'ctags -R --languages=markdownyaml --fields=+l --extra=+q -f ' . ctags_file . ' ' . expand('%:p:h') . ' --options=' . ctags_config
+  let output = systemlist(cmd)
   echo 'Tags generated in ' . ctags_file
-  call [delete(ctags_config)]
+  call delete(ctags_config)
 
-  
   if v:shell_error == 0
     echo 'Tags generated successfully in ' . ctags_file
   silent! execute 'set tags=' . ctags_file
