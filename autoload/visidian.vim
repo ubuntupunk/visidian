@@ -1267,25 +1267,32 @@ function! VisidianGenerateTags()
     return
   endif
 
-  let ctags_file = expand('%:p:h') . '/tags'
-  let ctags_config = tempname()
-  call writefile([
-      \ '--langdef=markdownyaml',
-      \ '--langmap=markdownyaml:.md',
-      \ '--regex-markdownyaml=/^---$(.*?)---$/m,metadata/',
-      \ '--regex-markdownyaml=/^#+\s+(.*)/\1/h,heading/',
-      \ '--regex-markdownyaml=/^[ \t]*```[a-z]*\s*$/\n/,codeblock/',
-      \ '--regex-markdownyaml=/^>{3}\s+(.*)/1/,pullquote/',
-      \ '--regex-markdownyaml=/!\[(.*?)\]\((.*?)\)/2/,image/',
-      \ '--regex-markdownyaml/\[(.*?)\]\((.*?)\)/2/,link/'
-      \ ], ctags_config)
+  " Use the global vault path variable
+  if !exists('g:visidian_vault_path')
+    echoerr "Error: g:visidian_vault_path is not defined."
+    return
+  endif
+  let vault_root = substitute(g:visidian_vault_path, '+$', '', '')
+  let ctags_file = vault_root . '/tags'
+"  We can use a temporary file to store the ctags configuration, but it not
+"  working as expected. So, we will use the default configuration.
+"  let ctags_config = tempname()
+"  call writefile([
+"    \ '--regex-Markdown=/^---$(.*?)---$/m,metadata/',
+"    \ '--regex-Markdown=/^#+\s+(.*)/\1/h,heading/',
+"    \ '--regex-Markdown=/^[ \t]*```[a-z]*\s*$/\n/,c,codeblock/',
+"    \ '--regex-Markdown=/^>{3}\s+(.*)/1/,p,pullquote/',
+"    \ '--regex-Markdown=/!\[(.*?)\]\((.*?)\)/2/,i,image/',
+"    \ '--regex-Markdown/\[(.*?)\]\((.*?)\)/2/,l,link/'
+"    \ ], ctags_config)
 
-  "FIXME: enter the vault_root variable instead of expand('%:p:h')
   echo 'Generating tags...'
-  let cmd = 'ctags -R --languages=markdownyaml --fields=+l --extra=+q -f ' . ctags_file . ' ' . expand('%:p:h') . ' --options=' . ctags_config
+  " Specify both Markdown and YAML
+" let cmd = 'ctags -R --languages=Markdown,Yaml --fields=+l --extras=+q -f ' . ctags_file . ' ' . vault_root . ' --options=' . ctags_config
+  let cmd = 'ctags -R --languages=Markdown,Yaml --fields=+l --extras=+q -f ' . ctags_file . ' ' . vault_root
   let output = systemlist(cmd)
   echo 'Tags generated in ' . ctags_file
-  call delete(ctags_config)
+"  call delete(ctags_config)
 
   if v:shell_error == 0
     echo 'Tags generated successfully in ' . ctags_file
