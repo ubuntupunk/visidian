@@ -804,9 +804,16 @@ function! s:menu_callback(winid, result) abort
     endif
 endfunction
 
+
+" FUNCTION: Highlight Todo
+ function! HighlightTodo()
+ execute(":highlight TODO ctermbg=grey ctermfg=white")
+ endfunction
+map <F7> :call HighlightTodo()<CR>
+
 " FUNCTION SIGN-TODO
  function! SignTodo()  
- execute(":sign define todo text=!! texth1=Todo")
+ execute(":sign define todo text=!! texthl=Todo")
  execute(":sign place ".line(".")." line=".line(".")." name=todo file=".expand("%:p"))
  endfunction
  map <F3> :call SignTodo()<CR>
@@ -816,13 +823,37 @@ function! SignLines() range
   let n = a:firstline
   execute(":sign define todo text=!! texthl=Todo")
   while n <= a:lastline
-    if getline(n) =~ '\(TODO\)'
+    if getline(n) =~ '\(TODO\FIXME\|XXX\)'
       execute(":sign place ".n." line=".n." name=todo file=".expand("%:p"))
     endif
     let n = n + 1
   endwhile  
 endfunction
 map <F4> :call SignLines()<CR>
+
+
+" FUNCTION check if the current buffer is a markdown file
+function! s:IsMarkdownFile()
+    return &filetype == 'markdown'
+endfunction
+
+" FUNCTION to set custom statusline for markdown files
+function! s:SetMarkdownStatusline()
+    if s:IsMarkdownFile()
+        " Set statusline:
+        " - %m: modified flag
+        " - %{strftime('%c', getftime(expand('%')))}: File last modified timestamp
+        " - Plugin name
+        setlocal statusline=%m%{strftime('%c',getftime(expand('%')))}\ Visidian\ Project
+    endif
+endfunction
+
+" Autocommand to set statusline when entering a buffer or when the filetype changes
+augroup markdown_statusline
+    autocmd!
+    autocmd BufEnter,FileType * call s:SetMarkdownStatusline()
+augroup END
+
 
 " FUNCTION VisidianToggleSidebar
 function! visidian#toggle_sidebar()
@@ -831,6 +862,7 @@ function! visidian#toggle_sidebar()
 "    wincmd w
 "    vertical resize -40
 "  else
+
 "    let g:visidian_sidebar_open = 1
 "    wincmd w
 "    vertical resize +40
