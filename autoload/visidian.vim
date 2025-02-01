@@ -1254,11 +1254,19 @@ function! visidian#para()
     endfor
 endfunction
 
-" Custom command for generating tags for Markdown and YAML
-" command! -nargs=0 VisidianGenerateTags call VisidianGenerateTags()
-
 " FUNCTION: Generate tags for Markdown and YAML files
 function! VisidianGenerateTags()
+  if executable('ctags') == 0
+    echoerr "Ctags not found. Please install ctags using your package manager:"
+    if has('unix')
+      echo "  - On Ubuntu/Debian: sudo apt-get install universal-ctags"
+      echo "  - On macOS with Homebrew: brew install universal-ctags"
+    elseif has('win32')
+      echo "  - On Windows with Chocolatey: choco install ctags"
+    endif
+    return
+  endif
+
   let ctags_file = expand('%:p:h') . '/tags'
   let ctags_config = tempname()
   call writefile([
@@ -1272,14 +1280,87 @@ function! VisidianGenerateTags()
       \ '--regex-markdownyaml/\[(.*?)\]\((.*?)\)/2/,link/'
       \ ], ctags_config)
 
-  let cmd = '[ctags -R](https://x.com/i/grok?text=ctags%20-R) --languages=markdownyaml [--fields=+l](https://x.com/i/grok?text=--fields%3D%2Bl) --extra=+q -f ' . ctags_file . ' ' . expand('%:p:h') . ' --options=' . ctags_config
   echo 'Generating tags...'
-  [silent execute](https://x.com/i/grok?text=silent%20execute) '!' . cmd
+  let cmd = '[ctags -R] --languages=markdownyaml [--fields=+l] --extra=+q -f ' . ctags_file . ' ' . expand('%:p:h') . ' --options=' . ctags_config
+  let output = system(cmd)
   echo 'Tags generated in ' . ctags_file
-  call [delete(ctags_config)](https://x.com/i/grok?text=delete(ctags_config))
+  call [delete(ctags_config)]
+
+  
+  if v:shell_error == 0
+    echo 'Tags generated successfully in ' . ctags_file
   silent! execute 'set tags=' . ctags_file
+  else
+    echoerr 'Failed to generate tags. Error output: '
+    echo  output
+  endif
 endfunction
 
+" FUNCTION Browse Tags
+function! VisidianBrowseTags()
+  " Open a new vertical split for tag browsing
+  vertical new
+  setlocal buftype=nofile bufhidden=hide noswapfile nowrap
+  setlocal modifiable
+
+  " Name the buffer
+  silent file VisidianTags
+
+  " Get tags from the tags file
+  let tags = systemlist('cat '.expand('%:p:h').'/tags | sort')
+
+  if empty(tags)
+    call setline(1, 'No tags found.')
+  else
+    " Write tags to buffer
+    call setline(1, tags)
+    " Syntax matching for different parts of the tag
+    syntax match VisidianTagTitle /^[^ \t]\+\ze\t/ 
+    syntax match VisidianTagFile /\t\zs[^ \t]\+\ze\t/ 
+    syntax match VisidianTagLineNr /\t\zs\d\+\ze;/ 
+    syntax match VisidianTagKind /;\zs[^ \t]\+\ze$/ 
+
+    " Link to highlight groups
+    highlight link VisidianTagTitle Title
+    highlight VisidianTagFile ctermfg=DarkGray guifg=#666666
+    highlight VisidianTagLineNr ctermfg=Yellow guifg=#B8BB26
+    highlight VisidianTagKind ctermfg=LightBlue guifg=#83A598
+  endif
+
+    " Set up key mappings for navigation and filtering
+    nnoremap <buffer> <silent> <CR> :call VisidianJumpToTag()<CR>
+    nnoremap <buffer> <silent> / :call VisidianFilterTags()<CR>
+    nnoremap <buffer> <silent> q :q<CR>
+    nnoremap <buffer> <silent> <C-n> :<C-u>exe "normal! " . v:count1 . "j"<CR>
+    nnoremap <buffer> <silent> <C-p> :<C-u>exe "normal! " . v:count1 . "k"<CR>
+
+    " Highlight tags for better readability
+    syntax match Tag /^[^ \t]\+\t/ 
+    highlight link Tag Title
+  endif
+
+  setlocal nomodifiable
+endfunction
+
+"FUNCTION Jumpt to Tag
+function! VisidianJumpToTag()
+  let line = getline('.')
+  if line =~ '^!'
+    " Handle special cases like image or link tags if needed
+    echo "Special tag type, not jumpable"
+    return
+  endif
+  let tag = split(line, "\t")[0]
+  silent! exe "tag " . tag
+endfunction
+
+"FUNCTION Filter Tags
+function! VisidianFilterTags()
+  setlocal modifiable
+  let @/ = input('Filter tags: ')
+  silent! exe '%s/\v(.*)@<!' . @/ . '/'
+  setlocal nomodifiable
+endfunction
 
 " FUNCTION: Help
 function! visidian#help()
