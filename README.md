@@ -72,6 +72,7 @@ Open Vim and run:
 - `:VisidianToggleAutoSync` - Toggle Auto Sync.
 - `:VisidianTogglePreview` - Toggle Markdown Preview.(FIXME)
 - `:VisidianToggleSidebar` - Toggle Sidebar. 
+- `:VisidianToggleSpell` - Toggle Spelling/Thesaurus
 - `:VisidianSearch` - Search for notes in the vault.
 - `:VisidianSort` - Intelligent Sorting of Notes (FIXME)
 - `:VisidianSaveSession` - Manually save the current session state
@@ -160,7 +161,7 @@ following installed:
 * **Ripgrep**: For fast searching within your vault.
 * **Python 3**: For running the markdown previewer.
 * **Pandoc**: For converting markdown files to other formats.
-* **Ctags**: For generating tags for your notes. universal-ctags is the
+* **Ctags**: For generating tags for your notes. Please install [universal-ctags](https://github.com/universal-ctags/ctags) the
 successor to the exhuberant-ctags project, available via most package managers.
 * **YAML parser**: For parsing YAML front matter in your notes.
 * **A Markdown Linter**: For checking your markdown files for errors.
