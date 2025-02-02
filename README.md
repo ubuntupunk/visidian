@@ -98,7 +98,7 @@ The PARA method, developed by Tiago Forte, stands for Projects, Areas, Resources
 - **Resources**: Topics of interest or areas of study, not tied to immediate action.
 - **Archives**: Completed projects, expired areas, or old resources.
 
-To use PARA in Visidian, run `:VisidianPara` to create these folder structures in your vault.
+To use PARA in Visidian, run `:VisidianParaGen` to create these folder structures in your vault.
 
 ---
 
@@ -160,9 +160,9 @@ following installed:
 * **Ripgrep**: For fast searching within your vault.
 * **Python 3**: For running the markdown previewer.
 * **Pandoc**: For converting markdown files to other formats.
-* **Ctags**: For generating tags for your notes.
+* **Ctags**: For generating tags for your notes. universal-ctags is the
+successor to the exhuberant-ctags project, available via most package managers.
 * **YAML parser**: For parsing YAML front matter in your notes.
-* **YAML Front Matter**: For linking notes and adding metadata.
 * **A Markdown Linter**: For checking your markdown files for errors.
 * **Vim-Markdown** (https://github.com/preservim/vim-markdown) is a good option.
 * **A Spell Checker**: For catching typos and errors in your notes.
