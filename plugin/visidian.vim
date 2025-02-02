@@ -43,5 +43,5 @@ command! -nargs=0 VisidianChooseSession call visidian#choose_session()
 command! -nargs=0 VisidianClearSessions call visidian#clear_sessions()
 
 " Generate & Browse Ctags
-command! -nargs=0 VisidianGenerateTags call VisidianGenerateTags()
-command! -nargs=0 VisidianBrowseTags call VisidianBrowseTags()
+command! -nargs=0 VisidianGenCtags call VisidianGenerateTags()
+command! -nargs=0 VisidianBrowseCtags call VisidianBrowseTags()

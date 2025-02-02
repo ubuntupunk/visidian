@@ -1340,7 +1340,6 @@ function! VisidianBrowseTags()
     highlight VisidianTagLineNr ctermfg=Yellow guifg=#B8BB26
     highlight VisidianTagKind ctermfg=LightBlue guifg=#83A598
   
-
     " Set up key mappings for navigation and filtering
     nnoremap <buffer> <silent> <CR> :call VisidianJumpToTag()<CR>
     nnoremap <buffer> <silent> / :call VisidianFilterTags()<CR>
@@ -1359,27 +1358,32 @@ endfunction
 "FUNCTION Jump to Tag
 function! VisidianJumpToTag()
   let line = getline('.')
+  echom "Attempting to jump:" . line
   if line =~ '^!'
     " Handle special cases like image or link tags if needed
     echo "Special tag type, not jumpable"
     return
   endif
-
-let parts = split(line, "\t")
+  let parts = split(line, "\t")
   if len(parts) < 3
     echo "Invalid tag line format"
     return
   endif
   let tag_name = parts[0]
   let tag_file = parts[1]
-  let tag_address = parts[2]
-  
+"  let tag_address = substitute(parts[2], '[[:cntrl:]]', '', 'g')  " Remove control characters
+ let tag_address = substitute(parts[2], '[\r\n[:cntrl:]]', '', 'g')  " Remove CR, LF, and all control characters
+  let tag_address = substitute(tag_address, '\s\+$', '', '')  " Remove trailing whitespace
+
  " let tag = split(line, "\t")[0]
  " silent! exe "tag " . tag
  " Check if we have a full path or need to make it relative to the vault
   if tag_file !~# '^/'
     let tag_file = g:visidian_vault_path . '/' . tag_file
   endif
+
+  "Make sure Vim knows you have tags
+   set tags+= g:visidian_vault_path . '/' . tag_file
 
   " Open the file and jump to the address
   try
@@ -1388,12 +1392,22 @@ let parts = split(line, "\t")
     if tag_address =~# '^\d\+$'
       exe tag_address
     else
-      " If it's a search pattern, use it
-      let @/ = substitute(tag_address, '^/', '', '')
-      normal n
-    endif
+      " Otherwise treat it as a search pattern
+      let @/ = substitute(tag_address, ';".*', '', '')
+      if search(@/, 'w') == 0
+        echo "Pattern not found: " . @/
+      else
+        normal n
+      endif
+    endif  
+  catch /^Vim\%((\a\+)\)\=:E486/
+    " Suppress Pattern not found error
+  catch /^Vim\%((\a\+)\)\=:E488/
+    " Suppress Trailing characters error
   catch
-    echo "Error opening file: " . tag_file
+    echoh1 ErrorMsg
+    echo "Error opening file: " . tag_file . " - " . v:exception
+    echoh1 None
   endtry
 endfunction
 
@@ -1413,6 +1427,7 @@ function! VisidianFilterTags()
   endif
   setlocal nomodifiable
 endfunction
+
 
 " FUNCTION: Help
 function! visidian#help()
