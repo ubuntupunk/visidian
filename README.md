@@ -64,11 +64,14 @@ Open Vim and run:
 - `:VisidianVault` - Create a new vault.
 - `:VisidianLink` - Display connections between notes using YAML front matter (FIXME)
 - `:VisidianParaGen` - Setup PARA folders in your vault.
+- `:VisidianGenTags` - Generate Yaml Tags List in your vault. (TODO)
+- `:VisidianGenCtags` - Generate Ctags File in your vault.
+- `:VisidianBrowseCtags` - Browse Ctags in your vault.
 - `:VisidianHelp` - Open this help document.
 - `:VisidianSync` - Sync your Vault with a Remote (FIXME)
 - `:VisidianToggleAutoSync` - Toggle Auto Sync.
 - `:VisidianTogglePreview` - Toggle Markdown Preview.(FIXME)
-- `:VisidianToggleSidebar` - Toggle Sidebar. (TODO)
+- `:VisidianToggleSidebar` - Toggle Sidebar. 
 - `:VisidianSearch` - Search for notes in the vault.
 - `:VisidianSort` - Intelligent Sorting of Notes (FIXME)
 - `:VisidianSaveSession` - Manually save the current session state
