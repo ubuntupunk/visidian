@@ -29,16 +29,19 @@ function! visidian#ensure_session_dir() abort
     endif
 endfunction
 
+" FUNCTION: Get Session File
 function! visidian#get_session_file() abort
     let safe_name = substitute(g:visidian_vault_path, '[\/]', '_', 'g')
     return g:visidian_session_dir . safe_name . '.vim'
 endfunction
 
+" FUNCTION: Get Session History
 function! visidian#get_session_history_file() abort
     let safe_name = substitute(g:visidian_vault_path, '[\/]', '_', 'g')
     return g:visidian_session_dir . safe_name . '.history'
 endfunction
 
+" FUNCTION: Rotate Session History
 function! s:rotate_session_history(new_session) abort
     let history_file = visidian#get_session_history_file()
     let sessions = []
@@ -58,6 +61,7 @@ function! s:rotate_session_history(new_session) abort
     call writefile(sessions, history_file)
 endfunction
 
+" FUNCTION: List Sessions
 function! visidian#list_sessions() abort
     let history_file = visidian#get_session_history_file()
     if !filereadable(history_file)
@@ -86,6 +90,7 @@ function! visidian#list_sessions() abort
     return sessions
 endfunction
 
+" FUNCTION: Choose Session
 function! visidian#choose_session() abort
     let sessions = visidian#list_sessions()
     if empty(sessions)
@@ -116,6 +121,7 @@ function! visidian#choose_session() abort
     return 1
 endfunction
 
+" FUNCTION: Clear Session
 function! visidian#clear_sessions() abort
     let history_file = visidian#get_session_history_file()
     if !filereadable(history_file)
@@ -132,6 +138,7 @@ function! visidian#clear_sessions() abort
     endif
 endfunction
 
+" FUNCTION: Save session
 function! visidian#save_session() abort
     if g:visidian_auto_save_session && !empty(g:visidian_vault_path)
         call visidian#ensure_session_dir()
@@ -164,6 +171,7 @@ function! visidian#save_session() abort
     return 0
 endfunction
 
+" FUNCTION: Load Session
 function! visidian#load_session() abort
     if !empty(g:visidian_vault_path)
         let session_file = visidian#get_session_file()
@@ -867,20 +875,31 @@ function! SetMarkdownStatusline()
     endif
 endfunction
 
+
 " FUNCTION VisidianToggleSidebar
 function! visidian#toggle_sidebar()
-"  if exists('g:visidian_sidebar_open') && g:visidian_sidebar_open
-"    let g:visidian_sidebar_open = 0
-"    wincmd w
-"    vertical resize -40
-"  else
-
-"    let g:visidian_sidebar_open = 1
-"    wincmd w
-"    vertical resize +40
-"  elseif 
-  NERDTreeToggle
-"  endif
+  if exists('g:visidian_sidebar_open') && g:visidian_sidebar_open
+    let g:visidian_sidebar_open = 0
+    " Close the sidebar
+    if exists(':NERDTreeToggle')
+      NERDTreeToggle
+    else
+      " Assuming netrw is in the rightmost window
+      exe "wincmd L"
+      if &filetype == 'netrw'
+        close
+      endif
+    endif
+  else
+    let g:visidian_sidebar_open = 1
+    " Open the sidebar
+    if exists(':NERDTreeToggle')
+      NERDTreeToggle
+    else
+      " Open netrw if NERDTree isn't available
+      Vexplore
+    endif
+  endif
 endfunction
 
 " FUNCTION: Check if Nerd Fonts are available
@@ -1253,6 +1272,46 @@ function! visidian#para()
         endtry
     endfor
 endfunction
+
+" FUNCTION: Toggle Spelling, Thesaurus
+function! visidian#toggle_spell()
+  " File types where spell checking might be relevant
+  if &filetype =~ '\v^(markdown|tex|text)$'
+    if &spell
+      setlocal nospell
+      setlocal thesaurus=
+      echo "Spell checking and Thesaurus disabled"
+    else
+      setlocal spell
+      " Ensure spellfile is set
+      if empty(&spellfile)
+        setlocal spellfile=~/.vim/spell/en.utf-8.add
+      endif
+      " Try to find the thesaurus file in different locations
+      let thesaurus_path = ""
+      for dir in ['~/.vim/plugin/','~/.vim/spell', '~/.vim/', '~/.config/nvim/', '~/.vim_runtime/sources_non_forked/visidian.vim']
+        if filereadable(expand(dir . 'thesaurus.txt'))
+          let thesaurus_path = expand(dir . 'thesaurus.txt')
+          break
+        endif
+      endfor
+      if !empty(thesaurus_path)
+        setlocal thesaurus+=thesaurus_path
+      else
+        echo "Thesaurus file not found in specified locations."
+      endif
+      echo "Spell checking and Thesaurus enabled"
+    endif
+  else
+    echo "Spell checking and Thesaurus not applicable for this file type"
+  endif
+endfunction
+
+" Enable spell checking by default for relevant file types
+autocmd FileType markdown,tex,text setlocal spell
+
+" Example mapping to toggle spell-checking and thesaurus
+" nnoremap <silent> <leader>s :call visidian#toggle_spell()<CR>
 
 " FUNCTION: Generate tags for Markdown and YAML files
 function! VisidianGenerateTags()

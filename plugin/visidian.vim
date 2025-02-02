@@ -45,3 +45,6 @@ command! -nargs=0 VisidianClearSessions call visidian#clear_sessions()
 " Generate & Browse Ctags
 command! -nargs=0 VisidianGenCtags call VisidianGenerateTags()
 command! -nargs=0 VisidianBrowseCtags call VisidianBrowseTags()
+
+"Toggle Spelling
+command! -nargs=0 VisidianToggleSpell call visidian#toggle_spell()
