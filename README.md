@@ -59,6 +59,7 @@ Open Vim and run:
 ```
 ## Commands
 - `:VisidianDash` - Open the Visidian dashboard.
+- `:VisidianMenu` - Open the Visidian Popup Menu (FIXME)
 - `:VisidianFile` - Create a new markdown file in the vault.
 - `:VisidianFolder` - Create a new folder in the vault.
 - `:VisidianVault` - Create a new vault.
