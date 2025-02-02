@@ -1313,8 +1313,15 @@ function! VisidianBrowseTags()
   " Name the buffer
   silent file VisidianTags
 
+" Use the global vault path variable
+  if !exists('g:visidian_vault_path')
+    call setline(1, "Error: g:visidian_vault_path is not defined.")
+    return
+  endif
+  let vault_root = g:visidian_vault_path
+
   " Get tags from the tags file
-  let tags = systemlist('cat '.expand('%:p:h').'/tags | sort')
+  let tags = systemlist('cat ' . vault_root . '/tags | sort')
 
   if empty(tags)
     call setline(1, 'No tags found.')
@@ -1332,7 +1339,7 @@ function! VisidianBrowseTags()
     highlight VisidianTagFile ctermfg=DarkGray guifg=#666666
     highlight VisidianTagLineNr ctermfg=Yellow guifg=#B8BB26
     highlight VisidianTagKind ctermfg=LightBlue guifg=#83A598
-  endif
+  
 
     " Set up key mappings for navigation and filtering
     nnoremap <buffer> <silent> <CR> :call VisidianJumpToTag()<CR>
@@ -1349,7 +1356,7 @@ function! VisidianBrowseTags()
   setlocal nomodifiable
 endfunction
 
-"FUNCTION Jumpt to Tag
+"FUNCTION Jump to Tag
 function! VisidianJumpToTag()
   let line = getline('.')
   if line =~ '^!'
@@ -1357,15 +1364,53 @@ function! VisidianJumpToTag()
     echo "Special tag type, not jumpable"
     return
   endif
-  let tag = split(line, "\t")[0]
-  silent! exe "tag " . tag
+
+let parts = split(line, "\t")
+  if len(parts) < 3
+    echo "Invalid tag line format"
+    return
+  endif
+  let tag_name = parts[0]
+  let tag_file = parts[1]
+  let tag_address = parts[2]
+  
+ " let tag = split(line, "\t")[0]
+ " silent! exe "tag " . tag
+ " Check if we have a full path or need to make it relative to the vault
+  if tag_file !~# '^/'
+    let tag_file = g:visidian_vault_path . '/' . tag_file
+  endif
+
+  " Open the file and jump to the address
+  try
+    exe 'edit ' . fnameescape(tag_file)
+    " If the tag_address is a line number, jump to it directly
+    if tag_address =~# '^\d\+$'
+      exe tag_address
+    else
+      " If it's a search pattern, use it
+      let @/ = substitute(tag_address, '^/', '', '')
+      normal n
+    endif
+  catch
+    echo "Error opening file: " . tag_file
+  endtry
 endfunction
 
-"FUNCTION Filter Tags
+" FUNCTION Filter Tags
 function! VisidianFilterTags()
   setlocal modifiable
-  let @/ = input('Filter tags: ')
-  silent! exe '%s/\v(.*)@<!' . @/ . '/'
+  let pattern = input('Filter tags: ')
+  if empty(pattern)
+    return
+  endif
+  %d_ " clear current buffer
+  let tags = systemlist('cat ' . g:visidian_vault_path . '/tags | grep -i "' . escape(pattern, '"\') . '" | sort')
+  if empty(tags)
+    call setline(1, "No tags matching '" . pattern . "'")
+  else
+    call setline(1, tags)
+  endif
   setlocal nomodifiable
 endfunction
 
