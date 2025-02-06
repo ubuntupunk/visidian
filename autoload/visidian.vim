@@ -760,10 +760,10 @@ endfunction
 " FUNCTION: Menu filter
 function! s:menu_filter(winid, key) abort
     " Get current line number
-    "let current_line = popup_getpos(a:winid).firstline
-    
-    let current_line = line('.')
-    
+    let pos = popup_getpos(a:winid)
+
+    let current_line = pos.lnum
+
     let max_line = len(s:current_menu_items)
 
     " Handle key input
