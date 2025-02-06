@@ -782,7 +782,7 @@ function! s:menu_filter(winid, key) abort
         return 1
     elseif a:key == "\<CR>" || a:key == ' '
         " Execute the command for the current line
-        let item = s:current_menu_items[current_line - 1]
+        let item = s:current_menu_items[s:current_line - 1]
         echom "Executing command: " . item.cmd
         if item.cmd == 'close'
             call popup_close(a:winid)
