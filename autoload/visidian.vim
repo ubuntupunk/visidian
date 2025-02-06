@@ -803,6 +803,11 @@ endfunction
 
 " FUNCTION: Menu callback
 function! s:menu_callback(winid, result) abort
+" Execute the command associated with the selected menu item
+    if a:result > 0 && a:result <= len(s:current_menu_items)
+        let selected_item = s:current_menu_items[a:result - 1]
+        execute selected_item.cmd
+    endif
     " Clean up menu items
     if exists('s:current_menu_items')
         unlet s:current_menu_items
