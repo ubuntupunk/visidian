@@ -762,10 +762,14 @@ function! s:menu_filter(winid, key) abort
     " Get current line number
     "let pos = popup_getpos(a:winid)
     "let current_line = pos.lnum
+
     " Initialize current line if not already set
-    if !exists('s:current_line')
-        let s:current_line = 1
-    endif
+    "if !exists('s:current_line') 
+    "    let s:current_line = 1
+    "endif
+
+    let s:current_line = 1
+    echom "Initialized current line to: " . s:current_line
 
     let max_line = len(s:current_menu_items)
 
