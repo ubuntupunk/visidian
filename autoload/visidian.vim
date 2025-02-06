@@ -760,9 +760,12 @@ endfunction
 " FUNCTION: Menu filter
 function! s:menu_filter(winid, key) abort
     " Get current line number
-    let pos = popup_getpos(a:winid)
-
-    let current_line = pos.lnum
+    "let pos = popup_getpos(a:winid)
+    "let current_line = pos.lnum
+     
+    if !exists('s:current_line')
+        let s:current_line = 1
+    endif
 
     let max_line = len(s:current_menu_items)
 
