@@ -762,7 +762,7 @@ function! s:menu_filter(winid, key) abort
     " Get current line number
     "let pos = popup_getpos(a:winid)
     "let current_line = pos.lnum
-     
+    " Initialize current line if not already set
     if !exists('s:current_line')
         let s:current_line = 1
     endif
@@ -771,14 +771,19 @@ function! s:menu_filter(winid, key) abort
 
     " Handle key input
     if a:key == 'j' || a:key == "\<Down>"
+        let s:current_line = min([s:current_line + 1, max_line])
+        echom "Current line: " . s:current_line
         call popup_filter_menu(a:winid, "\<Down>")
         return 1
     elseif a:key == 'k' || a:key == "\<Up>"
+        let s:current_line = max([s:current_line - 1, 1])
+        echom "Current line: " . s:current_line
         call popup_filter_menu(a:winid, "\<Up>")
         return 1
     elseif a:key == "\<CR>" || a:key == ' '
         " Execute the command for the current line
         let item = s:current_menu_items[current_line - 1]
+        echom "Executing command: " . item.cmd
         if item.cmd == 'close'
             call popup_close(a:winid)
         else
@@ -796,6 +801,8 @@ function! s:menu_filter(winid, key) abort
     let num = str2nr(a:key)
     if num > 0 && num <= max_line
         let item = s:current_menu_items[num - 1]
+        echom "Executing command: " . item.cmd
+        let s:current_line = num
         call popup_close(a:winid)
         if item.cmd != 'close'
             " Execute command after closing popup to avoid interference
