@@ -637,6 +637,17 @@ endfunction
 
 " FUNCTION: Create popup menu
 function! visidian#menu() abort
+ " Clear any existing menu state
+    if exists('s:current_line')
+        unlet s:current_line
+    endif
+    if exists('s:current_menu_items')
+        unlet s:current_menu_items
+    endif
+    if exists('s:pending_cmd')
+        unlet s:pending_cmd
+    endif
+ 
     " Check if popup feature is available
     if !has('popupwin')
         echohl ErrorMsg
@@ -757,6 +768,31 @@ function! visidian#menu() abort
     call win_execute(popup_winid, 'highlight PopupSelected ctermfg=208 guifg=#fe8019 gui=bold')
 endfunction
 
+
+" Execute menu command safely
+function! s:execute_menu_command(cmd) abort
+    " Store command in a script variable to prevent interference
+    let s:pending_cmd = a:cmd
+    
+    " Clear any existing state
+    if exists('s:current_line')
+        unlet s:current_line
+    endif
+    if exists('s:current_menu_items')
+        unlet s:current_menu_items
+    endif
+    
+    " Execute the command after a brief delay to ensure cleanup
+    call timer_start(50, {-> s:do_execute_command()})
+endfunction
+
+function! s:do_execute_command() abort
+    if exists('s:pending_cmd')
+        execute s:pending_cmd
+        unlet s:pending_cmd
+    endif
+endfunction
+
 " FUNCTION: Menu filter
 function! s:menu_filter(winid, key) abort
     " Get current line number
@@ -791,7 +827,8 @@ function! s:menu_filter(winid, key) abort
         else
             call popup_close(a:winid)
             " Execute command after closing popup to avoid interference
-            call timer_start(10, {-> execute(item.cmd)})
+            "call timer_start(10, {-> execute(item.cmd)})
+            call s:execute_menu_command(item.cmd)
         endif
         return 1
     elseif a:key == 'q' || a:key == "\<Esc>"
@@ -808,7 +845,8 @@ function! s:menu_filter(winid, key) abort
         call popup_close(a:winid)
         if item.cmd != 'close'
             " Execute command after closing popup to avoid interference
-            call timer_start(10, {-> execute(item.cmd)})
+            "call timer_start(10, {-> execute(item.cmd)})
+            call s:execute_menu_command(item.cmd)
         endif
         return 1
     endif
