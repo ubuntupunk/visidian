@@ -113,13 +113,18 @@ function! s:UpdateVisidianStatusLine()
         let l:path = expand('%:p')
         let l:hi_group = ''
         
+        " Debug path matching
+        if g:visidian_debug
+            echom "Statusline Path: " . l:path
+        endif
+        
         if l:path =~? '/Projects/'
             let l:hi_group = '%#VisidianProjects#'
         elseif l:path =~? '/Areas/'
             let l:hi_group = '%#VisidianAreas#'
         elseif l:path =~? '/Resources/'
             let l:hi_group = '%#VisidianResources#'
-        elseif l:path =~? '/Archives/'
+        elseif l:path =~? '/Archive\|Archives/'
             let l:hi_group = '%#VisidianArchives#'
         endif
 

@@ -1003,6 +1003,11 @@ function! visidian#para_status() abort
         return ''
     endif
 
+    " Debug path matching
+    if g:visidian_debug
+        echom "Path: " . l:path
+    endif
+
     " Determine PARA context with colors
     if l:path =~? '/Projects/'
         return '[P]rojects '
@@ -1010,7 +1015,7 @@ function! visidian#para_status() abort
         return '[A]reas '
     elseif l:path =~? '/Resources/'
         return '[R]esources '
-    elseif l:path =~? '/Archives/'
+    elseif l:path =~? '/Archive\|Archives/'
         return '[AR]chives '
     endif
 
