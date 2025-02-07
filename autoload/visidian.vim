@@ -279,17 +279,30 @@ function! visidian#dashboard() abort
         
         " Set up dashboard layout
         let header = [
-            \ '  Visidian - Obsidian for Vim',
+            \ '  _   _ _     _     _ _             ',
+            \ ' | | | (_)   (_)   | (_)            ',
+            \ ' | | | |_ ___ _  __| |_  __ _ _ __  ',
+            \ ' | | | | / __| |/ _` | |/ _` | ''_ \ ',
+            \ ' \ \_/ / \__ \ | (_| | | (_| | | | |',
+            \ '  \___/|_|___/_|\__,_|_|\__,_|_| |_|',
             \ '',
             \ '  Current Vault: ' . g:visidian_vault_path,
             \ '',
-            \ '  Commands:',
-            \ '  [n] :VisidianFile    - New Note',
-            \ '  [f] :VisidianFolder  - New Folder',
-            \ '  [s] :VisidianSearch  - Search Notes',
-            \ '  [l] :VisidianLink    - Link Notes',
-            \ '  [p] :VisidianParaGen - Generate PARA Folders',
-            \ '  [h] :VisidianHelp    - Help',
+            \ '  Available Commands:',
+            \ '  :VisidianFile    - Create a new note',
+            \ '  :VisidianFolder  - Create a new folder',
+            \ '  :VisidianSearch  - Search through notes',
+            \ '  :VisidianLink    - Link between notes',
+            \ '  :VisidianParaGen - Generate PARA folders',
+            \ '  :VisidianHelp    - Show help',
+            \ '',
+            \ '  Tip: To set up key mappings in your vimrc, use:',
+            \ '  let mapleader = "<your-leader-key>"',
+            \ '  nnoremap <leader>vf :VisidianFile<CR>',
+            \ '  nnoremap <leader>vs :VisidianSearch<CR>',
+            \ '  etc.',
+            \ '',
+            \ '  Pro Tip: Use :call visidian#menu() for a popup menu interface!',
             \ ''
             \ ]
         
@@ -600,7 +613,7 @@ function! visidian#create_vault() abort
         let g:visidian_vault_path = vault_path
         
         " Save configuration
-        if !visidian#write_json({'vault_path': vault_path})
+        if !visidian#write_json({'vault_path': g:visidian_vault_path})
             throw "Failed to save vault configuration"
         endif
         
@@ -1399,7 +1412,7 @@ function! VisidianGenerateTags()
 "    \ '--regex-Markdown=/^#+\s+(.*)/\1/h,heading/',
 "    \ '--regex-Markdown=/^[ \t]*```[a-z]*\s*$/\n/,c,codeblock/',
 "    \ '--regex-Markdown=/^>{3}\s+(.*)/1/,p,pullquote/',
-"    \ '--regex-Markdown=/!\[(.*?)\]\((.*?)\)/2/,i,image/',
+"    \ '--regex-Markdown/\[(.*?)\]\((.*?)\)/2/,i,image/',
 "    \ '--regex-Markdown/\[(.*?)\]\((.*?)\)/2/,l,link/'
 "    \ ], ctags_config)
 
@@ -1614,5 +1627,3 @@ augroup VisidianSession
     autocmd!
     autocmd VimLeave * call visidian#save_session()
 augroup END
-
-

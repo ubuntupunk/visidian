@@ -1,0 +1,58 @@
+*visidian-para.txt*  PARA Method Color System for Visidian
+
+                                                        *visidian-para*
+
+The PARA Color System helps you visually navigate your Visidian vault by color-coding
+different types of notes based on their PARA classification:
+
+    Projects (Pink)     - Active, time-bound projects
+    Areas (Green)      - Ongoing areas of responsibility
+    Resources (Blue)   - Reference materials and knowledge
+    Archives (Gray)    - Inactive or completed items
+
+==============================================================================
+CUSTOMIZATION                                          *visidian-para-colors*
+
+You can customize the colors by setting g:visidian_para_colors in your vimrc:
+>
+    let g:visidian_para_colors = {
+        \ 'projects': {'ctermfg': '168', 'guifg': '#d75f87'},
+        \ 'areas': {'ctermfg': '107', 'guifg': '#87af5f'},
+        \ 'resources': {'ctermfg': '110', 'guifg': '#87afd7'},
+        \ 'archives': {'ctermfg': '242', 'guifg': '#6c6c6c'},
+        \ }
+<
+==============================================================================
+STATUSLINE INTEGRATION                                 *visidian-para-status*
+
+Add PARA context to your statusline by including %{VisidianParaContext()}:
+>
+    set statusline+=%{VisidianParaContext()}
+<
+This will show P/A/R/Ar indicators in your status line based on the current
+file's location in your vault.
+
+==============================================================================
+COLOR MEANINGS                                         *visidian-para-meanings*
+
+Pink (Projects)
+    - Active projects with clear outcomes and deadlines
+    - Time-bound initiatives
+    - Current focus areas
+
+Green (Areas)
+    - Long-term responsibilities
+    - Ongoing commitments
+    - Standards to maintain
+
+Blue (Resources)
+    - Reference materials
+    - Knowledge base
+    - Topic-based information
+
+Gray (Archives)
+    - Completed projects
+    - Inactive areas
+    - Historical reference
+
+ vim:tw=78:ts=8:ft=help:norl:

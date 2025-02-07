@@ -18,6 +18,7 @@ if !exists('g:visidian_debug')
     let g:visidian_debug = 0
 endif
 
+
 " Check search method availability
 let s:has_fzf_plugin = exists('*fzf#run')
 let s:has_system_fzf = executable('fzf')
