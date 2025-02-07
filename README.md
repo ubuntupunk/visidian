@@ -93,16 +93,42 @@ This feature ensures that you can pick up exactly where you left off in each vau
 
 ## PARA Method
 
-The PARA method, developed by Tiago Forte, stands for Projects, Areas, Resources, and Archives. It's a simple, yet effective way to organize information:
+The PARA method, developed by Tiago Forte, stands for Projects, Areas, Resources, and Archives. Visidian provides built-in support for PARA organization with visual indicators and color coding:
 
-- **Projects**: For tasks with a defined goal and deadline.
-- **Areas**: Ongoing responsibilities without a deadline.
-- **Resources**: Topics of interest or areas of study, not tied to immediate action.
-- **Archives**: Completed projects, expired areas, or old resources.
+- **[P]rojects** (Pink): Active tasks with a defined goal and deadline
+- **[A]reas** (Green): Ongoing responsibilities without a deadline
+- **[R]esources** (Blue): Topics of interest or areas of study
+- **[AR]chives** (Gray): Completed projects and inactive items
 
-To use PARA in Visidian, run `:VisidianParaGen` to create these folder structures in your vault.
+### PARA Visual Integration
 
----
+Visidian helps you stay oriented in your knowledge base with:
+
+1. **Color-coded Statusline**: Shows your current PARA context with colored indicators
+2. **Visual Hierarchy**: Each PARA category has its own distinct color throughout the interface
+3. **Customizable Colors**: Adjust the colors to match your preferences:
+   ```vim
+   " In your vimrc:
+   let g:visidian_para_colors = {
+       \ 'projects': {'ctermfg': '168', 'guifg': '#d75f87'},
+       \ 'areas': {'ctermfg': '107', 'guifg': '#87af5f'},
+       \ 'resources': {'ctermfg': '110', 'guifg': '#87afd7'},
+       \ 'archives': {'ctermfg': '242', 'guifg': '#6c6c6c'}
+       \ }
+   ```
+
+### Getting Started with PARA
+
+1. Create your PARA structure:
+   ```vim
+   :VisidianParaGen
+   ```
+   This creates the basic PARA folders in your vault.
+
+2. Navigate your vault:
+   - The statusline will show your current context (e.g., "[P]rojects")
+   - Colors help you quickly identify different types of content
+   - Use `:VisidianMenu` for quick navigation
 
 ## Combining GTD with Visidian
 
