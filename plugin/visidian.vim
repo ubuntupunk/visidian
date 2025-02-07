@@ -18,16 +18,21 @@ if !exists('g:visidian_debug')
     let g:visidian_debug = 0
 endif
 
-" Check for FZF availability
-if !executable('fzf')
-    echohl WarningMsg
-    echom "Visidian: System FZF not found. Install FZF for better search functionality."
-    echohl None
-endif
+" Check search method availability
+let s:has_fzf_plugin = exists('*fzf#run')
+let s:has_system_fzf = executable('fzf')
 
-if !exists('*fzf#run')
+if s:has_fzf_plugin
     if g:visidian_debug
-        echom "Visidian: FZF Vim plugin not found. Using system FZF fallback."
+        echom "Visidian: Using FZF Vim plugin for search"
+    endif
+elseif s:has_system_fzf
+    if g:visidian_debug
+        echom "Visidian: Using system FZF for search"
+    endif
+else
+    if g:visidian_debug
+        echom "Visidian: Using Vim's built-in search (no FZF available)"
     endif
 endif
 

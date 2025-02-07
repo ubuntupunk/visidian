@@ -1,4 +1,4 @@
-"file: autload/visidian/search.vim
+"file: autoload/visidian/search.vim
 "this is the search function called by the VisidianSearch command
 
 "FUNCTION: Search
@@ -18,23 +18,55 @@ function! visidian#search#search()
         echo "No query provided."
         return
     endif
-    
+
     if s:debug | echom "Query received: " . query | endif
-    " Check if fzf is available 
-    
-    if executable('fzf')
-        if s:debug | echom "Using FZF search" | endif
-        call s:fzf_search(query)
+
+    " Check for FZF availability (either plugin or system)
+    if exists('*fzf#run')
+        if s:debug | echom "Using Vim FZF plugin" | endif
+        call s:fzf_plugin_search(query)
+    elseif executable('fzf')
+        if s:debug | echom "Using system FZF" | endif
+        call s:fzf_system_search(query)
     else
-        if s:debug | echom "Using Vim search" | endif
+        if s:debug | echom "Using Vim's built-in search" | endif
         call s:vim_search(query)
     endif
 endfunction
 
-"FUNCTION: FZF search query
-function! s:fzf_search(query)
-    if s:debug | echom "Starting FZF search..." | endif
+"FUNCTION: FZF plugin search
+function! s:fzf_plugin_search(query)
+    let files = split(globpath(g:visidian_vault_path, '**/*.md'), '\n')
+    if empty(files)
+        echo "No markdown files found in vault."
+        return
+    endif
+
+    if s:debug | echom "Found " . len(files) . " markdown files" | endif
     
+    let opts = {
+        \ 'source': files,
+        \ 'sink': 'edit',
+        \ 'options': ['--preview', 'bat --color=always {} || cat {}',
+        \            '--query', a:query,
+        \            '--prompt', 'Search Notes> '],
+        \ 'down': '40%'
+        \ }
+
+    if s:debug | echom "Launching FZF plugin with options: " . string(opts) | endif
+
+    try
+        call fzf#run(fzf#wrap(opts))
+    catch
+        echoerr "Vim FZF plugin search failed: " . v:exception
+        if s:debug
+            echom "Error details: " . v:throwpoint
+        endif
+    endtry
+endfunction
+
+"FUNCTION: FZF system search
+function! s:fzf_system_search(query)
     let files = split(globpath(g:visidian_vault_path, '**/*.md'), '\n')
     if empty(files)
         echo "No markdown files found in vault."
@@ -43,70 +75,41 @@ function! s:fzf_search(query)
 
     if s:debug | echom "Found " . len(files) . " markdown files" | endif
 
-    " Try Vim FZF plugin first
-    if exists('*fzf#run')
-        if s:debug | echom "Using Vim FZF plugin" | endif
+    " Escape special characters in query
+    let escaped_query = shellescape(a:query)
+    let preview_cmd = shellescape('bat --color=always {} || cat {}')
+    let command = printf("fzf --preview=%s --query=%s", preview_cmd, escaped_query)
+
+    if s:debug | echom "FZF system command: " . command | endif
+
+    try
+        let selected = systemlist(command, files)
+        if v:shell_error
+            throw "FZF error: " . string(selected)
+        endif
         
-        let opts = {
-            \ 'source': files,
-            \ 'sink': 'edit',
-            \ 'options': ['--preview', 'bat --color=always {} || cat {}',
-            \            '--query', a:query,
-            \            '--prompt', 'Search Notes> '],
-            \ 'down': '40%'
-            \ }
-
-        if s:debug | echom "Launching FZF with options: " . string(opts) | endif
-
-        try
-            call fzf#run(fzf#wrap(opts))
-        catch
-            echoerr "Vim FZF plugin search failed: " . v:exception
-            if s:debug
-                echom "Error details: " . v:throwpoint
-            endif
-        endtry
-    else
-        " Fallback to system FZF
-        if s:debug | echom "Using system FZF" | endif
-
-        " Escape special characters in query
-        let escaped_query = shellescape(a:query)
-        let preview_cmd = shellescape('bat --color=always {} || cat {}')
-        let command = printf("fzf --preview=%s --query=%s", preview_cmd, escaped_query)
-
-        if s:debug | echom "FZF command: " . command | endif
-
-        try
-            let selected = systemlist(command, files)
-            if v:shell_error
-                throw "FZF error: " . string(selected)
-            endif
-            
-            if !empty(selected)
-                for file in selected
-                    if filereadable(file)
-                        execute 'edit ' . fnameescape(file)
-                    else
-                        echoerr "Cannot read file: " . file
-                    endif
-                endfor
-            else
-                echo "No matches found."
-            endif
-        catch
-            echoerr "System FZF search failed: " . v:exception
-            if s:debug
-                echom "Error details: " . v:throwpoint
-            endif
-        endtry
-    endif
+        if !empty(selected)
+            for file in selected
+                if filereadable(file)
+                    execute 'edit ' . fnameescape(file)
+                else
+                    echoerr "Cannot read file: " . file
+                endif
+            endfor
+        else
+            echo "No matches found."
+        endif
+    catch
+        echoerr "System FZF search failed: " . v:exception
+        if s:debug
+            echom "Error details: " . v:throwpoint
+        endif
+    endtry
 endfunction
 
-
-"FUNCTION vimgrep search
+"FUNCTION: Vim's built-in search
 function! s:vim_search(query)
-    if s:debug | echom "Starting Vim search..." | endif
+    if s:debug | echom "Starting Vim built-in search..." | endif
 
     " Escape special characters in the pattern
     let pattern = escape(a:query, '/\*')
@@ -139,7 +142,7 @@ function! s:vim_search(query)
     catch /^Vim\%((\a\+)\)\=:E480/
         echo "No matches found."
     catch
-        echoerr "Search failed: " . v:exception
+        echoerr "Vim search failed: " . v:exception
         if s:debug
             echom "Error details: " . v:throwpoint
         endif
