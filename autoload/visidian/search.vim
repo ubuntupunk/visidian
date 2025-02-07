@@ -34,6 +34,11 @@ function! visidian#search#search()
     endif
 endfunction
 
+"FUNCTION: Get preview command
+function! s:get_preview_cmd()
+    return executable('bat') ? 'bat --color=always {}' : 'cat {}'
+endfunction
+
 "FUNCTION: FZF plugin search
 function! s:fzf_plugin_search(query)
     let files = split(globpath(g:visidian_vault_path, '**/*.md'), '\n')
@@ -44,10 +49,11 @@ function! s:fzf_plugin_search(query)
 
     if s:debug | echom "Found " . len(files) . " markdown files" | endif
     
+    let preview_cmd = s:get_preview_cmd()
     let opts = {
         \ 'source': files,
         \ 'sink': 'edit',
-        \ 'options': ['--preview', 'bat --color=always {} || cat {}',
+        \ 'options': ['--preview', preview_cmd,
         \            '--query', a:query,
         \            '--prompt', 'Search Notes> '],
         \ 'down': '40%'
@@ -77,7 +83,7 @@ function! s:fzf_system_search(query)
 
     " Escape special characters in query
     let escaped_query = shellescape(a:query)
-    let preview_cmd = shellescape('bat --color=always {} || cat {}')
+    let preview_cmd = shellescape(s:get_preview_cmd())
     let command = printf("fzf --preview=%s --query=%s", preview_cmd, escaped_query)
 
     if s:debug | echom "FZF system command: " . command | endif

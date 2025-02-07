@@ -21,14 +21,17 @@ endif
 " Check search method availability
 let s:has_fzf_plugin = exists('*fzf#run')
 let s:has_system_fzf = executable('fzf')
+let s:has_bat = executable('bat')
 
 if s:has_fzf_plugin
     if g:visidian_debug
         echom "Visidian: Using FZF Vim plugin for search"
+        echom "Visidian: Using " . (s:has_bat ? "bat" : "cat") . " for preview"
     endif
 elseif s:has_system_fzf
     if g:visidian_debug
         echom "Visidian: Using system FZF for search"
+        echom "Visidian: Using " . (s:has_bat ? "bat" : "cat") . " for preview"
     endif
 else
     if g:visidian_debug
