@@ -43,26 +43,64 @@ function! s:fzf_search(query)
 
     if s:debug | echom "Found " . len(files) . " markdown files" | endif
 
-    " Set up FZF options
-    let opts = {
-        \ 'source': files,
-        \ 'sink': 'edit',
-        \ 'options': ['--preview', 'bat --color=always {} || cat {}',
-        \            '--query', a:query,
-        \            '--prompt', 'Search Notes> '],
-        \ 'down': '40%'
-        \ }
+    " Try Vim FZF plugin first
+    if exists('*fzf#run')
+        if s:debug | echom "Using Vim FZF plugin" | endif
+        
+        let opts = {
+            \ 'source': files,
+            \ 'sink': 'edit',
+            \ 'options': ['--preview', 'bat --color=always {} || cat {}',
+            \            '--query', a:query,
+            \            '--prompt', 'Search Notes> '],
+            \ 'down': '40%'
+            \ }
 
-    if s:debug | echom "Launching FZF with options: " . string(opts) | endif
+        if s:debug | echom "Launching FZF with options: " . string(opts) | endif
 
-    try
-        call fzf#run(fzf#wrap(opts))
-    catch
-        echoerr "Search failed: " . v:exception
-        if s:debug
-            echom "Error details: " . v:throwpoint
-        endif
-    endtry
+        try
+            call fzf#run(fzf#wrap(opts))
+        catch
+            echoerr "Vim FZF plugin search failed: " . v:exception
+            if s:debug
+                echom "Error details: " . v:throwpoint
+            endif
+        endtry
+    else
+        " Fallback to system FZF
+        if s:debug | echom "Using system FZF" | endif
+
+        " Escape special characters in query
+        let escaped_query = shellescape(a:query)
+        let preview_cmd = shellescape('bat --color=always {} || cat {}')
+        let command = printf("fzf --preview=%s --query=%s", preview_cmd, escaped_query)
+
+        if s:debug | echom "FZF command: " . command | endif
+
+        try
+            let selected = systemlist(command, files)
+            if v:shell_error
+                throw "FZF error: " . string(selected)
+            endif
+            
+            if !empty(selected)
+                for file in selected
+                    if filereadable(file)
+                        execute 'edit ' . fnameescape(file)
+                    else
+                        echoerr "Cannot read file: " . file
+                    endif
+                endfor
+            else
+                echo "No matches found."
+            endif
+        catch
+            echoerr "System FZF search failed: " . v:exception
+            if s:debug
+                echom "Error details: " . v:throwpoint
+            endif
+        endtry
+    endif
 endfunction
 
 

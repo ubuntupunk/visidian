@@ -18,11 +18,17 @@ if !exists('g:visidian_debug')
     let g:visidian_debug = 0
 endif
 
-" Check for required plugins
-if !exists('*fzf#run')
+" Check for FZF availability
+if !executable('fzf')
     echohl WarningMsg
-    echom "Visidian: FZF Vim plugin is required for search functionality. Please install junegunn/fzf.vim"
+    echom "Visidian: System FZF not found. Install FZF for better search functionality."
     echohl None
+endif
+
+if !exists('*fzf#run')
+    if g:visidian_debug
+        echom "Visidian: FZF Vim plugin not found. Using system FZF fallback."
+    endif
 endif
 
 " Set up session options
