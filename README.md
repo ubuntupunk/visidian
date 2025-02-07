@@ -1,3 +1,12 @@
+```
+  _   _ _     _     _ _             
+ | | | (_)   (_)   | (_)            
+ | | | |_ ___ _  __| |_  __ _ _ __  
+ | | | | / __| |/ _` | |/ _` | '_ \ 
+ \ \_/ / \__ \ | (_| | | (_| | | | |
+  \___/|_|___/_|\__,_|_|\__,_|_| |_|
+```
+
 # Visidian - An Obsidian-like PKM for Vim
 
 Visidian is a Vim plugin designed to provide Obsidian-like **Personal Knowledge Management (PKM)** functionality within Vim. It supports managing notes, interconnecting them, and organizing your knowledge using various methods, including the PARA method.
@@ -58,26 +67,38 @@ Open Vim and run:
 :helptags ~/.vim/pack/visidian/start/visidian.vim/doc
 ```
 ## Commands
-- `:VisidianDash` - Open the Visidian dashboard.
-- `:VisidianMenu` - Open the Visidian Popup Menu (FIXME)
-- `:VisidianFile` - Create a new markdown file in the vault.
-- `:VisidianFolder` - Create a new folder in the vault.
-- `:VisidianVault` - Create a new vault.
-- `:VisidianLink` - Display connections between notes using YAML front matter (FIXME)
-- `:VisidianParaGen` - Setup PARA folders in your vault.
-- `:VisidianGenTags` - Generate Yaml Tags List in your vault. (TODO)
-- `:VisidianGenCtags` - Generate Ctags File in your vault.
-- `:VisidianBrowseCtags` - Browse Ctags in your vault.
-- `:VisidianHelp` - Open this help document.
-- `:VisidianSync` - Sync your Vault with a Remote (FIXME)
-- `:VisidianToggleAutoSync` - Toggle Auto Sync.
-- `:VisidianTogglePreview` - Toggle Markdown Preview.(FIXME)
-- `:VisidianToggleSidebar` - Toggle Sidebar. 
-- `:VisidianToggleSpell` - Toggle Spelling/Thesaurus
-- `:VisidianSearch` - Search for notes in the vault.
-- `:VisidianSort` - Intelligent Sorting of Notes (FIXME)
-- `:VisidianSaveSession` - Manually save the current session state
-- `:VisidianLoadSession` - Manually load a saved session state
+
+### Core Commands
+- `:VisidianDash` - Open the Visidian dashboard with quick access to all features
+- `:VisidianMenu` - Open the popup menu interface for quick navigation
+- `:VisidianFile` - Create a new markdown file in your vault
+- `:VisidianFolder` - Create a new folder in your vault
+- `:VisidianVault` - Create or select a vault
+- `:VisidianHelp` - Open Visidian help documentation
+
+### Organization & Navigation
+- `:VisidianParaGen` - Generate PARA method folder structure
+- `:VisidianSearch` - Full-text search through your vault
+- `:VisidianLink` - Create and manage note connections
+- `:VisidianSort` - Intelligent note sorting (Coming Soon)
+
+### Tags & References
+- `:VisidianGenTags` - Generate YAML tags list (Coming Soon)
+- `:VisidianGenCtags` - Generate ctags for your vault
+- `:VisidianBrowseCtags` - Browse through generated ctags
+
+### View & Interface
+- `:VisidianToggleSpell` - Toggle spell checking
+- `:VisidianToggleSidebar` - Toggle file explorer sidebar
+- `:VisidianTogglePreview` - Toggle markdown preview (Coming Soon)
+
+### Session Management
+- `:VisidianSaveSession` - Manually save current session
+- `:VisidianLoadSession` - Load a saved session
+
+### Synchronization
+- `:VisidianSync` - Sync vault with remote (Coming Soon)
+- `:VisidianToggleAutoSync` - Toggle automatic syncing (Coming Soon)
 
 ## Session Management
 
