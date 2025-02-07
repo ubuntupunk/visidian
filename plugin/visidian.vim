@@ -28,6 +28,11 @@ if !exists('g:visidian_para_colors')
         \ }
 endif
 
+" Define highlight groups for statusline
+highlight VisidianProjects   ctermfg=168 guifg=#d75f87 cterm=bold gui=bold
+highlight VisidianAreas      ctermfg=107 guifg=#87af5f cterm=bold gui=bold
+highlight VisidianResources  ctermfg=110 guifg=#87afd7 cterm=bold gui=bold
+highlight VisidianArchives   ctermfg=242 guifg=#6c6c6c cterm=bold gui=bold
 
 " Check search method availability
 let s:has_fzf_plugin = exists('*fzf#run')

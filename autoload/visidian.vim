@@ -1004,18 +1004,17 @@ function! visidian#para_status() abort
     endif
 
     " Determine PARA context with colors
-    let l:para = ''
     if l:path =~? '/Projects/'
-        let l:para = '%#VisidianProjectFolder#P%*'
+        return '%#VisidianProjects#[P]%* '
     elseif l:path =~? '/Areas/'
-        let l:para = '%#VisidianAreaFolder#A%*'
+        return '%#VisidianAreas#[A]%* '
     elseif l:path =~? '/Resources/'
-        let l:para = '%#VisidianResourceFolder#R%*'
+        return '%#VisidianResources#[R]%* '
     elseif l:path =~? '/Archives/'
-        let l:para = '%#VisidianArchiveFolder#Ar%*'
+        return '%#VisidianArchives#[Ar]%* '
     endif
 
-    return l:para . ' '
+    return ''
 endfunction
 
 " FUNCTION: clear cache of non-existent files
@@ -1443,7 +1442,7 @@ function! VisidianGenerateTags()
 "    \ '--regex-Markdown=/^---$(.*?)---$/m,metadata/',
 "    \ '--regex-Markdown=/^#+\s+(.*)/\1/h,heading/',
 "    \ '--regex-Markdown=/^[ \t]*```[a-z]*\s*$/\n/,c,codeblock/',
-"    \ '--regex-Markdown=/^>{3}\s+(.*)/1/,p,pullquote/',
+"    \ '--regex-Markdown/^>{3}\s+(.*)/1/,p,pullquote/',
 "    \ '--regex-Markdown/\[(.*?)\]\((.*?)\)/2/,i,image/',
 "    \ '--regex-Markdown/\[(.*?)\]\((.*?)\)/2/,l,link/'
 "    \ ], ctags_config)
