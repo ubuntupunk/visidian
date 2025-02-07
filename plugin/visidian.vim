@@ -88,3 +88,25 @@ command! -nargs=0 VisidianBrowseCtags call VisidianBrowseTags()
 
 "Toggle Spelling
 command! -nargs=0 VisidianToggleSpell call visidian#toggle_spell()
+
+" Set up autocommands for statusline
+augroup VisidianStatusLine
+    autocmd!
+    " Update statusline for markdown files in vault
+    autocmd BufEnter,BufWritePost *.md call s:UpdateVisidianStatusLine()
+augroup END
+
+function! s:UpdateVisidianStatusLine()
+    " Only modify statusline for markdown files in vault
+    if &filetype == 'markdown' || &filetype == 'visidian'
+        " Preserve existing statusline or set a basic one
+        if empty(&statusline)
+            setlocal statusline=%<%f\ %h%m%r%=%-14.(%l,%c%V%)\ %P
+        endif
+        
+        " Add PARA context if not already present
+        if &statusline !~# '%{visidian#para_status()}'
+            setlocal statusline^=%{visidian#para_status()}
+        endif
+    endif
+endfunction

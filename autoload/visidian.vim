@@ -911,7 +911,7 @@ endfunction
 map <F4> :call SignLines()<CR>
 
 
-" FUNCTION check if the current buffer is a markdown file
+" FUNCTION to set custom statusline for markdown files
 function! s:IsMarkdownFile()
     return &filetype == 'markdown'
 endfunction
@@ -985,6 +985,38 @@ nnoremap <silent> <leader>1 :call visidian#dashboard()<CR>
 
 " If you want to open only the menu without the full dashboard:
 nnoremap <silent> <leader>2 :call visidian#menu()<CR>
+
+" FUNCTION: PARA statusline function
+function! visidian#para_status() abort
+    let l:path = expand('%:p')
+    if empty(l:path) || empty(g:visidian_vault_path)
+        return ''
+    endif
+
+    " Normalize paths
+    let l:path = substitute(l:path, '\\', '/', 'g')
+    let l:vault = substitute(g:visidian_vault_path, '\\', '/', 'g')
+    let l:vault = substitute(l:vault, '/$', '', '')
+
+    " Check if file is in vault
+    if l:path !~# '^' . escape(l:vault, '/') . '/'
+        return ''
+    endif
+
+    " Determine PARA context with colors
+    let l:para = ''
+    if l:path =~? '/Projects/'
+        let l:para = '%#VisidianProjectFolder#P%*'
+    elseif l:path =~? '/Areas/'
+        let l:para = '%#VisidianAreaFolder#A%*'
+    elseif l:path =~? '/Resources/'
+        let l:para = '%#VisidianResourceFolder#R%*'
+    elseif l:path =~? '/Archives/'
+        let l:para = '%#VisidianArchiveFolder#Ar%*'
+    endif
+
+    return l:para . ' '
+endfunction
 
 " FUNCTION: clear cache of non-existent files
 function! visidian#clear_cache()
