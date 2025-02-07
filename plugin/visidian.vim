@@ -18,6 +18,16 @@ if !exists('g:visidian_debug')
     let g:visidian_debug = 0
 endif
 
+" Initialize PARA color system
+if !exists('g:visidian_para_colors')
+    let g:visidian_para_colors = {
+        \ 'projects': {'ctermfg': '168', 'guifg': '#d75f87'},
+        \ 'areas': {'ctermfg': '107', 'guifg': '#87af5f'},
+        \ 'resources': {'ctermfg': '110', 'guifg': '#87afd7'},
+        \ 'archives': {'ctermfg': '242', 'guifg': '#6c6c6c'}
+        \ }
+endif
+
 
 " Check search method availability
 let s:has_fzf_plugin = exists('*fzf#run')
