@@ -1,6 +1,37 @@
 "file: autoload/visidian/search.vim
 "this is the search function called by the VisidianSearch command
 
+" Track search state
+let s:search_active = 0
+
+"FUNCTION: Toggle search
+function! visidian#search#toggle()
+    if s:search_active
+        if s:debug | echom "Closing search..." | endif
+        call s:close_search()
+    else
+        if s:debug | echom "Opening search..." | endif
+        call visidian#search#search()
+    endif
+endfunction
+
+"FUNCTION: Close search
+function! s:close_search()
+    if exists('*fzf#run')
+        " For FZF plugin
+        try
+            call fzf#exit()
+        catch
+            " FZF window might already be closed
+        endtry
+    else
+        " For system FZF and vim search
+        silent! execute "normal! \<C-c>"
+        silent! cclose
+    endif
+    let s:search_active = 0
+endfunction
+
 "FUNCTION: Search
 function! visidian#search#search()
     if g:visidian_vault_path == ''
@@ -19,6 +50,7 @@ function! visidian#search#search()
         return
     endif
 
+    let s:search_active = 1
     if s:debug | echom "Query received: " . query | endif
 
     " Check for FZF availability (either plugin or system)
@@ -44,6 +76,7 @@ function! s:fzf_plugin_search(query)
     let files = split(globpath(g:visidian_vault_path, '**/*.md'), '\n')
     if empty(files)
         echo "No markdown files found in vault."
+        let s:search_active = 0
         return
     endif
 
@@ -55,19 +88,21 @@ function! s:fzf_plugin_search(query)
         \ 'sink': 'edit',
         \ 'options': ['--preview', preview_cmd,
         \            '--query', a:query,
-        \            '--prompt', 'Search Notes> '],
+        \            '--prompt', 'Search Notes> ',
+        \            '--bind', 'esc:abort'],
         \ 'down': '40%'
         \ }
 
     if s:debug | echom "Launching FZF plugin with options: " . string(opts) | endif
 
     try
-        call fzf#run(fzf#wrap(opts))
+        call fzf#run(fzf#wrap(extend(opts, {'on_exit': { -> execute('let s:search_active = 0')}})))
     catch
         echoerr "Vim FZF plugin search failed: " . v:exception
         if s:debug
             echom "Error details: " . v:throwpoint
         endif
+        let s:search_active = 0
     endtry
 endfunction
 
@@ -76,6 +111,7 @@ function! s:fzf_system_search(query)
     let files = split(globpath(g:visidian_vault_path, '**/*.md'), '\n')
     if empty(files)
         echo "No markdown files found in vault."
+        let s:search_active = 0
         return
     endif
 
@@ -84,13 +120,14 @@ function! s:fzf_system_search(query)
     " Escape special characters in query
     let escaped_query = shellescape(a:query)
     let preview_cmd = shellescape(s:get_preview_cmd())
-    let command = printf("fzf --preview=%s --query=%s", preview_cmd, escaped_query)
+    let command = printf("fzf --preview=%s --query=%s --bind=esc:abort", preview_cmd, escaped_query)
 
     if s:debug | echom "FZF system command: " . command | endif
 
     try
         let selected = systemlist(command, files)
-        if v:shell_error
+        let s:search_active = 0
+        if v:shell_error && v:shell_error != 130  " 130 is the exit code when escape is pressed
             throw "FZF error: " . string(selected)
         endif
         
@@ -110,6 +147,7 @@ function! s:fzf_system_search(query)
         if s:debug
             echom "Error details: " . v:throwpoint
         endif
+        let s:search_active = 0
     endtry
 endfunction
 

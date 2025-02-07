@@ -61,6 +61,9 @@ command! -nargs=0 VisidianSearch call visidian#search()
 command! -nargs=0 VisidianSort call visidian#sort()
 command! -nargs=0 VisidianMenu call visidian#menu()
 
+" Add toggle search command
+command! -nargs=0 VisidianToggleSearch call visidian#search#toggle()
+
 " Session management commands
 command! -nargs=0 VisidianSaveSession call visidian#save_session()
 command! -nargs=0 VisidianLoadSession call visidian#load_session()
