@@ -769,6 +769,7 @@ function! s:menu_filter(winid, key) abort
     endif
 
     let max_line = len(s:current_menu_items)
+    echom "Max line: " . max_line
 
     " Handle key input
     if a:key == 'j' || a:key == "\<Down>"
@@ -801,9 +802,9 @@ function! s:menu_filter(winid, key) abort
     " Handle number keys for quick selection
     let num = str2nr(a:key)
     if num > 0 && num <= max_line
-        let item = s:current_menu_items[num - 1]
-        echom "Executing command: " . item.cmd
         let s:current_line = num
+        let item = s:current_menu_items[num - 1]
+        echom "Quick select: " .num . " " . item.cmd
         call popup_close(a:winid)
         if item.cmd != 'close'
             " Execute command after closing popup to avoid interference
