@@ -18,6 +18,13 @@ if !exists('g:visidian_debug')
     let g:visidian_debug = 0
 endif
 
+" Check for required plugins
+if !exists('*fzf#run')
+    echohl WarningMsg
+    echom "Visidian: FZF Vim plugin is required for search functionality. Please install junegunn/fzf.vim"
+    echohl None
+endif
+
 " Set up session options
 set sessionoptions=blank,buffers,curdir,folds,help,tabpages,winsize,terminal
 
