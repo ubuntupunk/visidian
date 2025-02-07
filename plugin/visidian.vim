@@ -29,10 +29,15 @@ if !exists('g:visidian_para_colors')
 endif
 
 " Define highlight groups for statusline
-highlight VisidianProjects   ctermfg=168 guifg=#d75f87 cterm=bold gui=bold
-highlight VisidianAreas      ctermfg=107 guifg=#87af5f cterm=bold gui=bold
-highlight VisidianResources  ctermfg=110 guifg=#87afd7 cterm=bold gui=bold
-highlight VisidianArchives   ctermfg=242 guifg=#6c6c6c cterm=bold gui=bold
+hi clear VisidianProjects
+hi clear VisidianAreas
+hi clear VisidianResources
+hi clear VisidianArchives
+
+hi def VisidianProjects   term=bold cterm=bold ctermfg=168 gui=bold guifg=#d75f87
+hi def VisidianAreas      term=bold cterm=bold ctermfg=107 gui=bold guifg=#87af5f
+hi def VisidianResources  term=bold cterm=bold ctermfg=110 gui=bold guifg=#87afd7
+hi def VisidianArchives   term=bold cterm=bold ctermfg=242 gui=bold guifg=#6c6c6c
 
 " Check search method availability
 let s:has_fzf_plugin = exists('*fzf#run')
@@ -104,14 +109,31 @@ augroup END
 function! s:UpdateVisidianStatusLine()
     " Only modify statusline for markdown files in vault
     if &filetype == 'markdown' || &filetype == 'visidian'
+        " Get PARA context
+        let l:path = expand('%:p')
+        let l:hi_group = ''
+        
+        if l:path =~? '/Projects/'
+            let l:hi_group = '%#VisidianProjects#'
+        elseif l:path =~? '/Areas/'
+            let l:hi_group = '%#VisidianAreas#'
+        elseif l:path =~? '/Resources/'
+            let l:hi_group = '%#VisidianResources#'
+        elseif l:path =~? '/Archives/'
+            let l:hi_group = '%#VisidianArchives#'
+        endif
+
         " Preserve existing statusline or set a basic one
         if empty(&statusline)
             setlocal statusline=%<%f\ %h%m%r%=%-14.(%l,%c%V%)\ %P
         endif
         
-        " Add PARA context if not already present
-        if &statusline !~# '%{visidian#para_status()}'
-            setlocal statusline^=%{visidian#para_status()}
+        " Add PARA context with color if not already present
+        if !empty(l:hi_group)
+            let l:para_status = l:hi_group . visidian#para_status() . '%*'
+            if &statusline !~# escape(l:para_status, '[]')
+                execute 'setlocal statusline^=' . escape(l:para_status, ' ')
+            endif
         endif
     endif
 endfunction

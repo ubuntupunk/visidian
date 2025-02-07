@@ -1005,13 +1005,13 @@ function! visidian#para_status() abort
 
     " Determine PARA context with colors
     if l:path =~? '/Projects/'
-        return '%#VisidianProjects#[P]%* '
+        return '[P]rojects '
     elseif l:path =~? '/Areas/'
-        return '%#VisidianAreas#[A]%* '
+        return '[A]reas '
     elseif l:path =~? '/Resources/'
-        return '%#VisidianResources#[R]%* '
+        return '[R]esources '
     elseif l:path =~? '/Archives/'
-        return '%#VisidianArchives#[Ar]%* '
+        return '[AR]chives '
     endif
 
     return ''
