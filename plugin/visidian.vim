@@ -13,6 +13,11 @@ endif
 
 let g:loaded_visidian_vim = 1
 
+" Initialize plugin variables
+if !exists('g:visidian_debug')
+    let g:visidian_debug = 0
+endif
+
 " Set up session options
 set sessionoptions=blank,buffers,curdir,folds,help,tabpages,winsize,terminal
 
