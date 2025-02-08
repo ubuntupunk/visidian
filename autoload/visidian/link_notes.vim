@@ -31,7 +31,10 @@ endfunction
 
 " FUNCTION: Get YAML front matter with fallback
 function! s:get_yaml_front_matter(file)
-    call visidian#debug#trace('CORE', 'Reading YAML from: ' . a:file)
+    if g:visidian_debug
+        call visidian#debug#trace('CORE', 'Reading YAML from: ' . a:file)
+    endif
+
     try
         let lines = readfile(a:file)
         let yaml_text = []
@@ -52,6 +55,9 @@ function! s:get_yaml_front_matter(file)
         
         " Return empty YAML if no frontmatter found
         if !yaml_end
+            if g:visidian_debug
+                call visidian#debug#trace('CORE', 'No YAML frontmatter in: ' . a:file)
+            endif
             return {'tags': [], 'links': []}
         endif
         
@@ -61,24 +67,32 @@ function! s:get_yaml_front_matter(file)
         if s:yaml_parser_available()
             try
                 let yaml = yaml#decode(yaml_str)
-                call visidian#debug#trace('CORE', 'Used yaml#decode parser')
+                if g:visidian_debug
+                    call visidian#debug#trace('CORE', 'Used yaml#decode parser')
+                endif
                 " Ensure tags and links exist
                 let yaml.tags = get(yaml, 'tags', [])
                 let yaml.links = get(yaml, 'links', [])
                 return yaml
             catch
                 " Silently fall back to simple parser
-                call visidian#debug#trace('CORE', 'yaml#decode failed, falling back to simple parser')
+                if g:visidian_debug
+                    call visidian#debug#trace('CORE', 'yaml#decode failed, using simple parser')
+                endif
             endtry
         endif
         
         " Fallback to simple parser
         let yaml = s:simple_yaml_parse(yaml_str)
-        call visidian#debug#trace('CORE', 'Used simple YAML parser')
+        if g:visidian_debug
+            call visidian#debug#trace('CORE', 'Used simple YAML parser')
+        endif
         return yaml
     catch
-        " Return empty YAML on any error
-        call visidian#debug#trace('CORE', 'Failed to parse YAML: ' . v:exception . '. Using empty YAML.')
+        " Return empty YAML on any error, only trace in debug mode
+        if g:visidian_debug
+            call visidian#debug#trace('CORE', 'YAML parsing error: ' . v:exception)
+        endif
         return {'tags': [], 'links': []}
     endtry
 endfunction
@@ -103,7 +117,9 @@ function! visidian#link_notes#link_notes()
 
     " Normalize vault path
     let vault_path = substitute(g:visidian_vault_path, '[\/]\+$', '', '')
-    call visidian#debug#debug('CORE', 'Using vault path: ' . vault_path)
+    if g:visidian_debug
+        call visidian#debug#debug('CORE', 'Using vault path: ' . vault_path)
+    endif
 
     " Get all markdown files in the vault
     let vault_files = []
@@ -116,7 +132,9 @@ function! visidian#link_notes#link_notes()
     endfor
 
     if empty(vault_files)
-        call visidian#debug#warn('CORE', 'No markdown files found in vault')
+        if g:visidian_debug
+            call visidian#debug#warn('CORE', 'No markdown files found in vault')
+        endif
         echohl WarningMsg
         echo "No markdown files found in vault."
         echohl None
@@ -137,7 +155,9 @@ function! visidian#link_notes#link_notes()
     let vault_files = filter(vault_files, 'v:val !=# current_file')
 
     if empty(vault_files)
-        call visidian#debug#warn('CORE', 'No other markdown files found in vault')
+        if g:visidian_debug
+            call visidian#debug#warn('CORE', 'No other markdown files found in vault')
+        endif
         echohl WarningMsg
         echo "No other markdown files found in vault."
         echohl None
@@ -201,6 +221,9 @@ function! visidian#link_notes#link_notes()
                 call add(links, new_link)
                 let current_yaml['links'] = links
                 call s:update_yaml_frontmatter(current_file, current_yaml)
+                if g:visidian_debug
+                    call visidian#debug#info('CORE', 'Added YAML link: ' . new_link)
+                endif
                 echo "\nAdded YAML link to " . new_link
             else
                 echo "\nLink already exists in YAML frontmatter."
@@ -210,6 +233,9 @@ function! visidian#link_notes#link_notes()
             let md_link = s:create_markdown_link(selected_file)
             let pos = getpos('.')
             call append(pos[1], md_link)
+            if g:visidian_debug
+                call visidian#debug#info('CORE', 'Added markdown link: ' . md_link)
+            endif
             echo "\nInserted markdown link: " . md_link
         endif
         
@@ -280,18 +306,25 @@ function! s:create_link(target_file, current_file)
             if index(current_yaml.links, relative_path) == -1
                 call add(current_yaml.links, relative_path)
                 call s:update_yaml_frontmatter(a:current_file, current_yaml)
-                call visidian#debug#info('CORE', 'Added YAML link: ' . relative_path)
+                if g:visidian_debug
+                    call visidian#debug#info('CORE', 'Added YAML link: ' . relative_path)
+                endif
             endif
         elseif choice == 2 " Markdown link
             " Insert markdown link at cursor
             let link_text = '[' . target_title . '](' . relative_path . ')'
             call append(line('.'), link_text)
-            call visidian#debug#info('CORE', 'Added markdown link: ' . link_text)
+            if g:visidian_debug
+                call visidian#debug#info('CORE', 'Added markdown link: ' . link_text)
+            endif
         endif
         
         return 1
     catch
-        call visidian#debug#error('CORE', 'Failed to create link: ' . v:exception)
+        " Only show error in debug mode
+        if g:visidian_debug
+            call visidian#debug#error('CORE', 'Failed to create link: ' . v:exception)
+        endif
         return 0
     endtry
 endfunction
@@ -343,7 +376,10 @@ endfunction
 
 "FUNCTION: Get YAML front matter
 function! s:get_yaml_front_matter(file)
-    call visidian#debug#trace('CORE', 'Reading YAML from: ' . a:file)
+    if g:visidian_debug
+        call visidian#debug#trace('CORE', 'Reading YAML from: ' . a:file)
+    endif
+
     try
         let lines = readfile(a:file)
         let yaml_text = []
@@ -370,23 +406,33 @@ function! s:get_yaml_front_matter(file)
         endif
         
         let yaml = yaml#decode(join(yaml_text, "\n"))
-        call visidian#debug#trace('CORE', 'Parsed YAML: ' . string(yaml))
+        if g:visidian_debug
+            call visidian#debug#trace('CORE', 'Parsed YAML: ' . string(yaml))
+        endif
         return yaml
     catch
-        call visidian#debug#error('CORE', 'Failed to read/parse YAML: ' . v:exception)
+        " Only show error in debug mode
+        if g:visidian_debug
+            call visidian#debug#error('CORE', 'Failed to read/parse YAML: ' . v:exception)
+        endif
         throw v:exception
     endtry
 endfunction
 
 "FUNCTION: Weight and sort potential links
 function! s:weight_and_sort_links(current_yaml, all_files)
-    call visidian#debug#debug('CORE', 'Weighting potential links')
+    if g:visidian_debug
+        call visidian#debug#debug('CORE', 'Weighting potential links')
+    endif
+
     let weights = {}
     let tags = get(a:current_yaml, 'tags', [])
     let links = get(a:current_yaml, 'links', [])
     
-    call visidian#debug#trace('CORE', 'Current tags: ' . string(tags))
-    call visidian#debug#trace('CORE', 'Current links: ' . string(links))
+    if g:visidian_debug
+        call visidian#debug#trace('CORE', 'Current tags: ' . string(tags))
+        call visidian#debug#trace('CORE', 'Current links: ' . string(links))
+    endif
 
     for file in a:all_files
         try
@@ -401,7 +447,9 @@ function! s:weight_and_sort_links(current_yaml, all_files)
             for tag in tags
                 if index(file_tags, tag) >= 0
                     let weight += 2
-                    call visidian#debug#trace('CORE', 'Tag match in ' . file . ': ' . tag)
+                    if g:visidian_debug
+                        call visidian#debug#trace('CORE', 'Tag match in ' . file . ': ' . tag)
+                    endif
                 endif
             endfor
             
@@ -409,7 +457,9 @@ function! s:weight_and_sort_links(current_yaml, all_files)
             for link in links
                 if index(file_links, link) >= 0
                     let weight += 1
-                    call visidian#debug#trace('CORE', 'Link match in ' . file . ': ' . link)
+                    if g:visidian_debug
+                        call visidian#debug#trace('CORE', 'Link match in ' . file . ': ' . link)
+                    endif
                 endif
             endfor
             
