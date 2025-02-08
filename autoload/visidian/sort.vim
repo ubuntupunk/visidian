@@ -193,9 +193,9 @@ function! s:determine_directory(file)
         let max_matches = 0
         let target_dir = 'resources'  " Default to resources
         
-        for [dir, count] in items(matches)
-            if count > max_matches
-                let max_matches = count
+        for [dir, match_count] in items(matches)
+            if match_count > max_matches
+                let max_matches = match_count
                 let target_dir = dir
             endif
         endfor
