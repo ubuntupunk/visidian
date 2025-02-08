@@ -7,6 +7,12 @@
   \___/|_|___/_|\__,_|_|\__,_|_| |_|
 ```
 
+<p align="center">
+  <a href="https://www.buymeacoffee.com/ubuntupunk">
+    <img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=ubuntupunk&button_colour=FF5F5F&font_colour=ffffff&font_family=Inter&outline_colour=000000&coffee_colour=FFDD00" />
+  </a>
+</p>
+
 # Visidian - An Obsidian-like PKM for Vim
 
 Visidian is a Vim plugin designed to provide Obsidian-like **Personal Knowledge Management (PKM)** functionality within Vim. It supports managing notes, interconnecting them, and organizing your knowledge using various methods, including the PARA method.
