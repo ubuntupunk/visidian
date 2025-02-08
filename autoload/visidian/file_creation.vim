@@ -22,27 +22,37 @@ let s:gtd_logic = {
 "FUNCTION: Create File
 function! visidian#file_creation#new_md_file()
     if g:visidian_vault_path == ''
-        echoerr "No vault path set. Please create or set a vault first."
+        call visidian#debug#error('PARA', 'No vault path set')
+        echohl ErrorMsg
+        echo "No vault path set. Please create or set a vault first."
+        echohl None
         return
     endif
 
     let name = input("Enter new markdown file name: ")
     if name == ''
+        call visidian#debug#info('PARA', 'No file name provided')
         echo "No file name provided."
         return
     endif
+    call visidian#debug#debug('PARA', 'Creating new file: ' . name)
 
     let tags = input("Enter tags for the file (comma-separated): ")
     let tags_list = map(split(tags, ','), 'trim(v:val)')
+    call visidian#debug#debug('PARA', 'Tags: ' . string(tags_list))
 
     let links = input("Enter linked file names (comma-separated, without .md): ")
     let links_list = map(split(links, ','), 'trim(v:val)')
+    call visidian#debug#debug('PARA', 'Links: ' . string(links_list))
 
     let suggested_dir = s:suggest_directory(tags_list)
+    call visidian#debug#debug('PARA', 'Suggested directory: ' . suggested_dir)
+    
     let confirmed_dir = input('Save file in directory? [' . suggested_dir . ']: ', suggested_dir)
     if empty(confirmed_dir)
         let confirmed_dir = suggested_dir
     endif
+    call visidian#debug#debug('PARA', 'Confirmed directory: ' . confirmed_dir)
 
     " Remove trailing slash if present
     let confirmed_dir = substitute(confirmed_dir, '/$', '', '')
@@ -50,11 +60,14 @@ function! visidian#file_creation#new_md_file()
     " Ensure directory exists
     let full_dir = g:visidian_vault_path . confirmed_dir
     if !isdirectory(full_dir)
+        call visidian#debug#info('PARA', 'Creating directory: ' . full_dir)
         try
             call mkdir(full_dir, 'p')
-            echo "Created directory: " . confirmed_dir
         catch
-            echoerr "Failed to create directory: " . confirmed_dir
+            call visidian#debug#error('PARA', 'Failed to create directory: ' . v:exception)
+            echohl ErrorMsg
+            echo "Failed to create directory: " . v:exception
+            echohl None
             return
         endtry
     endif
@@ -79,11 +92,13 @@ function! visidian#file_creation#new_md_file()
     endtry
 endfunction
 
-" FUNCTION: Suggest Directory
+"FUNCTION: Suggest directory based on tags
 function! s:suggest_directory(tags)
+    call visidian#debug#debug('PARA', 'Suggesting directory for tags: ' . string(a:tags))
+    
     let scores = {'projects': 0, 'areas': 0, 'resources': 0, 'archives': 0}
     let default_dir = 'resources'
-
+    
 " Score based on tags
     for tag in a:tags
         for [dir, tag_weights] in items(s:para_logic)
@@ -97,7 +112,7 @@ function! s:suggest_directory(tags)
             let scores[s:gtd_logic[tolower(tag)]] += 15 " High weight for direct GTD matches
         endif
     endfor
-
+    
 " Determine the highest scored directory
     let max_score = max(values(scores))
     let best_dirs = filter(keys(scores), {_, v -> scores[v] == max_score})
@@ -107,8 +122,8 @@ function! s:suggest_directory(tags)
         for dir in ['projects', 'areas', 'resources', 'archives']
             if index(best_dirs, dir) != -1
                 return dir . '/' . s:suggest_subdir(dir, a:tags)
-            endif
-        endfor
+                endif
+            endfor
     else
         return best_dirs[0] . '/' . s:suggest_subdir(best_dirs[0], a:tags)
     endif
@@ -124,8 +139,8 @@ function! s:suggest_subdir(dir, tags)
                 return 'clients/'
             elseif tag =~? '\vteam|group'
                 return 'teams/'
-            endif
-        endfor
+        endif
+    endfor
         return 'general/'
     endif
     return ''
