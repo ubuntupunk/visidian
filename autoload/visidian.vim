@@ -723,7 +723,8 @@ function! visidian#menu() abort
         \ {'id': 12, 'text': icons.preview . ' Toggle Preview', 'cmd': 'call visidian#toggle_preview()', 'desc': 'Toggle markdown preview'},
         \ {'id': 13, 'text': icons.sidebar . ' Toggle Sidebar', 'cmd': 'call visidian#toggle_sidebar()', 'desc': 'Toggle sidebar visibility'},
         \ {'id': 14, 'text': icons.help . ' Help',              'cmd': 'call visidian#help()',         'desc': 'Show help documentation'},
-        \ {'id': 15, 'text': icons.close . ' Close Menu',       'cmd': 'close',                'desc': 'Close this menu'}
+        \ {'id': 15, 'text': icons.close . ' Close Menu',       'cmd': 'close',                'desc': 'Close this menu'},
+        \ {'id': 16, 'text': icons.para . ' Import & Sort',     'cmd': 'call visidian#import_sort()', 'desc': 'Import and sort files using PARA'}
     \ ]
 
     " Calculate menu dimensions
@@ -1448,7 +1449,6 @@ function! VisidianGenerateTags()
 "  call writefile([
 "    \ '--regex-Markdown=/^---$(.*?)---$/m,metadata/',
 "    \ '--regex-Markdown=/^#+\s+(.*)/\1/h,heading/',
-"    \ '--regex-Markdown=/^[ \t]*```[a-z]*\s*$/\n/,c,codeblock/',
 "    \ '--regex-Markdown/^>{3}\s+(.*)/1/,p,pullquote/',
 "    \ '--regex-Markdown/\[(.*?)\]\((.*?)\)/2/,i,image/',
 "    \ '--regex-Markdown/\[(.*?)\]\((.*?)\)/2/,l,link/'
@@ -1665,3 +1665,49 @@ augroup VisidianSession
     autocmd!
     autocmd VimLeave * call visidian#save_session()
 augroup END
+
+" FUNCTION: Import and sort files from a directory
+function! visidian#import_sort() abort
+    " Check if vault path is set
+    if empty(g:visidian_vault_path)
+        echohl ErrorMsg
+        echo "No vault path set. Please create or set a vault first."
+        echohl None
+        return
+    endif
+
+    " Ask for import directory
+    let import_dir = input('Enter path to import from (or press Enter for default import/ folder): ')
+    
+    " If no directory specified, use default import directory
+    if empty(import_dir)
+        let import_dir = g:visidian_vault_path . 'import'
+        " Create import directory if it doesn't exist
+        if !isdirectory(import_dir)
+            call mkdir(import_dir, 'p')
+            echo "Created default import directory at: " . import_dir
+        endif
+    endif
+
+    " Normalize path
+    let import_dir = fnamemodify(import_dir, ':p')
+    
+    " Check if directory exists
+    if !isdirectory(import_dir)
+        echohl ErrorMsg
+        echo "Directory does not exist: " . import_dir
+        echohl None
+        return
+    endif
+
+    " Set import directory as vault path temporarily
+    let original_vault_path = g:visidian_vault_path
+    let g:visidian_vault_path = import_dir
+
+    " Run the sort
+    echo "Sorting files from: " . import_dir
+    call visidian#sort#sort()
+
+    " Restore original vault path
+    let g:visidian_vault_path = original_vault_path
+endfunction

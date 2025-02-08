@@ -124,6 +124,24 @@ command! -nargs=0 VisidianBrowseCtags call VisidianBrowseTags()
 "Toggle Spelling
 command! -nargs=0 VisidianToggleSpell call visidian#toggle_spell()
 
+" Commands
+command! -nargs=0 VisidianMenu call visidian#menu()
+command! -nargs=0 VisidianNewNote call visidian#new_md_file()
+command! -nargs=0 VisidianNewFolder call visidian#new_folder()
+command! -nargs=0 VisidianSearch call visidian#search()
+command! -nargs=0 VisidianLinkNotes call visidian#link_notes()
+command! -nargs=0 VisidianPARA call visidian#create_para_folders()
+command! -nargs=0 VisidianSaveSession call visidian#save_session()
+command! -nargs=0 VisidianLoadSession call visidian#load_session()
+command! -nargs=0 VisidianListSessions call visidian#list_sessions()
+command! -nargs=0 VisidianChooseSession call visidian#choose_session()
+command! -nargs=0 VisidianClearSessions call visidian#clear_sessions()
+command! -nargs=0 VisidianToggleAutoSync call visidian#toggle_auto_sync()
+command! -nargs=0 VisidianTogglePreview call visidian#toggle_preview()
+command! -nargs=0 VisidianToggleSidebar call visidian#toggle_sidebar()
+command! -nargs=0 VisidianHelp call visidian#help()
+command! -nargs=0 VisidianImportSort call visidian#import_sort()
+
 " Set up autocommands for statusline
 augroup VisidianStatusLine
     autocmd!
