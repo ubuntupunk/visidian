@@ -12,6 +12,39 @@ function! s:debug_msg(msg)
     endif
 endfunction
 
+" FUNCTION: Open URL in browser
+function! s:open_in_browser(url)
+    call s:debug_msg("Opening URL in browser: " . a:url)
+    
+    if has('unix')
+        let browsers = ['xdg-open', 'google-chrome', 'firefox', 'chromium']
+        let cmd = ''
+        for browser in browsers
+            if executable(browser)
+                let cmd = browser
+                break
+            endif
+        endfor
+        
+        if empty(cmd)
+            call s:debug_msg("No browser found")
+            echo "Error: No suitable browser found"
+            return 0
+        endif
+        
+        call system(cmd . ' ' . a:url . ' &')
+        return 1
+    elseif has('win32') || has('win64')
+        call system('start ' . a:url)
+        return 1
+    elseif has('mac') || has('macunix')
+        call system('open ' . a:url)
+        return 1
+    endif
+    
+    return 0
+endfunction
+
 "FUNCTION: preview toggle
 function! visidian#preview#toggle_preview()
     call s:debug_msg("Current filetype: " . &filetype)
@@ -77,20 +110,6 @@ function! s:stop_preview()
         InstantMarkdownStop
     endif
 
-    " Finally, clean up the preview buffer if it exists
-    if exists('s:preview_buf') && bufexists(s:preview_buf)
-        call s:debug_msg("Cleaning up preview buffer: " . s:preview_buf)
-        " Try to close any associated windows first
-        let winids = win_findbuf(s:preview_buf)
-        for winid in winids
-            call s:debug_msg("Closing window: " . winid)
-            call win_execute(winid, 'close')
-        endfor
-        " Then delete the buffer
-        execute 'bd! ' . s:preview_buf
-        unlet s:preview_buf
-    endif
-
     let s:preview_active = 0
     call s:debug_msg("Preview stopped")
     echo "Markdown preview stopped."
@@ -111,33 +130,11 @@ function! s:start_grip_preview()
         return
     endif
 
-    if !executable('curl')
-        call s:debug_msg("curl not found")
-        echo "Error: curl is required for preview functionality"
-        return
-    endif
-
     " Stop any existing preview first
     call s:stop_preview()
 
-    " Create a new vertical split on the right
-    call s:debug_msg("Creating preview buffer")
-    botright vnew
-    let s:preview_buf = bufnr('%')
-    call s:debug_msg("Created preview buffer: " . s:preview_buf)
-    
-    " Set up the buffer
-    setlocal buftype=nofile
-    setlocal bufhidden=hide
-    setlocal noswapfile
-    setlocal nobuflisted
-    setlocal nomodifiable
-    setlocal nofoldenable
-    setlocal nonumber
-    setlocal norelativenumber
-    
     " Start grip in the background
-    let current_file = expand('#' . bufnr('#') . ':p')
+    let current_file = expand('%:p')
     let cmd = ['grip', current_file, '0.0.0.0:6419', '--quiet']
     call s:debug_msg("Starting grip with command: " . string(cmd))
     
@@ -153,73 +150,20 @@ function! s:start_grip_preview()
         call s:debug_msg("Started Vim job: " . string(s:grip_job))
     endif
 
-    " Set the window size
-    vertical resize 50
-    
-    " Add a status line to the preview window
-    setlocal statusline=%=%{exists('s:preview_active')?'Preview\ Active':'Preview\ Starting'}
-
-    " Wait a bit longer for grip to start
+    " Wait a bit for grip to start
     call s:debug_msg("Waiting for grip to start")
     sleep 1000m
     
-    " Try to load the preview content
-    call s:load_preview_content()
-    
-    let s:preview_active = 1
-    call s:debug_msg("Grip preview started successfully")
-    echo "Markdown preview started with grip."
-endfunction
-
-" FUNCTION: Load Preview Content
-function! s:load_preview_content()
-    call s:debug_msg("Loading preview content")
-    
-    if !exists('s:preview_buf') || !bufexists(s:preview_buf)
-        call s:debug_msg("Preview buffer not found")
-        return
-    endif
-    
-    " Load the preview URL in the buffer
-    let url = 'http://0.0.0.0:6419'
-    call s:debug_msg("Fetching content from: " . url)
-    
-    if !executable('curl')
-        call s:debug_msg("curl not found")
-        echo "Error: curl is required for preview functionality"
-        return
-    endif
-
-    " Try up to 3 times with increasing delays
-    let attempts = 0
-    let max_attempts = 3
-    let success = 0
-
-    while attempts < max_attempts && !success
-        let attempts += 1
-        call s:debug_msg("Attempt " . attempts . " of " . max_attempts)
-        
-        let content = system('curl -s ' . url)
-        if v:shell_error == 0 && len(content) > 0
-            call s:debug_msg("Content fetched successfully")
-            call setbufvar(s:preview_buf, '&modifiable', 1)
-            call deletebufline(s:preview_buf, 1, '$')
-            call setbufline(s:preview_buf, 1, split(content, '\n'))
-            call setbufvar(s:preview_buf, '&modifiable', 0)
-            let success = 1
-        else
-            call s:debug_msg("Failed to fetch content (attempt " . attempts . "): " . v:shell_error)
-            if attempts < max_attempts
-                let wait_time = attempts * 500
-                call s:debug_msg("Waiting " . wait_time . "ms before retry")
-                execute "sleep " . wait_time . "m"
-            endif
-        endif
-    endwhile
-
-    if !success
-        echo "Error: Could not fetch preview content. Check if grip is running correctly."
-        call s:debug_msg("All attempts to fetch content failed")
+    " Open in browser
+    let url = 'http://localhost:6419'
+    if s:open_in_browser(url)
+        let s:preview_active = 1
+        call s:debug_msg("Grip preview started successfully")
+        echo "Markdown preview started in browser."
+    else
+        call s:debug_msg("Failed to open browser")
+        echo "Error: Could not open browser for preview."
+        call s:stop_preview()
     endif
 endfunction
 
