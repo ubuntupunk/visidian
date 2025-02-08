@@ -21,6 +21,7 @@ This is currently just a markdown note-taking tool with some extra functionality
 4. [Tips for Using Visidian](#tips-for-using-visidian)
 5. [Session Management](#session-management)
 6. [Recommended Usage & Project Direction](#recommended-usage--project-direction)
+7. [Debugging](#debugging)
 
 ---
 ## Installation
@@ -171,6 +172,46 @@ While we currently emphasize folder-based organization, Visidian is evolving tow
 - Upcoming: Chat-with-your-notes functionality (planned for future releases)
 
 This hybrid approach allows you to maintain organized structures while preparing for more advanced knowledge management features.
+
+## Debugging
+
+Visidian includes a debug mode that can help diagnose issues or understand the plugin's behavior. When enabled, it provides detailed logging about operations such as:
+- File and note operations
+- Search functionality
+- Preview rendering
+- Session management
+- PARA folder operations
+
+### Enabling Debug Mode
+
+Add the following to your `vimrc`:
+```vim
+let g:visidian_debug = 1
+```
+
+### Viewing Debug Output
+
+1. Debug messages are displayed in Vim's message history
+2. View them using the `:messages` command
+3. Messages are prefixed with component names (e.g., "Visidian Preview:", "Visidian Search:") for easy identification
+
+### When to Use Debug Mode
+
+Enable debug mode when:
+- Setting up Visidian for the first time
+- Investigating unexpected behavior
+- Understanding how specific features work
+- Contributing to Visidian development
+
+### Debug Components
+
+Different components provide specific debug information:
+- **Preview**: Buffer creation, grip process management, content loading
+- **Search**: Query processing, FZF integration, result handling
+- **Core**: Vault operations, file management, PARA structure
+- **Session**: Session saving, loading, and state management
+
+Note: Debug mode may impact performance slightly, so it's recommended to disable it during normal use.
 
 ## Tips for Using Visidian
 
