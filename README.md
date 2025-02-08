@@ -20,6 +20,7 @@ This is currently just a markdown note-taking tool with some extra functionality
 3. [Combining GTD with Visidian](#combining-gtd-with-visidian)
 4. [Tips for Using Visidian](#tips-for-using-visidian)
 5. [Session Management](#session-management)
+6. [Recommended Usage & Project Direction](#recommended-usage--project-direction)
 
 ---
 ## Installation
@@ -52,15 +53,6 @@ git clone https://github.com/yourusername/visidian.vim.git ~/.vim/bundle/visidia
 ```
 After installation, make sure to restart Vim or source your vimrc for changes to take effect
 
-## Configuration
-note: this section is just a placholder, fixme.
-
-Update Your vimrc:
-
-Add the following line to your .vimrc or init.vim if you haven't already:
-```vim
-set runtimepath^=~/.vim/pack/visidian/start/visidian.vim
-```
 ## Generate Help Tags:
 Open Vim and run:
 ```vim
@@ -166,7 +158,19 @@ Getting Things Done (GTD) by David Allen can be seamlessly integrated with Visid
 - 'Areas' can represent contexts or areas of focus from GTD.
 - 'Resources' for reference material, and 'Archives' for completed or outdated projects.
 
----
+## Recommended Usage & Project Direction
+
+### Current Recommended Approach
+We strongly recommend starting with the VisidianParaGen folders structure from day one. This provides a solid foundation for organizing your knowledge using the PARA method, helping you avoid the common pitfall of unstructured note accumulation. The VisidianParaGen structure ensures your notes are organized in a way that makes them both accessible and actionable.
+
+### Future Direction
+While we currently emphasize folder-based organization, Visidian is evolving towards treating all notes as a unified stack with:
+- Intelligent sorting capabilities
+- Instant recall through advanced fuzzy search
+- Context-aware note relationships
+- Upcoming: Chat-with-your-notes functionality (planned for future releases)
+
+This hybrid approach allows you to maintain organized structures while preparing for more advanced knowledge management features.
 
 ## Tips for Using Visidian
 
