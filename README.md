@@ -42,14 +42,14 @@ This is currently just a markdown note-taking tool with some extra functionality
 * **Vim-Plug:**
 Add the following to your vimrc:
 ```vim
-Plug 'yourusername/visidian.vim'
+Plug 'ubuntupunk/visidian.vim'
 ```
 Then, in Vim, run :PlugInstall.
 
 * **Vundle:**
 Add this line to your vimrc:
 ```vim
-Plugin 'yourusername/visidian.vim'
+Plugin 'ubuntupunk/visidian.vim'
 ```
 Run :PluginInstall from Vim.
 
