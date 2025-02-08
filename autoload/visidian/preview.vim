@@ -111,6 +111,12 @@ function! s:start_grip_preview()
         return
     endif
 
+    if !executable('curl')
+        call s:debug_msg("curl not found")
+        echo "Error: curl is required for preview functionality"
+        return
+    endif
+
     " Stop any existing preview first
     call s:stop_preview()
 
@@ -153,9 +159,9 @@ function! s:start_grip_preview()
     " Add a status line to the preview window
     setlocal statusline=%=%{exists('s:preview_active')?'Preview\ Active':'Preview\ Starting'}
 
-    " Wait a bit for grip to start
+    " Wait a bit longer for grip to start
     call s:debug_msg("Waiting for grip to start")
-    sleep 500m
+    sleep 1000m
     
     " Try to load the preview content
     call s:load_preview_content()
@@ -178,19 +184,42 @@ function! s:load_preview_content()
     let url = 'http://0.0.0.0:6419'
     call s:debug_msg("Fetching content from: " . url)
     
-    if executable('curl')
+    if !executable('curl')
+        call s:debug_msg("curl not found")
+        echo "Error: curl is required for preview functionality"
+        return
+    endif
+
+    " Try up to 3 times with increasing delays
+    let attempts = 0
+    let max_attempts = 3
+    let success = 0
+
+    while attempts < max_attempts && !success
+        let attempts += 1
+        call s:debug_msg("Attempt " . attempts . " of " . max_attempts)
+        
         let content = system('curl -s ' . url)
-        if v:shell_error == 0
+        if v:shell_error == 0 && len(content) > 0
             call s:debug_msg("Content fetched successfully")
             call setbufvar(s:preview_buf, '&modifiable', 1)
             call deletebufline(s:preview_buf, 1, '$')
             call setbufline(s:preview_buf, 1, split(content, '\n'))
             call setbufvar(s:preview_buf, '&modifiable', 0)
+            let success = 1
         else
-            call s:debug_msg("Failed to fetch content: " . v:shell_error)
+            call s:debug_msg("Failed to fetch content (attempt " . attempts . "): " . v:shell_error)
+            if attempts < max_attempts
+                let wait_time = attempts * 500
+                call s:debug_msg("Waiting " . wait_time . "ms before retry")
+                execute "sleep " . wait_time . "m"
+            endif
         endif
-    else
-        call s:debug_msg("curl not found")
+    endwhile
+
+    if !success
+        echo "Error: Could not fetch preview content. Check if grip is running correctly."
+        call s:debug_msg("All attempts to fetch content failed")
     endif
 endfunction
 
