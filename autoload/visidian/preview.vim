@@ -17,9 +17,9 @@ function! visidian#preview#toggle_preview()
     call s:debug_msg("Current filetype: " . &filetype)
     call s:debug_msg("Current buffer: " . bufname('%'))
     
-    if &filetype != 'markdown'
-        call s:debug_msg("Not a markdown file, aborting")
-        echo "This command only works with Markdown files."
+    if &filetype != 'markdown' && &filetype != 'visidian'
+        call s:debug_msg("Not a markdown or visidian file, aborting")
+        echo "This command only works with Markdown or Visidian files."
         return
     endif
 
