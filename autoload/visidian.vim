@@ -723,8 +723,8 @@ function! visidian#menu() abort
         \ {'id': 12, 'text': icons.preview . ' Toggle Preview', 'cmd': 'call visidian#toggle_preview()', 'desc': 'Toggle markdown preview'},
         \ {'id': 13, 'text': icons.sidebar . ' Toggle Sidebar', 'cmd': 'call visidian#toggle_sidebar()', 'desc': 'Toggle sidebar visibility'},
         \ {'id': 14, 'text': icons.help . ' Help',              'cmd': 'call visidian#help()',         'desc': 'Show help documentation'},
-        \ {'id': 15, 'text': icons.para . ' Import & Sort',     'cmd': 'call visidian#import_sort()', 'desc': 'Import and sort files using PARA'}
-        \ {'id': 16, 'text': icons.close . ' Close Menu',       'cmd': 'close',                'desc': 'Close this menu'},
+        \ {'id': 15, 'text': icons.para . ' Import & Sort',     'cmd': 'call visidian#import_sort()', 'desc': 'Import and sort files using PARA'},
+        \ {'id': 16, 'text': icons.close . ' Close Menu',       'cmd': 'close',                'desc': 'Close this menu'}
     \ ]
 
     " Calculate menu dimensions
