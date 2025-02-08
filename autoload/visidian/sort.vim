@@ -129,11 +129,12 @@ function! s:get_yaml_front_matter(file)
         endfor
         
         if !yaml_end
-            throw 'No valid YAML front matter found'
+            call visidian#debug#warn('PARA', 'No valid YAML front matter found')
+            return {}
         endif
         
         return s:parse_yaml(yaml_text)
-    catch
+    catch /.*/
         call visidian#debug#error('PARA', 'Failed to read/parse YAML: ' . v:exception)
         return {}
     endtry
@@ -201,7 +202,7 @@ function! s:determine_directory(file)
         
         call visidian#debug#info('PARA', 'Determined directory: ' . target_dir)
         return target_dir
-    catch
+    catch /.*/
         call visidian#debug#error('PARA', 'Failed to determine directory: ' . v:exception)
         return 'resources'  " Default to resources on error
     endtry
@@ -259,7 +260,7 @@ function! s:update_yaml_front_matter(file)
         let updated_lines = lines[0:yaml_start] + yaml_lines + lines[yaml_end:]
         call writefile(updated_lines, a:file)
         call visidian#debug#info('PARA', 'Updated YAML front matter successfully')
-    catch
+    catch /.*/
         call visidian#debug#error('PARA', 'Failed to update YAML front matter: ' . v:exception)
     endtry
 endfunction
