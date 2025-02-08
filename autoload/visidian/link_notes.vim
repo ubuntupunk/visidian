@@ -2,13 +2,16 @@
 
 " FUNCTION: Check if YAML parser is available
 function! s:yaml_parser_available()
-    return exists('*yaml#decode')
+    let available = exists('*yaml#decode')
+    call visidian#debug#debug('CORE', 'YAML parser available: ' . available)
+    return available
 endfunction
 
 "FUNCTION: Link Notes
 function! visidian#link_notes#link_notes()
     " Check if vault exists
     if empty(g:visidian_vault_path)
+        call visidian#debug#error('CORE', 'No vault path set')
         echohl ErrorMsg
         echo "No vault path set. Please create or set a vault first."
         echohl None
@@ -17,6 +20,7 @@ function! visidian#link_notes#link_notes()
 
     " Normalize vault path
     let vault_path = substitute(g:visidian_vault_path, '[\/]\+$', '', '')
+    call visidian#debug#debug('CORE', 'Using vault path: ' . vault_path)
 
     " Get all markdown files in the vault
     let vault_files = []
@@ -26,10 +30,14 @@ function! visidian#link_notes#link_notes()
             " Get all markdown files in this folder and its subfolders
             let folder_files = glob(folder_path . '/**/*.md', 0, 1)
             let vault_files += folder_files
+            call visidian#debug#trace('CORE', 'Found ' . len(folder_files) . ' files in ' . para_folder)
+        else
+            call visidian#debug#debug('CORE', 'Directory not found: ' . folder_path)
         endif
     endfor
 
     if empty(vault_files)
+        call visidian#debug#warn('CORE', 'No markdown files found in vault')
         echohl WarningMsg
         echo "No markdown files found in vault."
         echohl None
@@ -39,217 +47,181 @@ function! visidian#link_notes#link_notes()
     " Get current file path
     let current_file = expand('%:p')
     if current_file !~# '\.md$'
+        call visidian#debug#error('CORE', 'Current file is not markdown: ' . current_file)
         echohl ErrorMsg
         echo "Current file is not a markdown file."
         echohl None
         return 0
     endif
+    call visidian#debug#debug('CORE', 'Processing current file: ' . current_file)
 
     " Remove current file from the list if it exists
     let vault_files = filter(vault_files, 'v:val !=# current_file')
+    call visidian#debug#debug('CORE', 'Found ' . len(vault_files) . ' potential link targets')
 
     if empty(vault_files)
+        call visidian#debug#warn('CORE', 'No other markdown files found in vault')
         echohl WarningMsg
-        echo "No other markdown files found to link to."
+        echo "No other markdown files found in vault."
         echohl None
         return 0
     endif
 
-    " Get YAML front matter from current file
-    let current_yaml = s:get_yaml_front_matter(current_file)
-    let weighted_links = s:weight_and_sort_links(current_yaml, vault_files)
-
-    " Initialize display files list
-    let display_files = []
-    let counter = 1
-
-    " If we have weighted links, show them with scores
-    if !empty(weighted_links)
-        for [file, score] in items(weighted_links)
-            " Get relative path from vault root
-            let rel_path = substitute(file, escape(vault_path . '/', '/\'), '', '')
-            " Add number prefix, score, and make it look nice
-            call add(display_files, printf('%2d) %-50s [Score: %d]', counter, rel_path, score))
-            let counter += 1
-        endfor
-    endif
-
-    " If no weighted links, show all files
-    if empty(display_files)
-        for file in vault_files
-            let rel_path = substitute(file, escape(vault_path . '/', '/\'), '', '')
-            call add(display_files, printf('%2d) %s', counter, rel_path))
-            let counter += 1
-        endfor
-    endif
-
-    " Show file list
-    echo "Select file to link to:\n"
-    echo join(display_files, "\n")
-    
-    " Get user choice
-    let choice = input("\nEnter number (1-" . len(display_files) . "): ")
-    if empty(choice) || choice < 1 || choice > len(display_files)
-        echo "\nInvalid choice. Cancelled."
+    " Check for YAML parser
+    if !s:yaml_parser_available()
+        call visidian#debug#error('CORE', 'YAML parser not available')
+        echohl ErrorMsg
+        echo "YAML parser not available. Please install vim-yaml."
+        echohl None
         return 0
     endif
 
-    " Get selected file
-    let target_file = !empty(weighted_links) ? keys(weighted_links)[choice - 1] : vault_files[choice - 1]
+    " Read current file's YAML front matter
+    try
+        let current_yaml = s:get_yaml_front_matter(current_file)
+        call visidian#debug#debug('CORE', 'Current file YAML: ' . string(current_yaml))
+    catch
+        call visidian#debug#error('CORE', 'Failed to parse YAML: ' . v:exception)
+        echohl ErrorMsg
+        echo "Failed to parse YAML front matter: " . v:exception
+        echohl None
+        return 0
+    endtry
+
+    " Weight and sort potential links
+    let weighted_files = s:weight_and_sort_links(current_yaml, vault_files)
+    call visidian#debug#debug('CORE', 'Weighted ' . len(weighted_files) . ' potential links')
+
+    " Present top matches to user
+    let max_suggestions = 10
+    let top_matches = weighted_files[0:max_suggestions-1]
     
-    " Create the link
-    let link_text = fnamemodify(target_file, ':t:r')  " Get filename without extension
-    let rel_path = substitute(target_file, escape(vault_path . '/', '/\'), '', '')
-    let link = '[[' . rel_path . '|' . link_text . ']]'
-    
-    " Insert the link at cursor position
-    let pos = getpos('.')
-    let line = getline('.')
-    let new_line = strpart(line, 0, pos[2]-1) . link . strpart(line, pos[2]-1)
-    call setline('.', new_line)
-    
-    " Move cursor to end of inserted link
-    let pos[2] += len(link)
-    call setpos('.', pos)
-    
-    echo "\nLinked to: " . rel_path
-    return 1
+    call visidian#debug#info('CORE', 'Presenting top ' . len(top_matches) . ' matches')
+    echo "Top related files:"
+    let i = 1
+    for [file, weight] in top_matches
+        echo i . ". " . fnamemodify(file, ':t:r') . " (score: " . weight . ")"
+        let i += 1
+    endfor
+
+    let choice = input("Select file to link (1-" . len(top_matches) . ", or 0 to cancel): ")
+    if choice > 0 && choice <= len(top_matches)
+        let selected_file = top_matches[choice-1][0]
+        call s:create_link(selected_file)
+        call visidian#debug#info('CORE', 'Created link to: ' . selected_file)
+        return 1
+    else
+        call visidian#debug#info('CORE', 'Link creation cancelled')
+        echo "Link creation cancelled."
+        return 0
+    endif
 endfunction
 
-"FUNCTION: Weight and Sort Links
+"FUNCTION: Get YAML front matter
+function! s:get_yaml_front_matter(file)
+    call visidian#debug#trace('CORE', 'Reading YAML from: ' . a:file)
+    try
+        let lines = readfile(a:file)
+        let yaml_text = []
+        let in_yaml = 0
+        let yaml_end = 0
+        
+        for line in lines
+            if line =~ '^---\s*$'
+                if !in_yaml
+                    let in_yaml = 1
+                    continue
+                else
+                    let yaml_end = 1
+                    break
+                endif
+            endif
+            if in_yaml
+                call add(yaml_text, line)
+            endif
+        endfor
+        
+        if !yaml_end
+            throw 'No valid YAML front matter found'
+        endif
+        
+        let yaml = yaml#decode(join(yaml_text, "\n"))
+        call visidian#debug#trace('CORE', 'Parsed YAML: ' . string(yaml))
+        return yaml
+    catch
+        call visidian#debug#error('CORE', 'Failed to read/parse YAML: ' . v:exception)
+        throw v:exception
+    endtry
+endfunction
+
+"FUNCTION: Weight and sort potential links
 function! s:weight_and_sort_links(current_yaml, all_files)
+    call visidian#debug#debug('CORE', 'Weighting potential links')
     let weights = {}
     let tags = get(a:current_yaml, 'tags', [])
     let links = get(a:current_yaml, 'links', [])
+    
+    call visidian#debug#trace('CORE', 'Current tags: ' . string(tags))
+    call visidian#debug#trace('CORE', 'Current links: ' . string(links))
 
-    " Calculate weights for each file
     for file in a:all_files
-        let file_yaml = s:get_yaml_front_matter(file)
-        let file_score = 0
-
-        if !empty(file_yaml)
-            " Weight by tags
+        try
+            let yaml = s:get_yaml_front_matter(file)
+            let file_tags = get(yaml, 'tags', [])
+            let file_links = get(yaml, 'links', [])
+            
+            " Calculate weight based on shared tags and links
+            let weight = 0
+            
+            " Tag matching
             for tag in tags
-                if index(get(file_yaml, 'tags', []), tag) != -1
-                    let file_score += 10  " Higher weight for tag matches
+                if index(file_tags, tag) >= 0
+                    let weight += 2
+                    call visidian#debug#trace('CORE', 'Tag match in ' . file . ': ' . tag)
                 endif
             endfor
-
-            " Weight by existing links
+            
+            " Link matching
             for link in links
-                if fnamemodify(file, ':t:r') == link
-                    let file_score += 20  " High weight for direct link matches
+                if index(file_links, link) >= 0
+                    let weight += 1
+                    call visidian#debug#trace('CORE', 'Link match in ' . file . ': ' . link)
                 endif
             endfor
-
-            " Weight by category match
-            if get(file_yaml, 'category', '') == get(a:current_yaml, 'category', '')
-                let file_score += 5  " Medium weight for category matches
+            
+            " Store weight if non-zero
+            if weight > 0
+                let weights[file] = weight
             endif
-
-            " Weight by subcategory match
-            if get(file_yaml, 'subcategory', '') == get(a:current_yaml, 'subcategory', '')
-                let file_score += 8  " Medium-high weight for subcategory matches
-            endif
-
-            " Store score if greater than 0
-            if file_score > 0
-                let weights[file] = file_score
-            endif
-        endif
+            
+        catch
+            call visidian#debug#warn('CORE', 'Failed to process file for weighting: ' . file)
+            continue
+        endtry
     endfor
-
-    " Convert dictionary to list of [file, score] pairs
-    let weighted_list = []
-    for [file, score] in items(weights)
-        call add(weighted_list, [file, score])
-    endfor
-
-    " Sort by score in descending order
-    function! s:compare_scores(a, b)
-        return a:b[1] - a:a[1]
-    endfunction
-
-    call sort(weighted_list, function('s:compare_scores'))
-
-    " Convert back to dictionary preserving sort order
-    let sorted_weights = {}
-    for [file, score] in weighted_list
-        let sorted_weights[file] = score
-    endfor
-
-    return sorted_weights
+    
+    " Sort files by weight
+    let sorted = sort(items(weights), {a, b -> b[1] - a[1]})
+    call visidian#debug#debug('CORE', 'Sorted ' . len(sorted) . ' weighted files')
+    return sorted
 endfunction
 
-"FUNCTION: Parse YAML front matter
-function! s:get_yaml_front_matter(file)
-    let lines = readfile(a:file)
-    let yaml_start = match(lines, '^---$')
-    if yaml_start == -1
-        return {}
-    endif
-    let yaml_end = match(lines, '^---$', yaml_start + 1)
-    if yaml_end == -1
-        return {}
-    endif
-    let yaml_content = join(lines[yaml_start+1 : yaml_end-1], "\n")
-
-    if s:yaml_parser_available()
-        return yaml#decode(yaml_content)
-    else
-        " Fallback to simple parsing for tags and links
-        let yaml_dict = {}
-        for line in split(yaml_content, '\n')
-            let match = matchlist(line, '\v^(\w+):\s*(.*)')
-            if !empty(match)
-                let key = match[1]
-                let value = match[2]
-                if key == 'tags' || key == 'links'
-                    let yaml_dict[key] = map(split(value, '\s*,\s*'), 'trim(v:val)')
-                else
-                    let yaml_dict[key] = value
-                endif
-            endif
-        endfor
-        return yaml_dict
-    endif
-endfunction
-
-"FUNCTION: Search and link notes
-function! s:search_and_link(links, tags)
-    let vault_files = globpath(g:visidian_vault_path, '**/*.md', 0, 1)
-    let linked_notes = {}
-
-    for file in vault_files
-        let file_yaml = s:get_yaml_front_matter(file)
-        if !empty(file_yaml)
-            let file_links = get(file_yaml, 'links', [])
-            let file_tags = get(file_yaml, 'tags', [])
-
-            " Check for matching tags
-            for tag in a:tags
-                if index(file_tags, tag) != -1
-                    let linked_notes[file] = 'Tag match: ' . tag
-                endif
-            endfor
-
-            " Check for direct links
-            if !empty(a:links) && index(file_links, fnamemodify(expand('%'), ':t')) != -1
-                let linked_notes[file] = 'Direct link'
-            endif
-        endif
-    endfor
-
-    if !empty(linked_notes)
-        enew
-        setlocal buftype=nofile bufhidden=wipe nobuflisted noswapfile nowrap
-
-        call append(0, 'Linked Notes:')
-        for [file, reason] in items(linked_notes)
-            call append(line('$'), substitute(file, g:visidian_vault_path, '', '') . ' - ' . reason)
-        endfor
-        normal! gg
-    else
-        echo "No links or tag matches found."
-    endif
+"FUNCTION: Create link in current file
+function! s:create_link(target_file)
+    call visidian#debug#debug('CORE', 'Creating link to: ' . a:target_file)
+    
+    " Get relative path and create markdown link
+    let rel_path = fnamemodify(a:target_file, ':t:r')
+    let link = '[[' . rel_path . ']]'
+    
+    " Insert link at cursor position
+    try
+        execute "normal! a" . link . "\<Esc>"
+        call visidian#debug#info('CORE', 'Link inserted successfully')
+    catch
+        call visidian#debug#error('CORE', 'Failed to insert link: ' . v:exception)
+        echohl ErrorMsg
+        echo "Failed to insert link: " . v:exception
+        echohl None
+    endtry
 endfunction

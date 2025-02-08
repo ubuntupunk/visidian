@@ -14,8 +14,33 @@ endif
 let g:loaded_visidian_vim = 1
 
 " Initialize plugin variables
-if !exists('g:visidian_debug')
-    let g:visidian_debug = 0
+if !exists('g:visidian_debug_level')
+    let g:visidian_debug_level = 'WARN'
+endif
+if !exists('g:visidian_debug_categories')
+    let g:visidian_debug_categories = ['ALL']
+endif
+
+" Add debug commands
+command! -nargs=1 -complete=customlist,s:debug_level_complete VisidianDebugLevel call visidian#debug#set_level(<q-args>)
+command! -nargs=+ -complete=customlist,s:debug_category_complete VisidianDebugCategories call visidian#debug#set_categories([<f-args>])
+command! -nargs=0 VisidianDebugHelp call visidian#debug#help()
+
+" Command completion functions
+function! s:debug_level_complete(ArgLead, CmdLine, CursorPos)
+    return filter(['ERROR', 'WARN', 'INFO', 'DEBUG', 'TRACE'], 'v:val =~? "^" . a:ArgLead')
+endfunction
+
+function! s:debug_category_complete(ArgLead, CmdLine, CursorPos)
+    return filter(['ALL', 'CORE', 'SESSION', 'PREVIEW', 'SEARCH', 'CACHE', 'PARA', 'UI', 'SYNC'], 'v:val =~? "^" . a:ArgLead')
+endfunction
+
+" Initialize essential commands
+if !exists(':iso_save')
+    command! -nargs=0 -bar iso_save call visidian#save_session()
+endif
+if !exists(':iso_load')
+    command! -nargs=0 -bar iso_load call visidian#load_session()
 endif
 
 " Initialize PARA color system
@@ -45,17 +70,17 @@ let s:has_system_fzf = executable('fzf')
 let s:has_bat = executable('bat')
 
 if s:has_fzf_plugin
-    if g:visidian_debug
+    if g:visidian_debug_level == 'DEBUG'
         echom "Visidian: Using FZF Vim plugin for search"
         echom "Visidian: Using " . (s:has_bat ? "bat" : "cat") . " for preview"
     endif
 elseif s:has_system_fzf
-    if g:visidian_debug
+    if g:visidian_debug_level == 'DEBUG'
         echom "Visidian: Using system FZF for search"
         echom "Visidian: Using " . (s:has_bat ? "bat" : "cat") . " for preview"
     endif
 else
-    if g:visidian_debug
+    if g:visidian_debug_level == 'DEBUG'
         echom "Visidian: Using Vim's built-in search (no FZF available)"
     endif
 endif
@@ -114,7 +139,7 @@ function! s:UpdateVisidianStatusLine()
         let l:hi_group = ''
         
         " Debug path matching
-        if g:visidian_debug
+        if g:visidian_debug_level == 'DEBUG'
             echom "Statusline Path: " . l:path
         endif
         

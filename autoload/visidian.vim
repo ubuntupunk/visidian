@@ -1026,51 +1026,53 @@ endfunction
 function! visidian#clear_cache()
     if !exists('g:visidian_cache')
         let g:visidian_cache = {}
+        call visidian#debug#info('CACHE', 'Initialized empty cache')
         return
     endif
     
-    echomsg "Starting cache clear with keys: " . string(keys(g:visidian_cache))
+    call visidian#debug#debug('CACHE', 'Starting cache clear with keys: ' . string(keys(g:visidian_cache)))
     let new_cache = {}
     for path in keys(g:visidian_cache)
         if empty(g:visidian_vault_path)
-            echoerr "Vault path not set or invalid."
+            call visidian#debug#error('CACHE', 'Vault path not set or invalid')
             return
         endif
 
         let full_path = g:visidian_vault_path . file
-        echomsg "Checking file: " . full_path
+        call visidian#debug#trace('CACHE', 'Checking file: ' . full_path)
         if !filereadable(full_path)
             let new_cache[path] = g:visidian_cache[path]
         else
-          echomsg "Removing non-existent file from cache: " . path
+            call visidian#debug#debug('CACHE', 'Removing non-existent file from cache: ' . path)
         endif
     endfor
     let g:visidian_cache = new_cache
-    echomsg "Cache cleared to: " . string(keys(g:visidian_cache))
+    call visidian#debug#info('CACHE', 'Cache cleared, remaining keys: ' . string(keys(g:visidian_cache)))
 endfunction
 
-" FUNCTION: Helper to cache file information, ignoring errors for missing files
+" FUNCTION: Helper to cache file information
 function! s:cache_file_info(file)
-" Ensure the file path is relative to the vault
-  let file_path = substitute(a:file, '^' . g:visidian_vault_path, '', '')
-  let full_path = g:visidian_vault_path . a:file
-    echomsg "Caching: " . full_path
+    " Ensure the file path is relative to the vault
+    let file_path = substitute(a:file, '^' . g:visidian_vault_path, '', '')
+    let full_path = g:visidian_vault_path . a:file
+    call visidian#debug#debug('CACHE', 'Caching file: ' . full_path)
+    
     try
         let lines = readfile(full_path)
         let yaml_start = match(lines, '^---$')
         let yaml_end = match(lines, '^---$', yaml_start + 1)
         if yaml_start != -1 && yaml_end != -1
             let g:visidian_cache[a:file] = {
-            \   'yaml': lines[yaml_start+1 : yaml_end-1]
-            \}
-        echomsg "Added to cache: " . a:file
+                \ 'yaml': lines[yaml_start+1 : yaml_end-1]
+                \ }
+            call visidian#debug#debug('CACHE', 'Added YAML to cache: ' . a:file)
         else
             let g:visidian_cache[a:file] = {'yaml': []}
-            echomsg "Added empty YAML to cache: " . a:file
+            call visidian#debug#debug('CACHE', 'Added empty YAML to cache: ' . a:file)
         endif
     catch /^Vim\%((\a\+)\)\=:E484/
-        echomsg "File not found, removing from cache: " . a:file 
-        " Ignore errors for files that no longer exist
+        call visidian#debug#warn('CACHE', 'File not found, removing from cache: ' . a:file)
+        " Remove from cache if file no longer exists
         call remove(g:visidian_cache, a:file)
     endtry
 endfunction

@@ -175,43 +175,42 @@ This hybrid approach allows you to maintain organized structures while preparing
 
 ## Debugging
 
-Visidian includes a debug mode that can help diagnose issues or understand the plugin's behavior. When enabled, it provides detailed logging about operations such as:
-- File and note operations
-- Search functionality
-- Preview rendering
-- Session management
-- PARA folder operations
+Visidian includes a comprehensive debugging system to help troubleshoot issues. You can control debugging output using the following commands:
 
-### Enabling Debug Mode
+- `:VisidianDebugLevel <level>` - Set the debug level (ERROR, WARN, INFO, DEBUG, TRACE)
+- `:VisidianDebugCategories <categories...>` - Set which categories to debug (use ALL for all categories)
+- `:VisidianDebugHelp` - Show available debug levels and categories
 
-Add the following to your `vimrc`:
+Debug levels:
+- ERROR: Only show errors
+- WARN: Show warnings and errors
+- INFO: Show general information, warnings, and errors
+- DEBUG: Show detailed debug information
+- TRACE: Show very detailed trace information
+
+Debug categories:
+- CORE: Core functionality
+- SESSION: Session management
+- PREVIEW: Markdown preview
+- SEARCH: Search functionality
+- CACHE: Cache operations
+- PARA: PARA system
+- UI: User interface
+- SYNC: Sync operations
+
+Example usage:
 ```vim
-let g:visidian_debug = 1
+" Enable debug logging for cache operations
+:VisidianDebugCategories CACHE
+
+" Enable all debug output
+:VisidianDebugLevel DEBUG
+:VisidianDebugCategories ALL
+
+" Only show errors and warnings for sync operations
+:VisidianDebugLevel WARN
+:VisidianDebugCategories SYNC
 ```
-
-### Viewing Debug Output
-
-1. Debug messages are displayed in Vim's message history
-2. View them using the `:messages` command
-3. Messages are prefixed with component names (e.g., "Visidian Preview:", "Visidian Search:") for easy identification
-
-### When to Use Debug Mode
-
-Enable debug mode when:
-- Setting up Visidian for the first time
-- Investigating unexpected behavior
-- Understanding how specific features work
-- Contributing to Visidian development
-
-### Debug Components
-
-Different components provide specific debug information:
-- **Preview**: Buffer creation, grip process management, content loading
-- **Search**: Query processing, FZF integration, result handling
-- **Core**: Vault operations, file management, PARA structure
-- **Session**: Session saving, loading, and state management
-
-Note: Debug mode may impact performance slightly, so it's recommended to disable it during normal use.
 
 ## Tips for Using Visidian
 
