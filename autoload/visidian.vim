@@ -298,7 +298,7 @@ function! visidian#dashboard() abort
             \ '',
             \ '  Tip: To set up key mappings in your vimrc, use:',
             \ '  let mapleader = "<your-leader-key>"',
-            \ '  nnoremap <leader>vf :VisidianFile<CR>',
+            \ '  nnoremap <leader>vf :VisidianNote<CR>',
             \ '  nnoremap <leader>vs :VisidianSearch<CR>',
             \ '  etc.',
             \ '',
