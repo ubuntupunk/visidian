@@ -289,7 +289,7 @@ function! visidian#dashboard() abort
             \ '  Current Vault: ' . g:visidian_vault_path,
             \ '',
             \ '  Available Commands:',
-            \ '  :VisidianFile    - Create a new note',
+            \ '  :VisidianNote    - Create a new note',
             \ '  :VisidianFolder  - Create a new folder',
             \ '  :VisidianSearch  - Search through notes',
             \ '  :VisidianLink    - Link between notes',
