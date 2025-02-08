@@ -141,20 +141,16 @@ endfunction
 
 " FUNCTION: Determine target directory based on tags
 function! s:determine_directory(file)
-    let yaml_data = s:get_yaml_front_matter(a:file)
-    return s:determine_directory_from_yaml(yaml_data)
-endfunction
-
-" FUNCTION: Determine target directory based on tags
-function! s:determine_directory_from_yaml(yaml_data)
-    call visidian#debug#trace('PARA', 'Determining directory from YAML data')
+    call visidian#debug#debug('PARA', 'Determining directory for: ' . a:file)
     
     try
-        if empty(a:yaml_data)
-            throw 'Invalid YAML data'
+        let yaml_data = s:get_yaml_front_matter(a:file)
+        if empty(yaml_data)
+            call visidian#debug#warn('PARA', 'No YAML data found, using resources directory')
+            return 'resources'
         endif
         
-        let tags = get(a:yaml_data, 'tags', [])
+        let tags = get(yaml_data, 'tags', [])
         if empty(tags)
             call visidian#debug#info('PARA', 'No tags found, using resources')
             return 'resources'
@@ -207,7 +203,7 @@ function! s:determine_directory_from_yaml(yaml_data)
         return target_dir
     catch
         call visidian#debug#error('PARA', 'Failed to determine directory: ' . v:exception)
-        return ''
+        return 'resources'  " Default to resources on error
     endtry
 endfunction
 
