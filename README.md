@@ -204,7 +204,7 @@ following installed:
 * **Vim 8.2+**: Visidian is tested on Vim 8.2 and above.
 * **A File Explorer**: NERDTree for navigating your vault and managing files.
 * **Markdown Previewer**: For the best experience, install a markdown previewer
-  like [Grip](supports GitHub Flavored Markdown),  [Markdown Preview](https://github.com/iamcco/markdown-preview.nvim)
+  like [Grip](https://github.com/joeyespo/grip)supports GitHub Flavored Markdown,  [Markdown Preview](https://github.com/iamcco/markdown-preview.nvim)
   or [Instant Markdown Vim](https://vimawesome.com/plugin/instant-markdown-vim) 
   -- for live previews in your browser.
 * **Git**: For syncing your vault with a remote repository
@@ -217,7 +217,7 @@ following installed:
 successor to the exhuberant-ctags project, available via most package managers.
 * **YAML parser**: For parsing YAML front matter in your notes.
 * **A Markdown Linter**: For checking your markdown files for errors.
-* **Vim-Markdown** (https://github.com/preservim/vim-markdown) is a good option.
+* **Vim-Markdown** [vim-markdown](https://github.com/preservim/vim-markdown) is a good option.
 * **A Spell Checker**: For catching typos and errors in your notes.
 
 ## Contributing
