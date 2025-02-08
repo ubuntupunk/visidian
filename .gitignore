@@ -3,4 +3,5 @@
 --read-only=*
 prompt.md
 rules.md
-
+test/test_vault/
+test_vault
