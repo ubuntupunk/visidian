@@ -93,7 +93,8 @@ command! -nargs=0 VisidianDash call visidian#dashboard()
 command! -nargs=0 VisidianNote call visidian#new_md_file()
 command! -nargs=0 VisidianFolder call visidian#new_folder()
 command! -nargs=0 VisidianVault call visidian#create_vault()
-command! -nargs=0 VisidianLink call visidian#link_notes()
+command! -nargs=0 VisidianLink call visidian#link_notes#link_notes()
+command! -nargs=0 VisidianClickYAMLLink call visidian#link_notes#click_yaml_link()
 command! -nargs=0 VisidianParaGen call visidian#create_para_folders()
 command! -nargs=0 VisidianHelp call visidian#help()
 command! -nargs=0 VisidianSync call visidian#sync()
@@ -113,6 +114,12 @@ command! -nargs=0 VisidianBrowseCtags call VisidianBrowseTags()
 
 "Toggle Spelling
 command! -nargs=0 VisidianToggleSpell call visidian#toggle_spell()
+
+" Optional: Map YAML link clicking to <CR> in YAML frontmatter
+augroup VisidianYAMLLinks
+    autocmd!
+    autocmd FileType markdown nnoremap <buffer> <CR> :call visidian#link_notes#click_yaml_link()<CR>
+augroup END
 
 " Set up autocommands for statusline
 augroup VisidianStatusLine

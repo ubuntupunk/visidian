@@ -98,7 +98,82 @@ function! s:create_markdown_link(file)
     return '[' . title . '](' . rel_path . ')'
 endfunction
 
-"FUNCTION: Link Notes
+" FUNCTION: Parse and normalize YAML link
+function! s:parse_yaml_link(link)
+    let link = a:link
+    let type = 'internal-markdown'
+    
+    " Handle quoted links
+    if link =~ '^".*"$' || link =~ "^'.*'$"
+        let link = link[1:-2]
+    endif
+    
+    " Handle external links
+    if link =~ '^https\?://'
+        let type = 'external-markdown'
+        return {'type': type, 'path': link, 'display': link}
+    endif
+    
+    " Handle expanded vault paths
+    if link =~ '^\$VAULT_PATH:'
+        let expanded = substitute(link, '^\$VAULT_PATH:', g:visidian_vault_path, '')
+        return {'type': 'internal-markdown', 'path': expanded, 'display': link}
+    endif
+    
+    " Handle internal markdown links
+    if link =~ '^\.\./' || link =~ '^\./'
+        return {'type': 'internal-markdown', 'path': link, 'display': fnamemodify(link, ':t:r')}
+    endif
+    
+    " Default to internal markdown
+    return {'type': 'internal-markdown', 'path': link, 'display': link}
+endfunction
+
+" FUNCTION: Handle YAML link click
+function! s:handle_yaml_link(link_info)
+    let link = a:link_info
+    
+    if link.type == 'external-markdown'
+        " Open external links in browser
+        if has('unix')
+            call system('xdg-open ' . shellescape(link.path) . ' &')
+        elseif has('macunix')
+            call system('open ' . shellescape(link.path) . ' &')
+        elseif has('win32')
+            call system('start ' . shellescape(link.path))
+        endif
+    else
+        " Handle internal links
+        if link.path =~ '^\$VAULT_PATH:'
+            let target = substitute(link.path, '^\$VAULT_PATH:', g:visidian_vault_path, '')
+        else
+            let current_dir = expand('%:p:h')
+            let target = resolve(current_dir . '/' . link.path)
+        endif
+        
+        if filereadable(target)
+            execute 'edit ' . fnameescape(target)
+        else
+            echohl WarningMsg
+            echo "Link target not found: " . target
+            echohl None
+        endif
+    endif
+endfunction
+
+" FUNCTION: Update buffer after YAML changes
+function! s:update_buffer()
+    " Save current view
+    let view = winsaveview()
+    
+    " Reload buffer
+    edit
+    
+    " Restore view
+    call winrestview(view)
+endfunction
+
+" FUNCTION: Link Notes
 function! visidian#link_notes#link_notes()
     " Check if vault exists
     if empty(g:visidian_vault_path)
@@ -217,6 +292,7 @@ function! visidian#link_notes#link_notes()
                 call add(links, new_link)
                 let current_yaml['links'] = links
                 call s:update_yaml_frontmatter(current_file, current_yaml)
+                call s:update_buffer()
                 echo "\nAdded YAML link to " . new_link
             else
                 echo "\nLink already exists in YAML frontmatter."
@@ -436,4 +512,58 @@ function! s:prompt_link_type()
     endif
     
     return str2nr(choice)
+endfunction
+
+" FUNCTION: Click YAML link under cursor
+function! visidian#link_notes#click_yaml_link()
+    " Get current line
+    let line = getline('.')
+    let col = col('.')
+    
+    " Check if we're in YAML frontmatter
+    let in_yaml = 0
+    let yaml_end = 0
+    let lnum = 1
+    
+    while lnum <= line('$')
+        let l = getline(lnum)
+        if l =~ '^---\s*$'
+            if !in_yaml
+                let in_yaml = 1
+            else
+                let yaml_end = 1
+                break
+            endif
+        endif
+        let lnum += 1
+    endwhile
+    
+    if !in_yaml || yaml_end
+        echo "Not in YAML frontmatter"
+        return
+    endif
+    
+    " Extract link from current line
+    let matches = matchlist(line, '^\s*\(\w\+\):\s*\(\[.\{-}\]\|\S.\{-}\)\s*$')
+    if !empty(matches) && matches[1] == 'links'
+        let value = matches[2]
+        if value =~ '^\['
+            " Handle array of links
+            let links = split(substitute(value[1:-2], '\s', '', 'g'), ',')
+            " Find which link the cursor is on
+            let pos = 0
+            for link in links
+                let start = stridx(line, link, pos)
+                let end = start + len(link)
+                if col >= start && col <= end
+                    call s:handle_yaml_link(s:parse_yaml_link(link))
+                    return
+                endif
+                let pos = end
+            endfor
+        else
+            " Single link
+            call s:handle_yaml_link(s:parse_yaml_link(value))
+        endif
+    endif
 endfunction
