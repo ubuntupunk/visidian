@@ -70,7 +70,7 @@ Open Vim and run:
 ### Core Commands
 - `:VisidianDash` - Open the Visidian dashboard with quick access to all features
 - `:VisidianMenu` - Open the popup menu interface for quick navigation
-- `:VisidianFile` - Create a new markdown file in your vault
+- `:VisidianNote` - Create a new markdown note in your vault
 - `:VisidianFolder` - Create a new folder in your vault
 - `:VisidianVault` - Create or select a vault
 - `:VisidianHelp` - Open Visidian help documentation
@@ -78,26 +78,30 @@ Open Vim and run:
 ### Organization & Navigation
 - `:VisidianParaGen` - Generate PARA method folder structure
 - `:VisidianSearch` - Full-text search through your vault
+- `:VisidianToggleSearch` - Toggle search mode
 - `:VisidianLink` - Create and manage note connections
-- `:VisidianSort` - Intelligent note sorting (Coming Soon)
+- `:VisidianSort` - Sort notes using PARA method
+- `:VisidianImport` - Import and sort files using PARA
 
-### Tags & References
-- `:VisidianGenTags` - Generate YAML tags list (Coming Soon)
-- `:VisidianGenCtags` - Generate ctags for your vault
-- `:VisidianBrowseCtags` - Browse through generated ctags
+### Session Management
+- `:VisidianSave` - Save current session
+- `:VisidianLoad` - Load a saved session
+- `:VisidianSaveSession` - Save current session with timestamp
+- `:VisidianLoadSession` - Load a specific session
+- `:VisidianListSessions` - List available sessions
+- `:VisidianChooseSession` - Choose a session to load
+- `:VisidianClearSessions` - Clear session history
 
 ### View & Interface
 - `:VisidianToggleSpell` - Toggle spell checking
 - `:VisidianToggleSidebar` - Toggle file explorer sidebar
-- `:VisidianTogglePreview` - Toggle markdown preview (Coming Soon)
+- `:VisidianTogglePreview` - Toggle markdown preview
+- `:VisidianToggleAutoSync` - Toggle automatic syncing
 
-### Session Management
-- `:VisidianSaveSession` - Manually save current session
-- `:VisidianLoadSession` - Load a saved session
-
-### Synchronization
-- `:VisidianSync` - Sync vault with remote (Coming Soon)
-- `:VisidianToggleAutoSync` - Toggle automatic syncing (Coming Soon)
+### Debug Commands
+- `:VisidianDebugLevel <level>` - Set debug level (ERROR, WARN, INFO, DEBUG, TRACE)
+- `:VisidianDebugCategories <categories...>` - Set debug categories
+- `:VisidianDebugHelp` - Show debug help
 
 ## Session Management
 
@@ -236,7 +240,7 @@ to adjust Visidian's structure to match your personal productivity style.
 
 ```
 nnoremap <leader>d :VisidianDash<CR>
-nnoremap <leader>n :VisidianFile<CR>
+nnoremap <leader>n :VisidianNote<CR>
 ```
 - **Note Naming**: Use consistent naming conventions or a date system for your
 notes to make searching and sorting easier.
