@@ -9,28 +9,37 @@ endfunction
 function! s:simple_yaml_parse(text)
     let yaml = {'tags': [], 'links': []}
     let lines = split(a:text, "\n")
+    
     for line in lines
         " Skip empty lines and comments
         if line =~ '^\s*$' || line =~ '^\s*#'
             continue
         endif
+        
         " Match key: value or key: [value1, value2]
         let matches = matchlist(line, '^\s*\(\w\+\):\s*\(\[.\{-}\]\|\S.\{-}\)\s*$')
         if !empty(matches)
             let key = matches[1]
             let value = matches[2]
+            
             " Handle arrays
             if value =~ '^\['
                 let value = split(substitute(value[1:-2], '\s', '', 'g'), ',')
             endif
+            
             let yaml[key] = value
         endif
     endfor
+    
     return yaml
 endfunction
 
 " FUNCTION: Get YAML front matter with fallback
 function! s:get_yaml_front_matter(file)
+    if g:visidian_debug
+        call visidian#debug#trace('CORE', 'Reading YAML from: ' . a:file)
+    endif
+
     try
         let lines = readfile(a:file)
         let yaml_text = []
@@ -201,14 +210,13 @@ function! visidian#link_notes#link_notes()
         if choice == '1'
             " Update YAML frontmatter
             let links = get(current_yaml, 'links', [])
-            let new_link = fnamemodify(selected_file, ':t:r')
+            let current_dir = fnamemodify(current_file, ':h')
+            let target_path = fnamemodify(selected_file, ':p')
+            let new_link = s:get_relative_path(current_dir, target_path)
             if index(links, new_link) == -1
                 call add(links, new_link)
                 let current_yaml['links'] = links
                 call s:update_yaml_frontmatter(current_file, current_yaml)
-                if g:visidian_debug
-                    call visidian#debug#info('CORE', 'Added YAML link: ' . new_link)
-                endif
                 echo "\nAdded YAML link to " . new_link
             else
                 echo "\nLink already exists in YAML frontmatter."
