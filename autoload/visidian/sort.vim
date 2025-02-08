@@ -67,9 +67,12 @@ endfunction
 " FUNCTION: Parse YAML string to dictionary
 function! s:parse_yaml(yaml_lines)
     let dict = {}
-    for line in a:yaml_lines
+    let idx = 0
+    while idx < len(a:yaml_lines)
+        let line = a:yaml_lines[idx]
         " Skip empty lines and comments
         if line =~ '^\s*$' || line =~ '^\s*#'
+            let idx += 1
             continue
         endif
         
@@ -82,24 +85,27 @@ function! s:parse_yaml(yaml_lines)
             " Handle list values (starting with -)
             if value =~ '^\s*$' && line =~ ':\s*$'
                 let list_values = []
-                let next_idx = index(a:yaml_lines, line) + 1
-                while next_idx < len(a:yaml_lines)
-                    let next_line = a:yaml_lines[next_idx]
+                let idx += 1
+                while idx < len(a:yaml_lines)
+                    let next_line = a:yaml_lines[idx]
                     if next_line =~ '^\s*-\s'
                         let list_item = substitute(next_line, '^\s*-\s*', '', '')
                         call add(list_values, list_item)
+                        let idx += 1
                     else
                         break
                     endif
-                    let next_idx += 1
                 endwhile
                 let dict[key] = list_values
             else
                 " Handle scalar values
                 let dict[key] = substitute(value, '^\s*[''"]\?\(.\{-}\)[''"]\?\s*$', '\1', '')
+                let idx += 1
             endif
+        else
+            let idx += 1
         endif
-    endfor
+    endwhile
     return dict
 endfunction
 
