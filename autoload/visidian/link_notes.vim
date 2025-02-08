@@ -1,10 +1,8 @@
 "autoload/visidian/link_notes.vim
 
-" FUNCTION: Check if YAML parser is available
+" FUNCTION: Check if yaml parser is available
 function! s:yaml_parser_available()
-    let available = exists('*yaml#decode')
-    call visidian#debug#debug('CORE', 'YAML parser available: ' . available)
-    return available
+    return exists('*yaml#decode')
 endfunction
 
 " FUNCTION: Simple YAML parser fallback
@@ -40,21 +38,19 @@ function! s:get_yaml_front_matter(file)
         let in_yaml = 0
         let yaml_end = 0
         
-        for line in lines
-            if line =~ '^---\s*$'
-                if !in_yaml
-                    let in_yaml = 1
-                    continue
-                else
+        " Check if file starts with YAML frontmatter
+        if len(lines) > 0 && lines[0] =~ '^---\s*$'
+            let in_yaml = 1
+            for line in lines[1:]
+                if line =~ '^---\s*$'
                     let yaml_end = 1
                     break
                 endif
-            endif
-            if in_yaml
                 call add(yaml_text, line)
-            endif
-        endfor
+            endfor
+        endif
         
+        " Return empty YAML if no frontmatter found
         if !yaml_end
             return {'tags': [], 'links': []}
         endif
@@ -62,13 +58,17 @@ function! s:get_yaml_front_matter(file)
         let yaml_str = join(yaml_text, "\n")
         
         " Try using yaml#decode if available
-        if exists('*yaml#decode')
+        if s:yaml_parser_available()
             try
                 let yaml = yaml#decode(yaml_str)
                 call visidian#debug#trace('CORE', 'Used yaml#decode parser')
+                " Ensure tags and links exist
+                let yaml.tags = get(yaml, 'tags', [])
+                let yaml.links = get(yaml, 'links', [])
                 return yaml
             catch
-                call visidian#debug#warn('CORE', 'yaml#decode failed, falling back to simple parser')
+                " Silently fall back to simple parser
+                call visidian#debug#trace('CORE', 'yaml#decode failed, falling back to simple parser')
             endtry
         endif
         
@@ -77,7 +77,8 @@ function! s:get_yaml_front_matter(file)
         call visidian#debug#trace('CORE', 'Used simple YAML parser')
         return yaml
     catch
-        call visidian#debug#warn('CORE', 'Failed to parse YAML: ' . v:exception . '. Using empty YAML.')
+        " Return empty YAML on any error
+        call visidian#debug#trace('CORE', 'Failed to parse YAML: ' . v:exception . '. Using empty YAML.')
         return {'tags': [], 'links': []}
     endtry
 endfunction
@@ -224,7 +225,7 @@ function! s:update_yaml_frontmatter(file, yaml)
     let lines = readfile(a:file)
     let new_lines = []
     let in_yaml = 0
-    let yaml_done = 0
+    let yaml_end = 0
     
     " Convert YAML to string format
     let yaml_lines = []
@@ -244,14 +245,99 @@ function! s:update_yaml_frontmatter(file, yaml)
                 call add(new_lines, line)
                 call extend(new_lines, yaml_lines)
             else
-                let yaml_done = 1
+                let yaml_end = 1
                 call add(new_lines, line)
             endif
-        elseif !in_yaml || yaml_done
+        elseif !in_yaml || yaml_end
             call add(new_lines, line)
         endif
     endfor
     
+    call writefile(new_lines, a:file)
+endfunction
+
+" FUNCTION: Create link in current file
+function! s:create_link(target_file, current_file)
+    try
+        let current_yaml = s:get_yaml_front_matter(a:current_file)
+        let target_yaml = s:get_yaml_front_matter(a:target_file)
+        
+        " Get relative path from current file to target
+        let current_dir = fnamemodify(a:current_file, ':h')
+        let target_path = fnamemodify(a:target_file, ':p')
+        let relative_path = s:get_relative_path(current_dir, target_path)
+        
+        " Get target title from YAML or filename
+        let target_title = get(target_yaml, 'title', fnamemodify(a:target_file, ':t:r'))
+        
+        " Create link based on user's choice
+        let choice = s:prompt_link_type()
+        if choice == 1 " YAML frontmatter
+            " Add to links array if not already present
+            if !has_key(current_yaml, 'links')
+                let current_yaml.links = []
+            endif
+            if index(current_yaml.links, relative_path) == -1
+                call add(current_yaml.links, relative_path)
+                call s:update_yaml_frontmatter(a:current_file, current_yaml)
+                call visidian#debug#info('CORE', 'Added YAML link: ' . relative_path)
+            endif
+        elseif choice == 2 " Markdown link
+            " Insert markdown link at cursor
+            let link_text = '[' . target_title . '](' . relative_path . ')'
+            call append(line('.'), link_text)
+            call visidian#debug#info('CORE', 'Added markdown link: ' . link_text)
+        endif
+        
+        return 1
+    catch
+        call visidian#debug#error('CORE', 'Failed to create link: ' . v:exception)
+        return 0
+    endtry
+endfunction
+
+" FUNCTION: Update YAML frontmatter in file
+function! s:update_yaml_frontmatter(file, yaml)
+    let lines = readfile(a:file)
+    let new_lines = []
+    let in_yaml = 0
+    let yaml_end = 0
+    
+    " Start with --- if file doesn't start with it
+    if len(lines) == 0 || lines[0] !~ '^---\s*$'
+        call add(new_lines, '---')
+    endif
+    
+    " Convert YAML to string format
+    for [key, value] in items(a:yaml)
+        if type(value) == v:t_list
+            let line = key . ': [' . join(value, ', ') . ']'
+        else
+            let line = key . ': ' . value
+        endif
+        call add(new_lines, line)
+    endfor
+    
+    " Add closing --- if needed
+    call add(new_lines, '---')
+    
+    " Add rest of file content
+    let found_yaml = 0
+    for line in lines
+        if !found_yaml && line =~ '^---\s*$'
+            let found_yaml = 1
+            continue
+        endif
+        if found_yaml && line =~ '^---\s*$'
+            let found_yaml = 0
+            continue
+        endif
+        if !found_yaml
+            call add(new_lines, line)
+        endif
+    endfor
+    
+    " Write back to file
     call writefile(new_lines, a:file)
 endfunction
 
@@ -348,22 +434,31 @@ function! s:weight_and_sort_links(current_yaml, all_files)
     return reverse(sort(sorted, {a, b -> a[1] - b[1]}))
 endfunction
 
-"FUNCTION: Create link in current file
-function! s:create_link(target_file)
-    call visidian#debug#debug('CORE', 'Creating link to: ' . a:target_file)
+" FUNCTION: Get relative path
+function! s:get_relative_path(current_dir, target_path)
+    let target_dir = fnamemodify(a:target_path, ':h')
+    let rel_path = substitute(a:target_path, '^' . a:current_dir . '/', '', '')
+    if target_dir == a:current_dir
+        return rel_path
+    else
+        return '../' . rel_path
+    endif
+endfunction
+
+" FUNCTION: Prompt link type
+function! s:prompt_link_type()
+    echo "\nLink Type:"
+    echo "1. YAML frontmatter link (metadata)"
+    echo "2. Markdown link (in content)"
+    echo "q. Cancel"
     
-    " Get relative path and create markdown link
-    let rel_path = fnamemodify(a:target_file, ':t:r')
-    let link = '[[' . rel_path . ']]'
+    let choice = input("\nEnter choice (1/2/q): ")
+    echo "\n"
     
-    " Insert link at cursor position
-    try
-        execute "normal! a" . link . "\<Esc>"
-        call visidian#debug#info('CORE', 'Link inserted successfully')
-    catch
-        call visidian#debug#error('CORE', 'Failed to insert link: ' . v:exception)
-        echohl ErrorMsg
-        echo "Failed to insert link: " . v:exception
-        echohl None
-    endtry
+    if choice == 'q'
+        echo "Operation cancelled."
+        return 0
+    endif
+    
+    return str2nr(choice)
 endfunction
