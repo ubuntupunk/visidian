@@ -7,6 +7,80 @@ function! s:yaml_parser_available()
     return available
 endfunction
 
+" FUNCTION: Simple YAML parser fallback
+function! s:simple_yaml_parse(text)
+    let yaml = {}
+    let lines = split(a:text, "\n")
+    for line in lines
+        " Skip empty lines and comments
+        if line =~ '^\s*$' || line =~ '^\s*#'
+            continue
+        endif
+        " Match key: value or key: [value1, value2]
+        let matches = matchlist(line, '^\s*\(\w\+\):\s*\(\[.\{-}\]\|\S.\{-}\)\s*$')
+        if !empty(matches)
+            let key = matches[1]
+            let value = matches[2]
+            " Handle arrays
+            if value =~ '^\['
+                let value = split(value[1:-2], ',\s*')
+            endif
+            let yaml[key] = value
+        endif
+    endfor
+    return yaml
+endfunction
+
+" FUNCTION: Get YAML front matter with fallback
+function! s:get_yaml_front_matter(file)
+    call visidian#debug#trace('CORE', 'Reading YAML from: ' . a:file)
+    try
+        let lines = readfile(a:file)
+        let yaml_text = []
+        let in_yaml = 0
+        let yaml_end = 0
+        
+        for line in lines
+            if line =~ '^---\s*$'
+                if !in_yaml
+                    let in_yaml = 1
+                    continue
+                else
+                    let yaml_end = 1
+                    break
+                endif
+            endif
+            if in_yaml
+                call add(yaml_text, line)
+            endif
+        endfor
+        
+        if !yaml_end
+            throw 'No valid YAML front matter found'
+        endif
+        
+        let yaml_str = join(yaml_text, "\n")
+        if s:yaml_parser_available()
+            let yaml = yaml#decode(yaml_str)
+        else
+            let yaml = s:simple_yaml_parse(yaml_str)
+        endif
+        
+        call visidian#debug#trace('CORE', 'Parsed YAML: ' . string(yaml))
+        return yaml
+    catch
+        call visidian#debug#warn('CORE', 'Failed to parse YAML: ' . v:exception . '. Using empty YAML.')
+        return {'tags': [], 'links': []}
+    endtry
+endfunction
+
+" FUNCTION: Create markdown link
+function! s:create_markdown_link(file)
+    let title = fnamemodify(a:file, ':t:r')
+    let rel_path = fnamemodify(a:file, ':.')
+    return '[' . title . '](' . rel_path . ')'
+endfunction
+
 "FUNCTION: Link Notes
 function! visidian#link_notes#link_notes()
     " Check if vault exists
@@ -27,12 +101,8 @@ function! visidian#link_notes#link_notes()
     for para_folder in ['Projects', 'Areas', 'Resources', 'Archive']
         let folder_path = vault_path . '/' . para_folder
         if isdirectory(folder_path)
-            " Get all markdown files in this folder and its subfolders
             let folder_files = glob(folder_path . '/**/*.md', 0, 1)
             let vault_files += folder_files
-            call visidian#debug#trace('CORE', 'Found ' . len(folder_files) . ' files in ' . para_folder)
-        else
-            call visidian#debug#debug('CORE', 'Directory not found: ' . folder_path)
         endif
     endfor
 
@@ -53,11 +123,9 @@ function! visidian#link_notes#link_notes()
         echohl None
         return 0
     endif
-    call visidian#debug#debug('CORE', 'Processing current file: ' . current_file)
 
-    " Remove current file from the list if it exists
+    " Remove current file from the list
     let vault_files = filter(vault_files, 'v:val !=# current_file')
-    call visidian#debug#debug('CORE', 'Found ' . len(vault_files) . ' potential link targets')
 
     if empty(vault_files)
         call visidian#debug#warn('CORE', 'No other markdown files found in vault')
@@ -67,54 +135,116 @@ function! visidian#link_notes#link_notes()
         return 0
     endif
 
-    " Check for YAML parser
-    if !s:yaml_parser_available()
-        call visidian#debug#error('CORE', 'YAML parser not available')
-        echohl ErrorMsg
-        echo "YAML parser not available. Please install vim-yaml."
-        echohl None
+    " Ask user for link type
+    echo "\nLink Type:"
+    echo "1. YAML frontmatter link (metadata)"
+    echo "2. Markdown link (in content)"
+    echo "q. Cancel"
+    
+    let choice = input("\nEnter choice (1/2/q): ")
+    echo "\n"
+    
+    if choice == 'q'
+        echo "Operation cancelled."
         return 0
     endif
 
-    " Read current file's YAML front matter
-    try
-        let current_yaml = s:get_yaml_front_matter(current_file)
-        call visidian#debug#debug('CORE', 'Current file YAML: ' . string(current_yaml))
-    catch
-        call visidian#debug#error('CORE', 'Failed to parse YAML: ' . v:exception)
-        echohl ErrorMsg
-        echo "Failed to parse YAML front matter: " . v:exception
-        echohl None
-        return 0
-    endtry
+    " Get current file's YAML if needed
+    let current_yaml = {}
+    if choice == '1'
+        try
+            let current_yaml = s:get_yaml_front_matter(current_file)
+        catch
+            let current_yaml = {'tags': [], 'links': []}
+        endtry
+    endif
 
     " Weight and sort potential links
     let weighted_files = s:weight_and_sort_links(current_yaml, vault_files)
-    call visidian#debug#debug('CORE', 'Weighted ' . len(weighted_files) . ' potential links')
 
     " Present top matches to user
     let max_suggestions = 10
     let top_matches = weighted_files[0:max_suggestions-1]
     
-    call visidian#debug#info('CORE', 'Presenting top ' . len(top_matches) . ' matches')
-    echo "Top related files:"
+    echo "Select file to link (0 to cancel):"
     let i = 1
     for [file, weight] in top_matches
-        echo i . ". " . fnamemodify(file, ':t:r') . " (score: " . weight . ")"
+        let display_name = fnamemodify(file, ':t')
+        echo printf("%d. %s", i, display_name)
         let i += 1
     endfor
 
-    let choice = input("Select file to link (1-" . len(top_matches) . ", or 0 to cancel): ")
-    if choice > 0 && choice <= len(top_matches)
-        let selected_file = top_matches[choice-1][0]
-        call s:create_link(selected_file)
-        call visidian#debug#info('CORE', 'Created link to: ' . selected_file)
-        return 1
-    else
-        call visidian#debug#info('CORE', 'Link creation cancelled')
-        echo "Link creation cancelled."
+    let selection = input("\nEnter number: ")
+    if selection == '0' || selection == ''
+        echo "\nOperation cancelled."
         return 0
     endif
+
+    let idx = str2nr(selection) - 1
+    if idx >= 0 && idx < len(top_matches)
+        let selected_file = top_matches[idx][0]
+        
+        if choice == '1'
+            " Update YAML frontmatter
+            let links = get(current_yaml, 'links', [])
+            let new_link = fnamemodify(selected_file, ':t:r')
+            if index(links, new_link) == -1
+                call add(links, new_link)
+                let current_yaml['links'] = links
+                call s:update_yaml_frontmatter(current_file, current_yaml)
+                echo "\nAdded YAML link to " . new_link
+            else
+                echo "\nLink already exists in YAML frontmatter."
+            endif
+        else
+            " Insert markdown link at cursor
+            let md_link = s:create_markdown_link(selected_file)
+            let pos = getpos('.')
+            call append(pos[1], md_link)
+            echo "\nInserted markdown link: " . md_link
+        endif
+        
+        return 1
+    else
+        echo "\nInvalid selection."
+        return 0
+    endif
+endfunction
+
+" FUNCTION: Update YAML frontmatter
+function! s:update_yaml_frontmatter(file, yaml)
+    let lines = readfile(a:file)
+    let new_lines = []
+    let in_yaml = 0
+    let yaml_done = 0
+    
+    " Convert YAML to string format
+    let yaml_lines = []
+    for [key, value] in items(a:yaml)
+        if type(value) == type([])
+            let yaml_lines += [key . ': [' . join(value, ', ') . ']']
+        else
+            let yaml_lines += [key . ': ' . value]
+        endif
+    endfor
+    
+    " Update file content
+    for line in lines
+        if line =~ '^---\s*$'
+            if !in_yaml
+                let in_yaml = 1
+                call add(new_lines, line)
+                call extend(new_lines, yaml_lines)
+            else
+                let yaml_done = 1
+                call add(new_lines, line)
+            endif
+        elseif !in_yaml || yaml_done
+            call add(new_lines, line)
+        endif
+    endfor
+    
+    call writefile(new_lines, a:file)
 endfunction
 
 "FUNCTION: Get YAML front matter
