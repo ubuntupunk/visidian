@@ -9,7 +9,7 @@ endfunction
 
 " FUNCTION: Simple YAML parser fallback
 function! s:simple_yaml_parse(text)
-    let yaml = {}
+    let yaml = {'tags': [], 'links': []}
     let lines = split(a:text, "\n")
     for line in lines
         " Skip empty lines and comments
@@ -23,7 +23,7 @@ function! s:simple_yaml_parse(text)
             let value = matches[2]
             " Handle arrays
             if value =~ '^\['
-                let value = split(value[1:-2], ',\s*')
+                let value = split(substitute(value[1:-2], '\s', '', 'g'), ',')
             endif
             let yaml[key] = value
         endif
@@ -56,17 +56,25 @@ function! s:get_yaml_front_matter(file)
         endfor
         
         if !yaml_end
-            throw 'No valid YAML front matter found'
+            return {'tags': [], 'links': []}
         endif
         
         let yaml_str = join(yaml_text, "\n")
-        if s:yaml_parser_available()
-            let yaml = yaml#decode(yaml_str)
-        else
-            let yaml = s:simple_yaml_parse(yaml_str)
+        
+        " Try using yaml#decode if available
+        if exists('*yaml#decode')
+            try
+                let yaml = yaml#decode(yaml_str)
+                call visidian#debug#trace('CORE', 'Used yaml#decode parser')
+                return yaml
+            catch
+                call visidian#debug#warn('CORE', 'yaml#decode failed, falling back to simple parser')
+            endtry
         endif
         
-        call visidian#debug#trace('CORE', 'Parsed YAML: ' . string(yaml))
+        " Fallback to simple parser
+        let yaml = s:simple_yaml_parse(yaml_str)
+        call visidian#debug#trace('CORE', 'Used simple YAML parser')
         return yaml
     catch
         call visidian#debug#warn('CORE', 'Failed to parse YAML: ' . v:exception . '. Using empty YAML.')
@@ -319,21 +327,25 @@ function! s:weight_and_sort_links(current_yaml, all_files)
                 endif
             endfor
             
-            " Store weight if non-zero
-            if weight > 0
-                let weights[file] = weight
-            endif
+            " Always give some weight to make sure file appears in list
+            let weight += 1
+            let weights[file] = weight
             
         catch
-            call visidian#debug#warn('CORE', 'Failed to process file for weighting: ' . file)
+            " Don't stop on parsing errors, just give minimal weight
+            let weights[file] = 1
             continue
         endtry
     endfor
-    
+
     " Sort files by weight
-    let sorted = sort(items(weights), {a, b -> b[1] - a[1]})
-    call visidian#debug#debug('CORE', 'Sorted ' . len(sorted) . ' weighted files')
-    return sorted
+    let sorted = []
+    for [file, weight] in items(weights)
+        call add(sorted, [file, weight])
+    endfor
+    
+    " Sort in descending order of weight
+    return reverse(sort(sorted, {a, b -> a[1] - b[1]}))
 endfunction
 
 "FUNCTION: Create link in current file
