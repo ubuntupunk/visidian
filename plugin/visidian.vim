@@ -36,11 +36,11 @@ function! s:debug_category_complete(ArgLead, CmdLine, CursorPos)
 endfunction
 
 " Initialize essential commands
-if !exists(':iso_save')
-    command! -nargs=0 -bar iso_save call visidian#save_session()
+if !exists(':VisidianSave')
+    command! -nargs=0 -bar VisidianSave call visidian#save_session()
 endif
-if !exists(':iso_load')
-    command! -nargs=0 -bar iso_load call visidian#load_session()
+if !exists(':VisidianLoad')
+    command! -nargs=0 -bar VisidianLoad call visidian#load_session()
 endif
 
 " Initialize PARA color system
