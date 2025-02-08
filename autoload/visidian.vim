@@ -1368,7 +1368,7 @@ endfunction
 " FUNCTION: Generate PKM folders using the PARA method
 function! visidian#para()
     if g:visidian_vault_path == ''
-        echoerr "No vault path set. Please create or load a vault first."
+        echoerr "No vault path set. Please create or set a vault first."
         return
     endif
 
@@ -1710,4 +1710,54 @@ function! visidian#import_sort() abort
 
     " Restore original vault path
     let g:visidian_vault_path = original_vault_path
+endfunction
+
+" FUNCTION: Session menu
+function! visidian#menu_session() abort
+    " Create menu options
+    let options = [
+        \ '1. Save current session',
+        \ '2. Load last session',
+        \ '3. List available sessions',
+        \ '4. Choose and load session',
+        \ '5. Clear session history',
+        \ 'q. Cancel'
+    \ ]
+    
+    " Display menu
+    echo "Session Management\n"
+    echo "==================\n"
+    for option in options
+        echo option
+    endfor
+    
+    " Get user choice
+    let choice = input("\nEnter your choice (1-5 or q): ")
+    echo "\n"
+    
+    if choice == '1'
+        call visidian#save_session()
+        echo "Session saved."
+    elseif choice == '2'
+        if visidian#load_session()
+            echo "Session loaded."
+        else
+            echo "No session found to load."
+        endif
+    elseif choice == '3'
+        call visidian#list_sessions()
+    elseif choice == '4'
+        if visidian#choose_session()
+            echo "Session loaded."
+        endif
+    elseif choice == '5'
+        let confirm = input("Are you sure you want to clear all session history? (y/N): ")
+        if confirm =~? '^y'
+            call visidian#clear_sessions()
+        else
+            echo "Operation cancelled."
+        endif
+    else
+        echo "Operation cancelled."
+    endif
 endfunction

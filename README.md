@@ -84,13 +84,12 @@ Open Vim and run:
 - `:VisidianImport` - Import and sort files using PARA
 
 ### Session Management
-- `:VisidianSave` - Save current session
-- `:VisidianLoad` - Load a saved session
-- `:VisidianSaveSession` - Save current session with timestamp
-- `:VisidianLoadSession` - Load a specific session
-- `:VisidianListSessions` - List available sessions
-- `:VisidianChooseSession` - Choose a session to load
-- `:VisidianClearSessions` - Clear session history
+- `:VisidianSession` - Interactive session management menu with options to:
+  - Save current session
+  - Load last session
+  - List available sessions
+  - Choose and load a specific session
+  - Clear session history
 
 ### View & Interface
 - `:VisidianToggleSpell` - Toggle spell checking

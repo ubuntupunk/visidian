@@ -36,11 +36,8 @@ function! s:debug_category_complete(ArgLead, CmdLine, CursorPos)
 endfunction
 
 " Initialize essential commands
-if !exists(':VisidianSave')
-    command! -nargs=0 -bar VisidianSave call visidian#save_session()
-endif
-if !exists(':VisidianLoad')
-    command! -nargs=0 -bar VisidianLoad call visidian#load_session()
+if !exists(':VisidianSession')
+    command! -nargs=0 VisidianSession call visidian#menu_session()
 endif
 
 " Initialize PARA color system
@@ -109,13 +106,6 @@ command! -nargs=0 VisidianMenu call visidian#menu()
 command! -nargs=0 VisidianImport call visidian#import()
 " Add toggle search command
 command! -nargs=0 VisidianToggleSearch call visidian#search#toggle()
-
-" Session management commands
-command! -nargs=0 VisidianSaveSession call visidian#save_session()
-command! -nargs=0 VisidianLoadSession call visidian#load_session()
-command! -nargs=0 VisidianListSessions call visidian#list_sessions()
-command! -nargs=0 VisidianChooseSession call visidian#choose_session()
-command! -nargs=0 VisidianClearSessions call visidian#clear_sessions()
 
 " Generate & Browse Ctags
 command! -nargs=0 VisidianGenCtags call VisidianGenerateTags()
