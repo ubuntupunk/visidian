@@ -136,12 +136,12 @@ function! s:start_grip_preview()
     
     if has('nvim')
         let s:grip_job = jobstart(cmd, {
-            \ 'on_exit': {job_id, data, event -> s:on_grip_exit(job_id, data, event)}
+            \ 'on_exit': function('s:on_grip_exit')
             \ })
         call s:debug_msg("Started Neovim job: " . s:grip_job)
     else
         let s:grip_job = job_start(cmd, {
-            \ 'exit_cb': {job, status -> s:on_grip_exit_vim(job, status)}
+            \ 'exit_cb': function('s:on_grip_exit_vim', [])
             \ })
         call s:debug_msg("Started Vim job: " . string(s:grip_job))
     endif
@@ -164,7 +164,7 @@ function! s:start_grip_preview()
 endfunction
 
 " FUNCTION: Grip Exit Callback for Neovim
-function! s:on_grip_exit(job_id, data, event) dict
+function! s:on_grip_exit(job_id, data, event)
     call s:debug_msg("Neovim grip process exited with status: " . a:data)
     if exists('s:preview_active') && s:preview_active
         echo "Grip preview stopped unexpectedly"
@@ -173,8 +173,8 @@ function! s:on_grip_exit(job_id, data, event) dict
 endfunction
 
 " FUNCTION: Grip Exit Callback for Vim
-function! s:on_grip_exit_vim(job, status) dict
-    call s:debug_msg("Vim grip process exited with status: " . a:status)
+function! s:on_grip_exit_vim(channel, msg)
+    call s:debug_msg("Vim grip process exited with status: " . a:msg)
     if exists('s:preview_active') && s:preview_active
         echo "Grip preview stopped unexpectedly"
         call s:stop_preview()
