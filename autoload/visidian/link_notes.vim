@@ -322,12 +322,27 @@ function! s:update_yaml_frontmatter(file, yaml)
     let in_yaml = 0
     let yaml_end = 0
     
-    " Start with --- if file doesn't start with it
-    if len(lines) == 0 || lines[0] !~ '^---\s*$'
-        call add(new_lines, '---')
-    endif
+    " Handle existing frontmatter
+    for line in lines
+        if line =~ '^---\s*$'
+            if !in_yaml
+                let in_yaml = 1
+                call add(new_lines, line)
+            else
+                let yaml_end = 1
+                " Don't add closing --- yet
+                break
+            endif
+        elseif in_yaml && !yaml_end
+            " Keep existing YAML lines that aren't in the update
+            let matches = matchlist(line, '^\s*\(\w\+\):\s*\(.*\)\s*$')
+            if !empty(matches) && !has_key(a:yaml, matches[1])
+                call add(new_lines, line)
+            endif
+        endif
+    endfor
     
-    " Convert YAML to string format
+    " Add updated YAML content
     for [key, value] in items(a:yaml)
         if type(value) == v:t_list
             let line = key . ': [' . join(value, ', ') . ']'
@@ -337,21 +352,17 @@ function! s:update_yaml_frontmatter(file, yaml)
         call add(new_lines, line)
     endfor
     
-    " Add closing --- if needed
+    " Add closing --- and rest of file content
     call add(new_lines, '---')
-    
-    " Add rest of file content
-    let found_yaml = 0
+    let found_end = 0
     for line in lines
-        if !found_yaml && line =~ '^---\s*$'
-            let found_yaml = 1
+        if !found_end && line =~ '^---\s*$'
+            if in_yaml
+                let found_end = 1
+            endif
             continue
         endif
-        if found_yaml && line =~ '^---\s*$'
-            let found_yaml = 0
-            continue
-        endif
-        if !found_yaml
+        if found_end
             call add(new_lines, line)
         endif
     endfor
