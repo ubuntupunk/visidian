@@ -245,10 +245,9 @@ following installed:
 * **Vim 8.2+**: Visidian is tested on Vim 8.2 and above.
 * **A File Explorer**: NERDTree for navigating your vault and managing files.
 * **Markdown Previewer**: For the best experience, install one of these previewers in order of preference:
-  1. [markdown-preview.nvim](https://github.com/iamcco/markdown-preview.nvim) (Neovim)
-  2. [instant-markdown-vim](https://vimawesome.com/plugin/instant-markdown-vim)
-  3. [bracey.vim](https://github.com/turbio/bracey.vim) (HTML preview in browser)
-  4. [Grip](https://github.com/joeyespo/grip) (GitHub Flavored Markdown in browser)
+  1. [markdown-preview.nvim](https://github.com/iamcco/markdown-preview.nvim) - Best option for Neovim users, provides live preview
+  2. [Grip](https://github.com/joeyespo/grip) - GitHub Flavored Markdown preview in browser
+  3. [bracey.vim](https://github.com/turbio/bracey.vim) - Alternative HTML preview in browser
 * **Git**: For syncing your vault with a remote repository
 * **Rsync**: For syncing your vault with a remote server.
 * **FZF**: For fuzzy searching within your vault.
