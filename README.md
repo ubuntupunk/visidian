@@ -182,6 +182,34 @@ While we currently emphasize folder-based organization, Visidian is evolving tow
 
 This hybrid approach allows you to maintain organized structures while preparing for more advanced knowledge management features.
 
+## Dependencies
+
+### Required
+* Vim 8.0+ or Neovim
+* A file explorer (NERDTree recommended)
+
+### Optional
+* A YAML parser for enhanced frontmatter support:
+  - Built-in simple YAML parser (default)
+  - Or install a more robust parser like [vimyaml](https://github.com/digitalrounin/vim-yaml-folds)
+
+### Recommended
+* **A File Explorer**: NERDTree for navigating your vault and managing files.
+* **Markdown Previewer**: For the best experience, install one of these previewers in order of preference:
+  1. [markdown-preview.nvim](https://github.com/iamcco/markdown-preview.nvim) - Best option for Neovim users, provides live preview
+  2. [Grip](https://github.com/joeyespo/grip) - GitHub Flavored Markdown preview in browser
+  3. [bracey.vim](https://github.com/turbio/bracey.vim) - Alternative HTML preview in browser
+* **Git**: For syncing your vault with a remote repository
+* **Rsync**: For syncing your vault with a remote server.
+* **FZF**: For fuzzy searching within your vault.
+* **Ripgrep**: For fast searching within your vault.
+* **Python 3**: For running the markdown previewer.
+* **Pandoc**: For converting markdown files to other formats.
+* **Ctags**: For generating tags for your notes. Please install [universal-ctags](https://github.com/universal-ctags/ctags) the
+successor to the exhuberant-ctags project, available via most package managers.
+* **Vim-Markdown** [vim-markdown](https://github.com/preservim/vim-markdown) is a good option.
+* **A Spell Checker**: For catching typos and errors in your notes.
+
 ## Debugging
 
 Visidian includes a comprehensive debugging system to help troubleshoot issues. You can control debugging output using the following commands:
@@ -246,28 +274,6 @@ notes to make searching and sorting easier.
 
 Remember, Visidian is meant to enhance your productivity, not to be a rigid
 system. Experiment with different setups until you find what works best for you.
-
-## Requirements
-While Visidian is designed to work out of the box, it's recommended to have the
-following installed: 
-* **Vim 8.2+**: Visidian is tested on Vim 8.2 and above.
-* **A File Explorer**: NERDTree for navigating your vault and managing files.
-* **Markdown Previewer**: For the best experience, install one of these previewers in order of preference:
-  1. [markdown-preview.nvim](https://github.com/iamcco/markdown-preview.nvim) - Best option for Neovim users, provides live preview
-  2. [Grip](https://github.com/joeyespo/grip) - GitHub Flavored Markdown preview in browser
-  3. [bracey.vim](https://github.com/turbio/bracey.vim) - Alternative HTML preview in browser
-* **Git**: For syncing your vault with a remote repository
-* **Rsync**: For syncing your vault with a remote server.
-* **FZF**: For fuzzy searching within your vault.
-* **Ripgrep**: For fast searching within your vault.
-* **Python 3**: For running the markdown previewer.
-* **Pandoc**: For converting markdown files to other formats.
-* **Ctags**: For generating tags for your notes. Please install [universal-ctags](https://github.com/universal-ctags/ctags) the
-successor to the exhuberant-ctags project, available via most package managers.
-* **YAML parser**: For parsing YAML front matter in your notes.
-* **A Markdown Linter**: For checking your markdown files for errors.
-* **Vim-Markdown** [vim-markdown](https://github.com/preservim/vim-markdown) is a good option.
-* **A Spell Checker**: For catching typos and errors in your notes.
 
 ## Contributing
 Contributions are welcome! If you have any suggestions, bug reports, or feature
