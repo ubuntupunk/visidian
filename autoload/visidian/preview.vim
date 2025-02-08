@@ -1,5 +1,6 @@
 "This is the markdown preview functionality for Vim. It uses
-"markdown-preview.nvim if available, otherwise it falls back to using grip.
+"markdown-preview.nvim if available, otherwise it falls back to using bracey.vim,
+"and finally grip with browser preview as a last resort.
 "Requires Vim 8.1 or Neovim.
 
 " Initialize debug mode
@@ -74,9 +75,15 @@ function! visidian#preview#toggle_preview()
                 InstantMarkdownPreview
                 let s:preview_active = 1
                 echo "Markdown preview started using instant-markdown-vim."
+            elseif exists(':Bracey')
+                call s:debug_msg("Using bracey.vim")
+                Bracey
+                let s:preview_active = 1
+                let s:using_bracey = 1
+                echo "Markdown preview started using bracey.vim."
             else
                 call s:debug_msg("No plugin preview available, using grip")
-                echo "Neither markdown-preview.nvim nor instant-markdown-vim available. Using grip..."
+                echo "No preview plugins found. Using grip with browser..."
                 call s:start_grip_preview()
             endif
         else
@@ -108,6 +115,10 @@ function! s:stop_preview()
     elseif exists(':InstantMarkdownStop')
         call s:debug_msg("Stopping instant-markdown-vim")
         InstantMarkdownStop
+    elseif exists('s:using_bracey') && exists(':BraceyStop')
+        call s:debug_msg("Stopping bracey.vim")
+        BraceyStop
+        unlet s:using_bracey
     endif
 
     let s:preview_active = 0
@@ -185,7 +196,7 @@ function! s:on_grip_exit_vim(job, status) dict
     endif
 endfunction
 
-"FUNCTION: Check if Vim supports either MarkdownPreview or InstantMarkdownPreview
+"FUNCTION: Check if Vim supports preview plugins
 function! s:supports_markdown_preview()
     let supported = v:version >= 801 || has('nvim')
     call s:debug_msg("Markdown preview plugin support: " . supported)
