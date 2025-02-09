@@ -26,8 +26,9 @@ This is currently just a markdown note-taking tool with some extra functionality
 3. [Combining GTD with Visidian](#combining-gtd-with-visidian)
 4. [Tips for Using Visidian](#tips-for-using-visidian)
 5. [Session Management](#session-management)
-6. [Recommended Usage & Project Direction](#recommended-usage--project-direction)
-7. [Debugging](#debugging)
+6. [Bookmarking](#bookmarking)
+7. [Recommended Usage & Project Direction](#recommended-usage--project-direction)
+8. [Debugging](#debugging)
 
 ---
 ## Installation
@@ -113,6 +114,71 @@ Visidian now uses Vim's native session management to preserve your workspace sta
 - You can manually save/load sessions using the commands above
 
 This feature ensures that you can pick up exactly where you left off in each vault, maintaining your workflow continuity.
+
+## Bookmarks
+
+The bookmarking system in Visidian is designed around GTD (Getting Things Done) and PARA (Projects, Areas, Resources, Archives) methodologies, making it easy to organize and track important notes and references.
+
+### Categories
+
+Bookmarks are organized into several predefined categories:
+
+- **GTD Categories**
+  - Inbox: For capturing new items
+  - Next: For immediate action items
+  - Waiting: For items pending on others
+  - Someday: For future possibilities
+  - Reference: For reference materials
+  - Done: For completed items
+
+- **PARA Categories**
+  - Projects: Current projects with deadlines
+  - Areas: Areas of ongoing responsibility
+  - Resources: Topic-based resources
+  - Archives: Completed or inactive items
+
+- **Books Categories**
+  - Reading: Currently reading
+  - To-Read: Reading list
+  - Finished: Completed books
+  - Reference: Reference materials
+
+- **Custom Categories**
+  - Create your own categories
+  - Manage and organize as needed
+
+### Usage
+
+Access the bookmarking system through:
+- Command: `:VisidianBook`
+- Menu: Press your leader key and select "Bookmarks" from the popup menu
+
+### Features
+
+- Add bookmarks to any category
+- Create custom categories
+- Edit and delete categories
+- Sort bookmarks within categories
+- View bookmark statistics
+- FZF integration for fuzzy finding bookmarks
+- Persistent storage across sessions
+
+### Example
+
+```vim
+" Add a bookmark to GTD category
+:VisidianBook
+" Select 'add:gtd' from the menu
+" Choose 'next' as the subcategory
+" Select the current note
+
+" Create a custom category
+:VisidianBook
+" Select 'category:new'
+" Enter category name and subcategories
+```
+
+The bookmarking system helps maintain an organized knowledge base, making it easier to find and manage important notes within your vault.
 
 ## PARA Method
 
