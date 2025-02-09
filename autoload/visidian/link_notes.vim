@@ -37,7 +37,7 @@ endfunction
 " FUNCTION: Get YAML front matter with fallback
 function! s:get_yaml_front_matter(file)
     if g:visidian_debug
-        call visidian#debug#trace('CORE', 'Reading YAML from: ' . a:file)
+        call visidian#debug#trace('LINK', 'Reading YAML from: ' . a:file)
     endif
 
     try
@@ -132,8 +132,10 @@ endfunction
 " FUNCTION: Handle YAML link click
 function! s:handle_yaml_link(link_info)
     let link = a:link_info
+    call visidian#debug#debug('LINK', 'Handling YAML link: ' . string(link))
     
     if link.type == 'external-markdown'
+    call visidian#debug#info('LINK', 'Opening external link: ' . link.path)
         " Open external links in browser
         if has('unix')
             call system('xdg-open ' . shellescape(link.path) . ' &')
@@ -151,9 +153,12 @@ function! s:handle_yaml_link(link_info)
             let target = resolve(current_dir . '/' . link.path)
         endif
         
+        call visidian#debug#debug('LINK', 'Resolved internal link target: ' . target)
+        
         if filereadable(target)
             execute 'edit ' . fnameescape(target)
         else
+            call visidian#debug#error('LINK', 'Link target not found: ' . target)
             echohl WarningMsg
             echo "Link target not found: " . target
             echohl None
@@ -177,7 +182,7 @@ endfunction
 function! visidian#link_notes#link_notes()
     " Check if vault exists
     if empty(g:visidian_vault_path)
-        call visidian#debug#error('CORE', 'No vault path set')
+        call visidian#debug#error('LINK', 'No vault path set')
         echohl ErrorMsg
         echo "No vault path set. Please create or set a vault first."
         echohl None
@@ -187,7 +192,7 @@ function! visidian#link_notes#link_notes()
     " Normalize vault path
     let vault_path = substitute(g:visidian_vault_path, '[\/]\+$', '', '')
     if g:visidian_debug
-        call visidian#debug#debug('CORE', 'Using vault path: ' . vault_path)
+        call visidian#debug#debug('LINK', 'Using vault path: ' . vault_path)
     endif
 
     " Get all markdown files in the vault
@@ -202,7 +207,7 @@ function! visidian#link_notes#link_notes()
 
     if empty(vault_files)
         if g:visidian_debug
-            call visidian#debug#warn('CORE', 'No markdown files found in vault')
+            call visidian#debug#warn('LINK', 'No markdown files found in vault')
         endif
         echohl WarningMsg
         echo "No markdown files found in vault."
@@ -213,7 +218,7 @@ function! visidian#link_notes#link_notes()
     " Get current file path
     let current_file = expand('%:p')
     if current_file !~# '\.md$'
-        call visidian#debug#error('CORE', 'Current file is not markdown: ' . current_file)
+        call visidian#debug#error('LINK', 'Current file is not markdown: ' . current_file)
         echohl ErrorMsg
         echo "Current file is not a markdown file."
         echohl None
@@ -225,7 +230,7 @@ function! visidian#link_notes#link_notes()
 
     if empty(vault_files)
         if g:visidian_debug
-            call visidian#debug#warn('CORE', 'No other markdown files found in vault')
+            call visidian#debug#warn('LINK', 'No other markdown files found in vault')
         endif
         echohl WarningMsg
         echo "No other markdown files found in vault."
@@ -244,6 +249,7 @@ function! visidian#link_notes#link_notes()
     
     if choice == 'q'
         echo "Operation cancelled."
+        call visidian#debug#info('LINK', 'Link operation cancelled by user')
         return 0
     endif
 
@@ -252,12 +258,15 @@ function! visidian#link_notes#link_notes()
     if choice == '1'
         try
             let current_yaml = s:get_yaml_front_matter(current_file)
+            call visidian#debug#debug('LINK', 'Loaded YAML front matter for current file')
         catch
+        call visidian#debug#warn('LINK', 'Failed to load YAML front matter, using empty default')
             let current_yaml = {'tags': [], 'links': []}
         endtry
     endif
 
     " Weight and sort potential links
+    call visidian#debug#debug('LINK', 'Weighting and sorting potential links')
     let weighted_files = s:weight_and_sort_links(current_yaml, vault_files)
 
     " Present top matches to user
@@ -275,6 +284,7 @@ function! visidian#link_notes#link_notes()
     let selection = input("\nEnter number: ")
     if selection == '0' || selection == ''
         echo "\nOperation cancelled."
+        call visidian#debug#info('LINK', 'Link operation cancelled by user')
         return 0
     endif
 
@@ -284,6 +294,7 @@ function! visidian#link_notes#link_notes()
         
         if choice == '1'
             " Update YAML frontmatter
+            call visidian#debug#debug('LINK', 'Updating YAML frontmatter')
             let links = get(current_yaml, 'links', [])
             let current_dir = fnamemodify(current_file, ':h')
             let target_path = fnamemodify(selected_file, ':p')
@@ -293,12 +304,15 @@ function! visidian#link_notes#link_notes()
                 let current_yaml['links'] = links
                 call s:update_yaml_frontmatter(current_file, current_yaml)
                 call s:update_buffer()
+                call visidian#debug#info('LINK', 'Added YAML link to ' . new_link)
                 echo "\nAdded YAML link to " . new_link
             else
+                call visidian#debug#info('LINK', 'Link already exists in YAML frontmatter')
                 echo "\nLink already exists in YAML frontmatter."
             endif
         else
             " Insert markdown link at cursor
+            call visidian#debug#debug('LINK', 'Inserting markdown link at cursor')
             let md_link = s:create_markdown_link(selected_file)
             let pos = getpos('.')
             call append(pos[1], md_link)
@@ -311,12 +325,14 @@ function! visidian#link_notes#link_notes()
         return 1
     else
         echo "\nInvalid selection."
+        call visidian#debug#info('LINK', 'Invalid selection')
         return 0
     endif
 endfunction
 
 " FUNCTION: Update YAML frontmatter in file
 function! s:update_yaml_frontmatter(file, yaml)
+call visidian#debug#debug('LINK', 'Updating YAML frontmatter in: ' . a:file)
     let lines = readfile(a:file)
     let new_lines = []
     let in_yaml = 0

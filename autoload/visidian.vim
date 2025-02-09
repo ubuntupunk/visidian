@@ -25,7 +25,7 @@ endif
 function! visidian#ensure_session_dir() abort
     if !isdirectory(g:visidian_session_dir)
         call mkdir(g:visidian_session_dir, 'p')
-        echo "Created session directory at: " . g:visidian_session_dir
+        call visidian#debug#info('SESSION', 'Created session directory at: ' . g:visidian_session_dir)
     endif
 endfunction
 
@@ -65,25 +65,25 @@ endfunction
 function! visidian#list_sessions() abort
     let history_file = visidian#get_session_history_file()
     if !filereadable(history_file)
-        echo "No session history found."
+        call visidian#debug#warn('SESSION', 'No session history found.')
         return []
     endif
     
     let sessions = readfile(history_file)
     if empty(sessions)
-        echo "No sessions in history."
+        call visidian#debug#warn('SESSION', 'No sessions in history.')
         return []
     endif
     
-    echo "Available sessions (most recent first):"
+    call visidian#debug#info('SESSION', 'Available sessions (most recent first):')
     let i = 0
     for session in sessions
         let session_data = json_decode(session)
         let timestamp = strftime('%Y-%m-%d %H:%M:%S', session_data.timestamp)
-        echo printf('%d: %s - Last note: %s', 
+        call visidian#debug#info('SESSION', printf('%d: %s - Last note: %s', 
             \ i, 
             \ timestamp, 
-            \ empty(session_data.last_note) ? '[none]' : fnamemodify(session_data.last_note, ':t'))
+            \ empty(session_data.last_note) ? '[none]' : fnamemodify(session_data.last_note, ':t')))
         let i += 1
     endfor
     
@@ -99,15 +99,13 @@ function! visidian#choose_session() abort
     
     let choice = input('Enter session number (0-' . (len(sessions)-1) . ') or [Enter] to cancel: ')
     if empty(choice)
-        echo "\nCancelled."
+        call visidian#debug#info('SESSION', "\nCancelled.")
         return 0
     endif
     
     let choice_num = str2nr(choice)
     if choice_num < 0 || choice_num >= len(sessions)
-        echohl ErrorMsg
-        echo "\nInvalid session number."
-        echohl None
+        call visidian#debug#error('SESSION', "\nInvalid session number.")
         return 0
     endif
     
@@ -125,16 +123,16 @@ endfunction
 function! visidian#clear_sessions() abort
     let history_file = visidian#get_session_history_file()
     if !filereadable(history_file)
-        echo "No session history to clear."
+        call visidian#debug#warn('SESSION', 'No session history to clear.')
         return
     endif
     
     let choice = input('Clear all session history? [y/N]: ')
     if choice =~? '^y'
         call delete(history_file)
-        echo "\nSession history cleared."
+        call visidian#debug#info('SESSION', "\nSession history cleared.")
     else
-        echo "\nOperation cancelled."
+        call visidian#debug#info('SESSION', "\nOperation cancelled.")
     endif
 endfunction
 
@@ -165,7 +163,7 @@ function! visidian#save_session() abort
         call writefile([json_encode(state)], session_file . '.state')
         call s:rotate_session_history(json_encode(state))
         
-        echo "Session saved to: " . session_file
+        call visidian#debug#info('SESSION', "Session saved to: " . session_file)
         return 1
     endif
     return 0
@@ -206,10 +204,10 @@ function! visidian#load_session() abort
                 normal! zz
             endif
             
-            echo "Session loaded from: " . session_file
+            call visidian#debug#info('SESSION', "Session loaded from: " . session_file)
             return 1
         else
-            echo "No existing session found at: " . session_file
+            call visidian#debug#warn('SESSION', "No existing session found at: " . session_file)
         endif
     endif
     return 0
@@ -240,25 +238,19 @@ endfunction
 function! visidian#dashboard() abort
     " Check if vault path is set
     if !visidian#load_vault_path()
-        echohl WarningMsg
-        echo "No vault configured. Let's set one up!"
-        echohl None
+        call visidian#debug#warn('CORE', "No vault configured. Let's set one up!")
         if visidian#create_vault()
-            echo "Vault created. Opening dashboard..."
+            call visidian#debug#info('CORE', "Vault created. Opening dashboard...")
         else
-            echohl ErrorMsg
-            echo "Failed to create vault. Please try again with :VisidianVault"
-            echohl None
+            call visidian#debug#error('CORE', "Failed to create vault. Please try again with :VisidianVault")
             return
         endif
     endif
 
     " Ensure vault path exists
     if !isdirectory(g:visidian_vault_path)
-        echohl ErrorMsg
-        echo "Vault directory does not exist: " . g:visidian_vault_path
-        echo "Please create it or set a new path with :VisidianVault"
-        echohl None
+        call visidian#debug#error('CORE', "Vault directory does not exist: " . g:visidian_vault_path)
+        call visidian#debug#warn('CORE', "Please create it or set a new path with :VisidianVault")
         return
     endif
 
@@ -371,11 +363,10 @@ function! visidian#write_json(data) abort
         endif
         call add(lines, '}')
         call writefile(lines, g:visidian_config_file)
+        call visidian#debug#info('CONFIG', 'Configuration saved to ' . g:visidian_config_file)
         return 1
     catch
-        echohl ErrorMsg
-        echo "Failed to write configuration to " . g:visidian_config_file . ": " . v:exception
-        echohl None
+        call visidian#debug#error('CONFIG', "Failed to write configuration to " . g:visidian_config_file . ": " . v:exception)
         return 0
     endtry
 endfunction
@@ -389,6 +380,7 @@ function! visidian#load_vault_path() abort
                 let safe_path = s:ensure_home_directory(json_data['vault_path'])
                 if !empty(safe_path)
                     let g:visidian_vault_path = safe_path
+                    call visidian#debug#info('CORE', 'Loaded vault path from configuration: ' . g:visidian_vault_path)
                     return 1
                 endif
             catch
@@ -405,9 +397,7 @@ endfunction
 function! visidian#create_para_folders() abort
     " Ensure vault path exists and is normalized
     if empty(g:visidian_vault_path)
-        echohl ErrorMsg
-        echo "No vault path set. Please create or set a vault first."
-        echohl None
+        call visidian#debug#error('CORE', "No vault path set. Please create or set a vault first.")
         return 0
     endif
 
@@ -421,12 +411,9 @@ function! visidian#create_para_folders() abort
         if !isdirectory(folder_path)
             try
                 call mkdir(folder_path, 'p')
-                echo "Created folder: " . folder_path
+                call visidian#debug#info('CORE', "Created folder: " . folder_path)
             catch
-                echohl ErrorMsg
-                echo "Error creating folder: " . folder_path
-                echo v:exception
-                echohl None
+                call visidian#debug#error('CORE', "Error creating folder: " . folder_path)
                 continue
             endtry
         endif
@@ -576,12 +563,9 @@ function! visidian#create_para_folders() abort
                 endif
 
                 call writefile(content, example_path)
-                echo "Created example note: " . example_path
+                call visidian#debug#info('CORE', "Created example note: " . example_path)
             catch
-                echohl ErrorMsg
-                echo "Error creating example note: " . example_path
-                echo v:exception
-                echohl None
+                call visidian#debug#error('CORE', "Error creating example note: " . example_path)
                 continue
             endtry
         endif
@@ -594,9 +578,7 @@ function! visidian#create_vault() abort
     " Get vault name from user
     let vault_name = input("Enter new vault name: ")
     if empty(vault_name)
-        echohl WarningMsg
-        echo "No vault name provided. Vault creation cancelled."
-        echohl None
+        call visidian#debug#warn('CORE', "No vault name provided. Vault creation cancelled.")
         return 0
     endif
 
@@ -625,7 +607,7 @@ function! visidian#create_vault() abort
         echo setup_para
         if setup_para =~? '^y'
             call visidian#create_para_folders()
-            echo "PARA folders created with README files"
+            call visidian#debug#info('CORE', "PARA folders created with README files")
         endif
 
         " Change to vault directory
@@ -641,9 +623,7 @@ function! visidian#create_vault() abort
         
         return 1
     catch
-        echohl ErrorMsg
-        echo "Failed to create vault: " . v:exception
-        echohl None
+        call visidian#debug#error('CORE', "Failed to create vault: " . v:exception)
         return 0
     endtry
 endfunction
@@ -663,9 +643,7 @@ function! visidian#menu() abort
  
     " Check if popup feature is available
     if !has('popupwin')
-        echohl ErrorMsg
-        echo "Popup windows not supported in this version of Vim"
-        echohl None
+        call visidian#debug#error('UI', "Popup windows not supported in this version of Vim")
         return
     endif
 
@@ -819,23 +797,23 @@ function! s:menu_filter(winid, key) abort
     endif
 
     let max_line = len(s:current_menu_items)
-    echom "Max line: " . max_line
+    call visidian#debug#trace('UI', 'Menu max line: ' . max_line)
 
     " Handle key input
     if a:key == 'j' || a:key == "\<Down>"
         let s:current_line = min([s:current_line + 1, max_line])
-        echom "Current line: " . s:current_line
+        call visidian#debug#trace('UI', 'Menu current line: ' . s:current_line)
         call popup_filter_menu(a:winid, "\<Down>")
         return 1
     elseif a:key == 'k' || a:key == "\<Up>"
         let s:current_line = max([s:current_line - 1, 1])
-        echom "Current line: " . s:current_line
+        call visidian#debug#trace('UI', 'Menu current line: ' . s:current_line)
         call popup_filter_menu(a:winid, "\<Up>")
         return 1
     elseif a:key == "\<CR>" || a:key == ' '
         " Execute the command for the current line
         let item = s:current_menu_items[s:current_line - 1]
-        echom "Executing command: " . item.cmd
+        call visidian#debug#debug('UI', 'Executing menu command: ' . item.cmd)
         if item.cmd == 'close'
             call popup_close(a:winid)
         else
@@ -855,7 +833,7 @@ function! s:menu_filter(winid, key) abort
     if num > 0 && num <= max_line
         let s:current_line = num
         let item = s:current_menu_items[num - 1]
-        echom "Quick select: " .num . " " . item.cmd
+        call visidian#debug#debug('UI', 'Quick menu selection: ' .num . " " . item.cmd)
         call popup_close(a:winid)
         if item.cmd != 'close'
             " Execute command after closing popup to avoid interference
@@ -919,9 +897,9 @@ endfunction
 
 " FUNCTION to set custom statusline for markdown files
 function! s:SetMarkdownStatusline()
-   echomsg "Setting markdown statusline..."
+   call visidian#debug#debug('UI', "Setting markdown statusline...")
     if s:IsMarkdownFile()
-      echomsg "File is markdown, setting statusline..."
+      call visidian#debug#debug('UI', "File is markdown, setting statusline...")
         " Set statusline:
         " - %m: modified flag
         " - %{strftime('%c', getftime(expand('%')))}: File last modified timestamp
@@ -1006,7 +984,7 @@ function! visidian#para_status() abort
 
     " Debug path matching
     if g:visidian_debug
-        echom "Path: " . l:path
+        call visidian#debug#trace('UI', 'Path: ' . l:path)
     endif
 
     " Determine PARA context with colors
@@ -1097,10 +1075,10 @@ function! visidian#create_vault()
                 throw "Failed to save vault configuration"
             endif
         else
-            echo "No vault name provided."
+            call visidian#debug#warn('CORE', "No vault name provided.")
         endif
     catch /^Vim\%((\a\+)\)\=:E739/
-        echoerr "Cannot create directory: Permission denied."
+        call visidian#debug#error('CORE', "Cannot create directory: Permission denied.")
     endtry
 endfunction
 
@@ -1108,9 +1086,7 @@ endfunction
 function! visidian#new_md_file() abort
     " Check if vault exists
     if empty(g:visidian_vault_path)
-        echohl ErrorMsg
-        echo "No vault path set. Please create or load a vault first."
-        echohl None
+        call visidian#debug#error('CORE', "No vault path set. Please create or load a vault first.")
         return 0
     endif
 
@@ -1123,7 +1099,7 @@ function! visidian#new_md_file() abort
     " Get filename
     let filename = input('Enter filename (without .md): ')
     if empty(filename)
-        echo "\nCancelled."
+        call visidian#debug#warn('CORE', "\nCancelled.")
         return 0
     endif
 
@@ -1142,7 +1118,7 @@ function! visidian#new_md_file() abort
     let category_choice = input(category_msg . 'Enter number (1-' . len(para_folders) . '): ')
     
     if empty(category_choice) || category_choice < 1 || category_choice > len(para_folders)
-        echo "\nInvalid category. Cancelled."
+        call visidian#debug#warn('CORE', "\nInvalid category. Cancelled.")
         return 0
     endif
 
@@ -1179,10 +1155,7 @@ function! visidian#new_md_file() abort
         try
             call mkdir(file_path, 'p')
         catch
-            echohl ErrorMsg
-            echo "Error creating directory: " . file_path
-            echo v:exception
-            echohl None
+            call visidian#debug#error('CORE', "Error creating directory: " . file_path)
             return 0
         endtry
     endif
@@ -1192,12 +1165,10 @@ function! visidian#new_md_file() abort
 
     " Check if file already exists
     if filereadable(file_path)
-        echohl WarningMsg
-        echo "File already exists: " . file_path
-        echohl None
+        call visidian#debug#warn('CORE', "\nFile already exists: " . file_path)
         let choice = input('Overwrite? [y/N]: ')
         if choice !~? '^y'
-            echo "\nCancelled."
+            call visidian#debug#warn('CORE', "\nCancelled.")
             return 0
         endif
     endif
@@ -1230,13 +1201,10 @@ function! visidian#new_md_file() abort
 
         call writefile(content, file_path)
         execute 'edit ' . fnameescape(file_path)
-        echo "Created file: " . file_path
+        call visidian#debug#info('CORE', "Created file: " . file_path)
         return 1
     catch
-        echohl ErrorMsg
-        echo "Error creating file: " . file_path
-        echo v:exception
-        echohl None
+        call visidian#debug#error('CORE', "Error creating file: " . file_path)
         return 0
     endtry
 endfunction
@@ -1250,9 +1218,7 @@ endfunction
 function! visidian#new_folder() abort
     " Check if vault exists
     if empty(g:visidian_vault_path)
-        echohl ErrorMsg
-        echo "No vault path set. Please create or load a vault first."
-        echohl None
+        call visidian#debug#error('CORE', "No vault path set. Please create or load a vault first.")
         return 0
     endif
 
@@ -1272,13 +1238,13 @@ function! visidian#new_folder() abort
     let category_choice = input(category_msg . 'Enter number (1-' . len(para_folders) . '): ')
     
     if empty(category_choice)
-        echo "\nCancelled."
+        call visidian#debug#warn('CORE', "\nCancelled.")
         return 0
     endif
 
     let choice_num = str2nr(category_choice)
     if choice_num < 1 || choice_num > len(para_folders)
-        echo "\nInvalid category. Cancelled."
+        call visidian#debug#warn('CORE', "\nInvalid category. Cancelled.")
         return 0
     endif
 
@@ -1287,7 +1253,7 @@ function! visidian#new_folder() abort
     " Get folder name
     let folder_name = input('Enter folder name: ')
     if empty(folder_name)
-        echo "\nCancelled."
+        call visidian#debug#warn('CORE', "\nCancelled.")
         return 0
     endif
 
@@ -1301,16 +1267,14 @@ function! visidian#new_folder() abort
 
     " Check if folder already exists
     if isdirectory(folder_path)
-        echohl WarningMsg
-        echo "\nFolder already exists: " . folder_path
-        echohl None
+        call visidian#debug#warn('CORE', "\nFolder already exists: " . folder_path)
         return 0
     endif
 
     " Create the folder
     try
         call mkdir(folder_path, 'p')
-        echo "\nCreated folder: " . folder_path
+        call visidian#debug#info('CORE', "\nCreated folder: " . folder_path)
 
         " Create example note in the new folder
         let example_path = folder_path . '/README.md'
@@ -1340,17 +1304,14 @@ function! visidian#new_folder() abort
             \ ]
 
         call writefile(content, example_path)
-        echo "Created README.md in new folder"
+        call visidian#debug#info('CORE', "Created README.md in new folder")
         
         " Open the new README in the current window
         execute 'edit ' . fnameescape(example_path)
         
         return 1
     catch
-        echohl ErrorMsg
-        echo "\nError creating folder: " . folder_path
-        echo v:exception
-        echohl None
+        call visidian#debug#error('CORE', "\nError creating folder: " . folder_path)
         return 0
     endtry
 endfunction
@@ -1368,7 +1329,7 @@ endfunction
 " FUNCTION: Generate PKM folders using the PARA method
 function! visidian#para()
     if g:visidian_vault_path == ''
-        echoerr "No vault path set. Please create or set a vault first."
+        call visidian#debug#error('CORE', "No vault path set. Please create or set a vault first.")
         return
     endif
 
@@ -1376,9 +1337,9 @@ function! visidian#para()
     for folder in para_folders
         try
             call mkdir(g:visidian_vault_path . folder, 'p')
-            echo "Created folder: " . folder
+            call visidian#debug#info('CORE', "Created folder: " . folder)
         catch /^Vim\%((\a\+)\)\=:E739/
-            echoerr "Error creating folder " . folder . ": Permission denied."
+            call visidian#debug#error('CORE', "Error creating folder " . folder . ": Permission denied.")
         endtry
     endfor
 endfunction
@@ -1390,7 +1351,7 @@ function! visidian#toggle_spell()
     if &spell
       setlocal nospell
       setlocal thesaurus=
-      echo "Spell checking and Thesaurus disabled"
+      call visidian#debug#info('SPELL', "Spell checking and Thesaurus disabled")
     else
       setlocal spell
       " Ensure spellfile is set
@@ -1408,12 +1369,12 @@ function! visidian#toggle_spell()
       if !empty(thesaurus_path)
         setlocal thesaurus+=thesaurus_path
       else
-        echo "Thesaurus file not found in specified locations."
+        call visidian#debug#warn('SPELL', "Thesaurus file not found in specified locations.")
       endif
-      echo "Spell checking and Thesaurus enabled"
+      call visidian#debug#info('SPELL', "Spell checking and Thesaurus enabled")
     endif
   else
-    echo "Spell checking and Thesaurus not applicable for this file type"
+    call visidian#debug#warn('SPELL', "Spell checking and Thesaurus not applicable for this file type")
   endif
 endfunction
 
@@ -1426,19 +1387,19 @@ autocmd FileType markdown,tex,text setlocal spell
 " FUNCTION: Generate tags for Markdown and YAML files
 function! VisidianGenerateTags()
   if executable('ctags') == 0
-    echoerr "Ctags not found. Please install ctags using your package manager:"
+    call visidian#debug#error('TAGS', "Ctags not found. Please install ctags using your package manager:")
     if has('unix')
-      echo "  - On Ubuntu/Debian: sudo apt-get install universal-ctags"
-      echo "  - On macOS with Homebrew: brew install universal-ctags"
+      call visidian#debug#warn('TAGS', "  - On Ubuntu/Debian: sudo apt-get install universal-ctags")
+      call visidian#debug#warn('TAGS', "  - On macOS with Homebrew: brew install universal-ctags")
     elseif has('win32')
-      echo "  - On Windows with Chocolatey: choco install ctags"
+      call visidian#debug#warn('TAGS', "  - On Windows with Chocolatey: choco install ctags")
     endif
     return
   endif
 
   " Use the global vault path variable
   if !exists('g:visidian_vault_path')
-    echoerr "Error: g:visidian_vault_path is not defined."
+    call visidian#debug#error('TAGS', "Error: g:visidian_vault_path is not defined.")
     return
   endif
   let vault_root = substitute(g:visidian_vault_path, '+$', '', '')
@@ -1454,20 +1415,20 @@ function! VisidianGenerateTags()
 "    \ '--regex-Markdown/\[(.*?)\]\((.*?)\)/2/,l,link/'
 "    \ ], ctags_config)
 
-  echo 'Generating tags...'
+  call visidian#debug#info('TAGS', 'Generating tags...')
   " Specify both Markdown and YAML
 " let cmd = 'ctags -R --languages=Markdown,Yaml --fields=+l --extras=+q -f ' . ctags_file . ' ' . vault_root . ' --options=' . ctags_config
   let cmd = 'ctags -R --languages=Markdown,Yaml --fields=+l --extras=+q -f ' . ctags_file . ' ' . vault_root
   let output = systemlist(cmd)
-  echo 'Tags generated in ' . ctags_file
+  call visidian#debug#info('TAGS', 'Tags generated in ' . ctags_file)
 "  call delete(ctags_config)
 
   if v:shell_error == 0
-    echo 'Tags generated successfully in ' . ctags_file
+    call visidian#debug#info('TAGS', 'Tags generated successfully in ' . ctags_file)
   silent! execute 'set tags=' . ctags_file
   else
-    echoerr 'Failed to generate tags. Error output: '
-    echo  output
+    call visidian#debug#error('TAGS', 'Failed to generate tags. Error output: ')
+    call visidian#debug#error('TAGS', output)
   endif
 endfunction
 
@@ -1483,7 +1444,7 @@ function! VisidianBrowseTags()
 
 " Use the global vault path variable
   if !exists('g:visidian_vault_path')
-    call setline(1, "Error: g:visidian_vault_path is not defined.")
+    call visidian#debug#error('TAGS', "Error: g:visidian_vault_path is not defined.")
     return
   endif
   let vault_root = g:visidian_vault_path
@@ -1534,7 +1495,7 @@ function! VisidianJumpToTag()
   endif
   let parts = split(line, "\t")
   if len(parts) < 3
-    echo "Invalid tag line format"
+    call visidian#debug#error('CORE', "Invalid tag line format")
     return
   endif
   let tag_name = parts[0]
@@ -1573,9 +1534,7 @@ function! VisidianJumpToTag()
   catch /^Vim\%((\a\+)\)\=:E488/
     " Suppress Trailing characters error
   catch
-    echoh1 ErrorMsg
-    echo "Error opening file: " . tag_file . " - " . v:exception
-    echoh1 None
+    call visidian#debug#error('CORE', "Error opening file: " . tag_file . " - " . v:exception)
   endtry
 endfunction
 
@@ -1616,7 +1575,7 @@ function! visidian#help()
         endif
     endfor
 
-    echoerr "Help file for Visidian not found in any expected locations."
+    call visidian#debug#error('CORE', "Help file for Visidian not found in any expected locations.")
 endfunction
 
 " FUNCTION: Call Sync

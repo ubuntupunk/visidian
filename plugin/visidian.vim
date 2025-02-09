@@ -134,7 +134,7 @@ function! s:UpdateVisidianStatusLine()
         
         " Debug path matching
         if g:visidian_debug_level == 'DEBUG'
-            echom "Statusline Path: " . l:path
+            call visidian#debug#trace('UI', 'Statusline Path: ' . l:path)
         endif
         
         if l:path =~? '/Projects/'
