@@ -666,6 +666,7 @@ function! visidian#menu() abort
         \ 'preview': '',
         \ 'sidebar': '',
         \ 'help': '',
+        \ 'bookmark': '',
         \ 'close': ''
     \ } : {
         \ 'note': '[+]',
@@ -682,6 +683,7 @@ function! visidian#menu() abort
         \ 'preview': '[V]',
         \ 'sidebar': '[B]',
         \ 'help': '[?]',
+        \ 'bookmark': '[M]',
         \ 'close': '[Q]'
     \ }
 
