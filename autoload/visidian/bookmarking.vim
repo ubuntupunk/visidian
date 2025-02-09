@@ -452,12 +452,9 @@ function! s:handle_view_selection(selection)
     
     if has_key(s:bookmarks, category) && has_key(s:bookmarks[category], name)
         " Update view count
-        if !has_key(s:bookmarks[category][name], 'views')
-            let s:bookmarks[category][name].views = 0
-        endif
-        let view_count = s:bookmarks[category][name].views
-        let s:bookmarks[category][name].views = view_count + 1
-        let s:bookmarks[category][name].last_viewed = localtime()
+        let bookmark = s:bookmarks[category][name]
+        let bookmark.views = get(bookmark, 'views', 0) + 1
+        let bookmark.last_viewed = localtime()
         call s:save_bookmarks()
         
         execute 'edit ' . fnameescape(s:bookmarks[category][name].path)
