@@ -70,26 +70,40 @@ endfunction
 function! s:fzf_search(query)
     call visidian#debug#debug('SEARCH', 'Starting FZF search...')
     
-    " Save current window
-    let current_win = winnr()
+    " Save current window and buffer
+    let s:last_win = winnr()
+    let s:last_buf = bufnr('%')
     
     " Build the command to find markdown files
     let find_cmd = 'find ' . shellescape(g:visidian_vault_path) . ' -type f -name "*.md"'
     
     " Create options dictionary for fzf
-    let opts = {
-        \ 'source': find_cmd,
-        \ 'sink': 'e',
-        \ 'options': '--prompt "Search> " --preview "grep -h -C 3 ' . shellescape(a:query) . ' {}"'
-        \ }
+    let opts = {}
+    let opts.source = find_cmd
+    let opts.sink = function('s:open_file')
+    let opts.options = ['--prompt', 'Search> ',
+                     \ '--preview', 'grep -h -C 3 ' . shellescape(a:query) . ' {}']
     
     try
-        call fzf#run(fzf#wrap(opts))
+        call fzf#run(extend(opts, get(g:, 'fzf_layout', {'down': '40%'})))
         call visidian#debug#debug('SEARCH', 'FZF search started successfully')
     catch
         call visidian#debug#error('SEARCH', 'FZF search failed: ' . v:exception)
+        " Return to original window if FZF fails
+        if exists('s:last_win')
+            execute s:last_win . 'wincmd w'
+        endif
         call s:vim_search(a:query)  " Fallback to vim search
     endtry
+endfunction
+
+"FUNCTION: Open file handler for FZF
+function! s:open_file(file)
+    " If we have a previous window, try to use it
+    if exists('s:last_win') && winbufnr(s:last_win) != -1
+        execute s:last_win . 'wincmd w'
+    endif
+    execute 'edit ' . fnameescape(a:file)
 endfunction
 
 "FUNCTION: Vim search
