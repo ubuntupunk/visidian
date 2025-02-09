@@ -100,7 +100,9 @@ Open Vim and run:
 
 ### Debug Commands
 - `:VisidianDebug <level>` - Set the debug level
-- `:VisidianDebugCat <categories...>` - Set which categories to debug
+- `:VisidianDebugCat <tab>` - Set which categories to debug.
+
+You can tab into levels and categories to narrow down the debug output.
 
 ## Session Management
 
@@ -272,7 +274,7 @@ Visidian includes a comprehensive debugging system to help troubleshoot issues. 
    - DEBUG: Show detailed debug information
    - TRACE: Show very detailed trace information
 
-2. `:VisidianDebugCat <categories...>` - Set which categories to debug
+2. `:VisidianDebugCat <categories>` - Set which categories to debug
    - ALL: Enable all categories
    - CORE: Core functionality
    - SESSION: Session management
