@@ -332,13 +332,13 @@ endfunction
 
 " FUNCTION: Update YAML frontmatter in file
 function! s:update_yaml_frontmatter(file, yaml)
-call visidian#debug#debug('LINK', 'Updating YAML frontmatter in: ' . a:file)
+    call visidian#debug#debug('LINK', 'Updating YAML frontmatter in: ' . a:file)
     let lines = readfile(a:file)
     let new_lines = []
     let in_yaml = 0
-    let yaml_processed = 0
-
-       " Process the file line by line
+    let links_updated = 0
+    
+    " Process the file line by line
     let i = 0
     while i < len(lines)
         let line = lines[i]
@@ -349,25 +349,25 @@ call visidian#debug#debug('LINK', 'Updating YAML frontmatter in: ' . a:file)
                 " Start of YAML block
                 let in_yaml = 1
                 call add(new_lines, line)
-                
-                " Add all new YAML content here
-                if !yaml_processed
-                    for [key, value] in items(a:yaml)
-                        if type(value) == v:t_list
-                            let line = key . ': [' . join(value, ', ') . ']'
-                        else
-                            let line = key . ': ' . value
-                        endif
-                        call add(new_lines, line)
-                    endfor
-                    let yaml_processed = 1
-                endif
             else
-                " End of YAML block
+                " End of YAML block - add links if not added yet
+                if !links_updated && has_key(a:yaml, 'links')
+                    call add(new_lines, 'links: [' . join(a:yaml.links, ', ') . ']')
+                    let links_updated = 1
+                endif
                 call add(new_lines, line)
                 let in_yaml = 0
             endif
-        elseif !in_yaml
+        elseif in_yaml
+            " Inside YAML block
+            if line =~ '^\s*links:'
+                " Skip existing links line
+                let links_updated = 1
+            else
+                " Keep all other YAML lines
+                call add(new_lines, line)
+            endif
+        else
             " Outside YAML block - copy line as is
             call add(new_lines, line)
         endif
