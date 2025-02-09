@@ -467,7 +467,7 @@ function! s:show_statistics()
     call visidian#debug#debug('BOOK', 'Generating bookmark statistics')
     
     " Initialize stats
-    let stats = {
+    let l:stats = {
         \ 'total': 0,
         \ 'by_category': {},
         \ 'recent_adds': [],
@@ -476,74 +476,89 @@ function! s:show_statistics()
         \ }
     
     " Collect statistics
-    for [category, bookmarks] in items(s:bookmarks)
-        let stats.by_category[category] = len(bookmarks)
-        let stats.total += len(bookmarks)
+    for [l:category, l:bookmarks] in items(s:bookmarks)
+        let l:stats.by_category[l:category] = len(l:bookmarks)
+        let l:stats.total += len(l:bookmarks)
         
-        for [name, data] in items(bookmarks)
+        for [l:name, l:data] in items(l:bookmarks)
             " Track recent additions (last 7 days)
-            if localtime() - data.timestamp < 7 * 24 * 60 * 60
-                call add(stats.recent_adds, {
-                    \ 'category': category,
-                    \ 'name': name,
-                    \ 'title': data.title,
-                    \ 'timestamp': data.timestamp
+            if localtime() - l:data.timestamp < 7 * 24 * 60 * 60
+                call add(l:stats.recent_adds, {
+                    \ 'category': l:category,
+                    \ 'name': l:name,
+                    \ 'title': l:data.title,
+                    \ 'timestamp': l:data.timestamp
                     \ })
             endif
             
             " Track view count if available
-            if has_key(data, 'views')
-                let stats.most_viewed[category . '/' . name] = data.views
+            if has_key(l:data, 'views')
+                let l:stats.most_viewed[l:category . '/' . l:name] = l:data.views
             endif
         endfor
     endfor
     
     " Sort recent additions by timestamp
-    call sort(stats.recent_adds, {a, b -> b.timestamp - a.timestamp})
+    call sort(l:stats.recent_adds, {a, b -> b.timestamp - a.timestamp})
     
     " Create the statistics report
-    let report = []
-    call add(report, '=== Bookmark Statistics ===')
-    call add(report, '')
-    call add(report, 'Total Bookmarks: ' . stats.total)
-    call add(report, '')
-    call add(report, '--- By Category ---')
+    let l:report = []
+    call add(l:report, '=== Bookmark Statistics ===')
+    call add(l:report, '')
+    call add(l:report, 'Total Bookmarks: ' . l:stats.total)
+    call add(l:report, '')
+    call add(l:report, '--- By Category ---')
     
-    for [category, count] in items(stats.by_category)
-        call add(report, printf('%-15s: %d', category, count))
-    endfor
+    " Show category counts
+    let l:category_list = items(l:stats.by_category)
+    let l:idx = 0
+    while l:idx < len(l:category_list)
+        let [l:cat, l:num] = l:category_list[l:idx]
+        call add(l:report, printf('%-15s: %d', l:cat, l:num))
+        let l:idx += 1
+    endwhile
     
-    call add(report, '')
-    call add(report, '--- Recent Additions (7 days) ---')
-    let recent_count = 0
-    for item in stats.recent_adds[0:4]  " Show top 5
-        call add(report, printf('%s: %s (%s)',
-            \ strftime('%Y-%m-%d', item.timestamp),
-            \ item.name,
-            \ item.category))
-        let recent_count += 1
-    endfor
-    if recent_count == 0
-        call add(report, 'No recent additions')
+    call add(l:report, '')
+    call add(l:report, '--- Recent Additions (7 days) ---')
+    
+    " Show recent additions
+    let l:num_recent = 0
+    let l:idx = 0
+    while l:idx < min([len(l:stats.recent_adds), 5])
+        let l:item = l:stats.recent_adds[l:idx]
+        call add(l:report, printf('%s: %s (%s)',
+            \ strftime('%Y-%m-%d', l:item.timestamp),
+            \ l:item.name,
+            \ l:item.category))
+        let l:num_recent += 1
+        let l:idx += 1
+    endwhile
+    if l:num_recent == 0
+        call add(l:report, 'No recent additions')
     endif
     
-    call add(report, '')
-    call add(report, '--- Most Viewed ---')
-    let viewed_count = 0
-    let sorted_views = items(stats.most_viewed)
-    call sort(sorted_views, {a, b -> b[1] - a[1]})
-    for [path, views] in sorted_views[0:4]  " Show top 5
-        call add(report, printf('%-30s: %d views', path, views))
-        let viewed_count += 1
-    endfor
-    if viewed_count == 0
-        call add(report, 'No view statistics available')
+    call add(l:report, '')
+    call add(l:report, '--- Most Viewed ---')
+    
+    " Show most viewed
+    let l:sorted_views = items(l:stats.most_viewed)
+    call sort(l:sorted_views, {a, b -> b[1] - a[1]})
+    let l:num_viewed = 0
+    let l:idx = 0
+    while l:idx < min([len(l:sorted_views), 5])
+        let [l:path, l:views] = l:sorted_views[l:idx]
+        call add(l:report, printf('%-30s: %d views', l:path, l:views))
+        let l:num_viewed += 1
+        let l:idx += 1
+    endwhile
+    if l:num_viewed == 0
+        call add(l:report, 'No view statistics available')
     endif
     
     " Display the report in a new buffer
-    let bufnr = bufnr(s:stats_buffer_name)
-    if bufnr != -1
-        execute 'bwipeout! ' . bufnr
+    let l:bufnr = bufnr(s:stats_buffer_name)
+    if l:bufnr != -1
+        execute 'bwipeout! ' . l:bufnr
     endif
     
     new
@@ -555,9 +570,8 @@ function! s:show_statistics()
     setlocal nowrap
     setlocal nomodifiable
     setlocal filetype=markdown
-    call setline(1, report)
+    call setline(1, l:report)
     
-    " Set buffer name
     call visidian#debug#info('BOOK', 'Generated statistics report')
 endfunction
 
