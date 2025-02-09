@@ -20,6 +20,9 @@ endif
 if !exists('g:visidian_debug_categories')
     let g:visidian_debug_categories = ['ALL']
 endif
+if !exists('g:visidian_vault_path')
+    let g:visidian_vault_path = ''
+endif
 
 " Add debug commands
 command! -nargs=1 -complete=customlist,s:debug_level_complete VisidianDebugLevel call visidian#debug#set_level(<q-args>)
@@ -65,6 +68,15 @@ hi def VisidianArchives   term=bold cterm=bold ctermfg=242 gui=bold guifg=#6c6c6
 let s:has_fzf_plugin = exists('*fzf#run')
 let s:has_system_fzf = executable('fzf')
 let s:has_bat = executable('bat')
+let s:has_rg = executable('rg')
+
+if g:visidian_debug_level == 'DEBUG'
+    call visidian#debug#debug('CORE', 'Search capabilities:')
+    call visidian#debug#debug('CORE', '  FZF plugin: ' . (s:has_fzf_plugin ? 'yes' : 'no'))
+    call visidian#debug#debug('CORE', '  System FZF: ' . (s:has_system_fzf ? 'yes' : 'no'))
+    call visidian#debug#debug('CORE', '  Bat: ' . (s:has_bat ? 'yes' : 'no'))
+    call visidian#debug#debug('CORE', '  Ripgrep: ' . (s:has_rg ? 'yes' : 'no'))
+endif
 
 if s:has_fzf_plugin
     if g:visidian_debug_level == 'DEBUG'
@@ -94,7 +106,7 @@ command! -nargs=0 VisidianNote call visidian#new_md_file()
 command! -nargs=0 VisidianFolder call visidian#new_folder()
 command! -nargs=0 VisidianVault call visidian#create_vault()
 command! -nargs=0 VisidianLink call visidian#link_notes#link_notes()
-command! -nargs=0 VisidianClickYAMLLink call visidian#link_notes#click_yaml_link()
+command! -nargs=0 VisidianClickableLink call visidian#link_notes#click_yaml_link()
 command! -nargs=0 VisidianParaGen call visidian#create_para_folders()
 command! -nargs=0 VisidianHelp call visidian#help()
 command! -nargs=0 VisidianSync call visidian#sync()
