@@ -26,7 +26,7 @@ let s:categories = deepcopy(s:base_categories)
 
 " FUNCTION: Save categories to file
 function! s:save_categories() abort
-    let categories_file = expand(g:visidian_vault_dir . '/.visidian_categories.json')
+    let categories_file = expand(g:visidian_vault_path . '/.visidian_categories.json')
     let custom_categories = {}
     
     " Only save custom categories (not base ones)
@@ -42,7 +42,7 @@ endfunction
 
 " FUNCTION: Load categories from file
 function! s:load_categories() abort
-    let categories_file = expand(g:visidian_vault_dir . '/.visidian_categories.json')
+    let categories_file = expand(g:visidian_vault_path . '/.visidian_categories.json')
     
     " Start with base categories
     let s:categories = deepcopy(s:base_categories)
@@ -107,12 +107,17 @@ function! s:add_bookmark(name, category)
             let s:bookmarks[a:category] = {}
         endif
         
+        " Get first 5 lines for preview, properly escaped
+        let preview_lines = getline(1, min([line('$'), 5]))
+        let preview = join(preview_lines, "\n")
+        
         let s:bookmarks[a:category][a:name] = {
             \ 'path': path,
             \ 'timestamp': localtime(),
-            \ 'title': getline(1),  " Assume first line is title
-            \ 'preview': join(getline(1, min([line('$'), 5])), "\n")  " First 5 lines for preview
+            \ 'title': getline(1),
+            \ 'preview': preview
             \ }
+        
         call s:save_bookmarks()
         call visidian#debug#info('BOOK', 'Added bookmark: ' . a:name . ' -> ' . path)
         echo "Added bookmark: " . a:name . " to " . a:category
@@ -179,6 +184,23 @@ endfunction
 " FUNCTION: Main bookmark menu
 function! visidian#bookmarking#menu()
     call visidian#debug#debug('BOOK', 'Opening bookmark menu')
+    
+    " Ensure vault path is set
+    if !visidian#load_vault_path()
+        call visidian#debug#warn('BOOK', "No vault configured. Let's set one up!")
+        if !visidian#create_vault()
+            return
+        endif
+    endif
+    
+    if empty(g:visidian_vault_path)
+        call visidian#debug#error('BOOK', 'No vault path set')
+        echohl ErrorMsg
+        echo "No vault path set. Please set a vault first."
+        echohl None
+        return
+    endif
+    
     if !exists('*fzf#run')
         call visidian#debug#error('BOOK', 'FZF not available')
         echohl ErrorMsg
