@@ -81,7 +81,7 @@ The search functionality was experiencing several issues:
 
 2. **FZF Search Improvements**
    - Better error handling for FZF execution
-   - Enhanced preview with syntax highlighting (using `bat` if available)
+   - Enhanced preview with grep for context
    - Proper escaping of search queries and commands
    - File existence validation before opening
    - Detailed feedback about number of files and matches
@@ -105,9 +105,10 @@ The search function can be used as before, but now provides better feedback and 
 - Displays number of matches found
 - Provides clear error messages if something goes wrong
 - Debug mode gives detailed information about the search process
+- FZF preview uses grep to show search context
 
 #### Known Limitations
-- FZF preview requires either `bat` or `cat` to be installed
+- FZF preview requires grep to be installed
 - Debug mode may produce verbose output in the message area
 
 ### Usage

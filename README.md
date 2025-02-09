@@ -187,12 +187,10 @@ This hybrid approach allows you to maintain organized structures while preparing
 For full functionality, Visidian requires the following:
 
 * **Required:**
-  * [ripgrep (rg)](https://github.com/BurntSushi/ripgrep) - For fast text searching
-  * [fzf](https://github.com/junegunn/fzf) - For fuzzy finding
+   * [fzf](https://github.com/junegunn/fzf) - For fuzzy finding
 
 * **Optional but recommended:**
   * [fzf.vim](https://github.com/junegunn/fzf.vim) - For enhanced preview functionality
-  * [bat](https://github.com/sharkdp/bat) - For syntax highlighting in previews
 
 Install these dependencies before using Visidian for the best experience.
 
