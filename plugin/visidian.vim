@@ -65,33 +65,22 @@ hi def VisidianResources  term=bold cterm=bold ctermfg=110 gui=bold guifg=#87afd
 hi def VisidianArchives   term=bold cterm=bold ctermfg=242 gui=bold guifg=#6c6c6c
 
 " Check search method availability
-let s:has_fzf_plugin = exists('*fzf#run')
-let s:has_system_fzf = executable('fzf')
-let s:has_bat = executable('bat')
-let s:has_rg = executable('rg')
+let s:has_fzf = executable('fzf')
+let s:has_fzf_vim = exists('*fzf#vim#with_preview')
 
 if g:visidian_debug_level == 'DEBUG'
     call visidian#debug#debug('CORE', 'Search capabilities:')
-    call visidian#debug#debug('CORE', '  FZF plugin: ' . (s:has_fzf_plugin ? 'yes' : 'no'))
-    call visidian#debug#debug('CORE', '  System FZF: ' . (s:has_system_fzf ? 'yes' : 'no'))
-    call visidian#debug#debug('CORE', '  Bat: ' . (s:has_bat ? 'yes' : 'no'))
-    call visidian#debug#debug('CORE', '  Ripgrep: ' . (s:has_rg ? 'yes' : 'no'))
+    call visidian#debug#debug('CORE', '  FZF.vim: ' . (s:has_fzf_vim ? 'yes' : 'no'))
+    call visidian#debug#debug('CORE', '  System FZF: ' . (s:has_fzf ? 'yes' : 'no'))
+    call visidian#debug#debug('CORE', '  Vim built-in: yes')
 endif
 
-if s:has_fzf_plugin
-    if g:visidian_debug_level == 'DEBUG'
-        echom "Visidian: Using FZF Vim plugin for search"
-        echom "Visidian: Using " . (s:has_bat ? "bat" : "cat") . " for preview"
-    endif
-elseif s:has_system_fzf
-    if g:visidian_debug_level == 'DEBUG'
-        echom "Visidian: Using system FZF for search"
-        echom "Visidian: Using " . (s:has_bat ? "bat" : "cat") . " for preview"
-    endif
+if s:has_fzf_vim
+    call visidian#debug#info('CORE', 'Using FZF.vim for enhanced search')
+elseif s:has_fzf
+    call visidian#debug#info('CORE', 'Using system FZF for search')
 else
-    if g:visidian_debug_level == 'DEBUG'
-        echom "Visidian: Using Vim's built-in search (no FZF available)"
-    endif
+    call visidian#debug#info('CORE', 'Using Vim built-in search')
 endif
 
 " Set up session options

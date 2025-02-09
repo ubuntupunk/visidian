@@ -46,15 +46,6 @@ function! visidian#search#search()
         return
     endif
 
-    " Check for required executables
-    if !executable('rg')
-        call visidian#debug#error('SEARCH', 'ripgrep (rg) not found')
-        echohl ErrorMsg
-        echo "ripgrep (rg) is required for search functionality but was not found in PATH"
-        echohl None
-        return
-    endif
-
     let query = input("Enter search query: ")
     if empty(query)
         call visidian#debug#info('SEARCH', 'Empty search query')
@@ -65,10 +56,10 @@ function! visidian#search#search()
     call visidian#debug#debug('SEARCH', 'Search query: ' . query)
     let s:search_active = 1
 
-    " Check search method availability
-    if exists('*fzf#run')
-        call visidian#debug#info('SEARCH', 'Using FZF plugin')
-        call s:fzf_search(query)
+    " Try search methods in order: vim built-in, fzf, fzf.vim
+    if executable('fzf') && exists('*fzf#vim#with_preview')
+        call visidian#debug#info('SEARCH', 'Using FZF.vim with preview')
+        call s:fzf_vim_search(query)
     elseif executable('fzf')
         call visidian#debug#info('SEARCH', 'Using system FZF')
         call s:system_fzf_search(query)
@@ -78,30 +69,15 @@ function! visidian#search#search()
     endif
 endfunction
 
-"FUNCTION: FZF plugin search
-function! s:fzf_search(query)
-    call visidian#debug#debug('SEARCH', 'Starting FZF plugin search...')
-    
-    let command = 'rg --column --line-number --no-heading --color=always --smart-case '
-    let initial_command = command . shellescape(a:query)
-    
+"FUNCTION: FZF.vim search with preview
+function! s:fzf_vim_search(query)
+    call visidian#debug#debug('SEARCH', 'Starting FZF.vim search with preview...')
     try
-        " Check if fzf.vim's preview function is available
-        if exists('*fzf#vim#with_preview')
-            call visidian#debug#debug('SEARCH', 'Using fzf.vim with preview')
-            call fzf#vim#grep(initial_command, 1, fzf#vim#with_preview(), 0)
-        else
-            " Fall back to basic fzf if fzf.vim is not available
-            call visidian#debug#warn('SEARCH', 'fzf.vim not found, falling back to system fzf')
-            call s:system_fzf_search(a:query)
-        endif
-        call visidian#debug#debug('SEARCH', 'FZF search started successfully')
+        call fzf#vim#grep('grep -r ' . shellescape(a:query) . ' ' . g:visidian_vault_path, 1, fzf#vim#with_preview(), 0)
+        call visidian#debug#debug('SEARCH', 'FZF.vim search started successfully')
     catch
-        call visidian#debug#error('SEARCH', 'FZF search failed: ' . v:exception)
-        echohl ErrorMsg
-        echo "FZF search failed: " . v:exception . ". Please ensure fzf.vim is installed for full functionality."
-        echohl None
-        let s:search_active = 0
+        call visidian#debug#error('SEARCH', 'FZF.vim search failed: ' . v:exception)
+        call s:system_fzf_search(a:query)  " Fallback to system FZF
     endtry
 endfunction
 
@@ -109,17 +85,14 @@ endfunction
 function! s:system_fzf_search(query)
     call visidian#debug#debug('SEARCH', 'Starting system FZF search...')
     
-    let search_cmd = 'rg --column --line-number --no-heading --color=always --smart-case ' . shellescape(a:query) . ' ' . shellescape(g:visidian_vault_path)
-    let preview_cmd = 'bat --style=numbers --color=always {} || cat {}'
+    let search_cmd = 'grep -r ' . shellescape(a:query) . ' ' . shellescape(g:visidian_vault_path)
+    let preview_cmd = 'cat {}'
     
     " Build the fzf command
     let fzf_cmd = 'fzf --ansi --delimiter : --preview "' . preview_cmd . '" --preview-window "+{2}-/2"'
     let full_cmd = search_cmd . ' | ' . fzf_cmd
     
     call visidian#debug#debug('SEARCH', 'Running command: ' . full_cmd)
-    
-    " Save the current buffer number
-    let current_buf = bufnr('%')
     
     " Run fzf in a terminal buffer
     let buf = term_start(['/bin/sh', '-c', full_cmd], {
@@ -131,23 +104,18 @@ function! s:system_fzf_search(query)
     
     if buf == 0
         call visidian#debug#error('SEARCH', 'Failed to start terminal for fzf')
-        echohl ErrorMsg
-        echo "Failed to start search terminal"
-        echohl None
-        let s:search_active = 0
-        return
+        call s:vim_search(a:query)  " Fallback to vim search
+    else
+        call visidian#debug#debug('SEARCH', 'System FZF search started successfully')
     endif
-    
-    call visidian#debug#debug('SEARCH', 'System FZF search started successfully')
 endfunction
 
 "FUNCTION: Vim search
 function! s:vim_search(query)
     call visidian#debug#debug('SEARCH', 'Starting Vim built-in search...')
-    
-    " Use vimgrep with ripgrep
     try
-        execute 'silent! grep! ' . shellescape(a:query) . ' ' . g:visidian_vault_path . '/**/*.md'
+        " Use Vim's built-in vimgrep
+        execute 'noautocmd vimgrep /' . escape(a:query, '/\') . '/j ' . g:visidian_vault_path . '/**/*.md'
         copen
         call visidian#debug#debug('SEARCH', 'Vim search completed successfully')
     catch
