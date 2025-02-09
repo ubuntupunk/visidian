@@ -74,15 +74,21 @@ function! s:fzf_search(query)
     
     let command = 'rg --column --line-number --no-heading --color=always --smart-case '
     let initial_command = command . shellescape(a:query)
-    let reload_command = command . '{q}'
     
     try
-        call fzf#vim#grep(initial_command, 1, fzf#vim#with_preview(), 0)
+        " Check if fzf.vim's preview function is available
+        if exists('*fzf#vim#with_preview')
+            call fzf#vim#grep(initial_command, 1, fzf#vim#with_preview(), 0)
+        else
+            " Fall back to basic fzf if fzf.vim is not available
+            call visidian#debug#warn('SEARCH', 'fzf.vim not found, falling back to system fzf')
+            call s:system_fzf_search(a:query)
+        endif
         call visidian#debug#debug('SEARCH', 'FZF search started successfully')
     catch
         call visidian#debug#error('SEARCH', 'FZF search failed: ' . v:exception)
         echohl ErrorMsg
-        echo "FZF search failed: " . v:exception
+        echo "FZF search failed: " . v:exception . ". Please ensure fzf.vim is installed for full functionality."
         echohl None
         let s:search_active = 0
     endtry

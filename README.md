@@ -184,31 +184,17 @@ This hybrid approach allows you to maintain organized structures while preparing
 
 ## Dependencies
 
-### Required
-* Vim 8.0+ or Neovim
-* A file explorer (NERDTree recommended)
+For full functionality, Visidian requires the following:
 
-### Optional
-* A YAML parser for enhanced frontmatter support:
-  - Built-in simple YAML parser (default)
-  - Or install a more robust parser like [vimyaml](https://github.com/digitalrounin/vim-yaml-folds)
+* **Required:**
+  * [ripgrep (rg)](https://github.com/BurntSushi/ripgrep) - For fast text searching
+  * [fzf](https://github.com/junegunn/fzf) - For fuzzy finding
 
-### Recommended
-* **A File Explorer**: NERDTree for navigating your vault and managing files.
-* **Markdown Previewer**: For the best experience, install one of these previewers in order of preference:
-  1. [markdown-preview.nvim](https://github.com/iamcco/markdown-preview.nvim) - Best option for Neovim users, provides live preview
-  2. [Grip](https://github.com/joeyespo/grip) - GitHub Flavored Markdown preview in browser
-  3. [bracey.vim](https://github.com/turbio/bracey.vim) - Alternative HTML preview in browser
-* **Git**: For syncing your vault with a remote repository
-* **Rsync**: For syncing your vault with a remote server.
-* **FZF**: For fuzzy searching within your vault.
-* **Ripgrep**: For fast searching within your vault.
-* **Python 3**: For running the markdown previewer.
-* **Pandoc**: For converting markdown files to other formats.
-* **Ctags**: For generating tags for your notes. Please install [universal-ctags](https://github.com/universal-ctags/ctags) the
-successor to the exhuberant-ctags project, available via most package managers.
-* **Vim-Markdown** [vim-markdown](https://github.com/preservim/vim-markdown) is a good option.
-* **A Spell Checker**: For catching typos and errors in your notes.
+* **Optional but recommended:**
+  * [fzf.vim](https://github.com/junegunn/fzf.vim) - For enhanced preview functionality
+  * [bat](https://github.com/sharkdp/bat) - For syntax highlighting in previews
+
+Install these dependencies before using Visidian for the best experience.
 
 ## Debugging
 
