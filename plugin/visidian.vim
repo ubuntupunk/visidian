@@ -102,7 +102,7 @@ command! -nargs=0 VisidianSearch call visidian#search()
 command! -nargs=0 VisidianSort call visidian#sort()
 command! -nargs=0 VisidianMenu call visidian#menu()
 command! -nargs=0 VisidianImport call visidian#import()
-" Add toggle search command
+command! -nargs=0 VisidianBook call visidian#bookmarking#menu()
 command! -nargs=0 VisidianToggleSearch call visidian#search#toggle()
 
 " Generate & Browse Ctags
