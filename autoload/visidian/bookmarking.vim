@@ -455,7 +455,8 @@ function! s:handle_view_selection(selection)
         if !has_key(s:bookmarks[category][name], 'views')
             let s:bookmarks[category][name].views = 0
         endif
-        let s:bookmarks[category][name].views += 1
+        let view_count = s:bookmarks[category][name].views
+        let s:bookmarks[category][name].views = view_count + 1
         let s:bookmarks[category][name].last_viewed = localtime()
         call s:save_bookmarks()
         
@@ -568,4 +569,4 @@ call s:load_bookmarks()
 call s:load_categories()
 
 " Set up single command
-command! -nargs=0 Bookmark call visidian#bookmarking#menu()
+command! -nargs=0 VisidianBook call visidian#bookmarking#menu()

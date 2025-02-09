@@ -99,9 +99,8 @@ Open Vim and run:
 - `:VisidianToggleAutoSync` - Toggle automatic syncing
 
 ### Debug Commands
-- `:VisidianDebugLevel <level>` - Set debug level (ERROR, WARN, INFO, DEBUG, TRACE)
-- `:VisidianDebugCategories <categories...>` - Set debug categories
-- `:VisidianDebugHelp` - Show debug help
+- `:VisidianDebug <level>` - Set the debug level
+- `:VisidianDebugCat <categories...>` - Set which categories to debug
 
 ## Session Management
 
@@ -264,40 +263,50 @@ Install these dependencies before using Visidian for the best experience.
 
 Visidian includes a comprehensive debugging system to help troubleshoot issues. You can control debugging output using the following commands:
 
-- `:VisidianDebugLevel <level>` - Set the debug level (ERROR, WARN, INFO, DEBUG, TRACE)
-- `:VisidianDebugCategories <categories...>` - Set which categories to debug (use ALL for all categories)
-- `:VisidianDebugHelp` - Show available debug levels and categories
+### Debug Commands
 
-Debug levels:
-- ERROR: Only show errors
-- WARN: Show warnings and errors
-- INFO: Show general information, warnings, and errors
-- DEBUG: Show detailed debug information
-- TRACE: Show very detailed trace information
+1. `:VisidianDebug <level>` - Set the debug level
+   - ERROR: Only show errors
+   - WARN: Show warnings and errors
+   - INFO: Show general information
+   - DEBUG: Show detailed debug information
+   - TRACE: Show very detailed trace information
 
-Debug categories:
-- CORE: Core functionality
-- SESSION: Session management
-- PREVIEW: Markdown preview
-- SEARCH: Search functionality
-- CACHE: Cache operations
-- PARA: PARA system
-- UI: User interface
-- SYNC: Sync operations
+2. `:VisidianDebugCat <categories...>` - Set which categories to debug
+   - ALL: Enable all categories
+   - CORE: Core functionality
+   - SESSION: Session management
+   - PREVIEW: Markdown preview
+   - SEARCH: Search functionality
+   - CACHE: Cache operations
+   - PARA: PARA system
+   - UI: User interface
+   - SYNC: Sync operations
+   - BOOKMARKS: Bookmarking system
+   - LINK: Link management
+   - NOTES: Note operations
 
-Example usage:
+Both commands support tab completion for available options.
+
+### Example Usage
+
 ```vim
-" Enable debug logging for cache operations
-:VisidianDebugCategories CACHE
+" Enable debug logging for bookmarks
+:VisidianDebug DEBUG
+:VisidianDebugCat BOOKMARKS
 
 " Enable all debug output
-:VisidianDebugLevel DEBUG
-:VisidianDebugCategories ALL
+:VisidianDebug DEBUG
+:VisidianDebugCat ALL
 
-" Only show errors and warnings for sync operations
-:VisidianDebugLevel WARN
-:VisidianDebugCategories SYNC
+" Only show errors for sync operations
+:VisidianDebug ERROR
+:VisidianDebugCat SYNC
 ```
+
+Debug messages can be viewed using the Vim `:messages` command.
+
+For more detailed information, see `:help visidian-debugging`.
 
 ## Tips for Using Visidian
 

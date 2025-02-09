@@ -42,6 +42,10 @@ if !exists(':VisidianSession')
     command! -nargs=0 VisidianSession call visidian#menu_session()
 endif
 
+if !exists(':VisidianBook')
+    command! -nargs=0 VisidianBook call visidian#bookmarking#menu()
+endif
+
 " Initialize PARA color system
 if !exists('g:visidian_para_colors')
     let g:visidian_para_colors = {
