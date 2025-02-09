@@ -14,6 +14,9 @@ endif
 let g:loaded_visidian_vim = 1
 
 " Initialize plugin variables
+if !exists('g:visidian_debug')
+    let g:visidian_debug = 1
+endif
 if !exists('g:visidian_debug_level')
     let g:visidian_debug_level = 'WARN'
 endif

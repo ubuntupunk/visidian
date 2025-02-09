@@ -46,6 +46,11 @@ endfunction
 
 " Log message if level is within current debug level
 function! s:log_message(level, component, msg)
+    " Check if debugging is enabled
+    if !get(g:, 'visidian_debug', 1)
+        return
+    endif
+
     let current_level = s:init_debug_level()
     let msg_level = get(s:DEBUG_LEVELS, toupper(a:level), -1)
     let categories = s:init_debug_categories()

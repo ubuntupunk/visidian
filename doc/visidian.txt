@@ -57,4 +57,37 @@ Only show errors for sync operations: >
 View debug messages using the Vim |:messages| command.
 
 ==============================================================================
+VARIABLES                                            *visidian-variables*
+
+                                                    *g:visidian_debug*
+    Enable or disable debug mode. Set to 0 to disable all debug output.
+    Default: 1
+
+                                                    *g:visidian_debug_level*
+    Set the debug level for messages. Available levels are:
+    - ERROR: Only show errors
+    - WARN:  Show warnings and errors
+    - INFO:  Show general information
+    - DEBUG: Show detailed debug information
+    - TRACE: Show very detailed trace information
+    Default: 'WARN'
+
+                                                    *g:visidian_debug_categories*
+    List of debug categories to enable. Set to ['ALL'] to enable all categories.
+    Available categories:
+    - ALL:       Enable all categories
+    - CORE:      Core functionality
+    - SESSION:   Session management
+    - PREVIEW:   Markdown preview
+    - SEARCH:    Search functionality
+    - CACHE:     Cache operations
+    - PARA:      PARA system
+    - UI:        User interface
+    - SYNC:      Sync operations
+    - BOOKMARKS: Bookmarking system
+    - LINK:      Link management
+    - NOTES:     Note operations
+    Default: ['ALL']
+
+==============================================================================
  vim:tw=78:ts=8:ft=help:norl:

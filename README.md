@@ -249,6 +249,25 @@ While we currently emphasize folder-based organization, Visidian is evolving tow
 
 This hybrid approach allows you to maintain organized structures while preparing for more advanced knowledge management features.
 
+## Configuration
+
+You can customize Visidian's behavior with the following variables in your `.vimrc`:
+
+### Debug Settings
+
+```vim
+" Enable/disable debug mode (default: 1)
+let g:visidian_debug = 0
+
+" Set debug level (default: 'WARN')
+let g:visidian_debug_level = 'INFO'
+
+" Set debug categories (default: ['ALL'])
+let g:visidian_debug_categories = ['CORE', 'PARA', 'BOOKMARKS']
+```
+
+### Other Settings
+
 ## Dependencies
 
 For full functionality, Visidian requires the following:
