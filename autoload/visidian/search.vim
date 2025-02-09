@@ -57,57 +57,39 @@ function! visidian#search#search()
     let s:search_active = 1
 
     " Try search methods in order: vim built-in, fzf, fzf.vim
-    if executable('fzf') && exists('*fzf#vim#with_preview')
-        call visidian#debug#info('SEARCH', 'Using FZF.vim with preview')
-        call s:fzf_vim_search(query)
-    elseif executable('fzf')
-        call visidian#debug#info('SEARCH', 'Using system FZF')
-        call s:system_fzf_search(query)
+    if exists('*fzf#run')
+        call visidian#debug#info('SEARCH', 'Using FZF')
+        call s:fzf_search(query)
     else
         call visidian#debug#info('SEARCH', 'Using Vim built-in search')
         call s:vim_search(query)
     endif
 endfunction
 
-"FUNCTION: FZF.vim search with preview
-function! s:fzf_vim_search(query)
-    call visidian#debug#debug('SEARCH', 'Starting FZF.vim search with preview...')
+"FUNCTION: FZF search
+function! s:fzf_search(query)
+    call visidian#debug#debug('SEARCH', 'Starting FZF search...')
+    
+    " Save current window
+    let current_win = winnr()
+    
+    " Build the command to find markdown files
+    let find_cmd = 'find ' . shellescape(g:visidian_vault_path) . ' -type f -name "*.md"'
+    
+    " Create options dictionary for fzf
+    let opts = {
+        \ 'source': find_cmd,
+        \ 'sink': 'e',
+        \ 'options': '--prompt "Search> " --preview "grep -h -C 3 ' . shellescape(a:query) . ' {}"'
+        \ }
+    
     try
-        call fzf#vim#grep('grep -r ' . shellescape(a:query) . ' ' . g:visidian_vault_path, 1, fzf#vim#with_preview(), 0)
-        call visidian#debug#debug('SEARCH', 'FZF.vim search started successfully')
+        call fzf#run(fzf#wrap(opts))
+        call visidian#debug#debug('SEARCH', 'FZF search started successfully')
     catch
-        call visidian#debug#error('SEARCH', 'FZF.vim search failed: ' . v:exception)
-        call s:system_fzf_search(a:query)  " Fallback to system FZF
-    endtry
-endfunction
-
-"FUNCTION: System FZF search
-function! s:system_fzf_search(query)
-    call visidian#debug#debug('SEARCH', 'Starting system FZF search...')
-    
-    let search_cmd = 'grep -r ' . shellescape(a:query) . ' ' . shellescape(g:visidian_vault_path)
-    let preview_cmd = 'cat {}'
-    
-    " Build the fzf command
-    let fzf_cmd = 'fzf --ansi --delimiter : --preview "' . preview_cmd . '" --preview-window "+{2}-/2"'
-    let full_cmd = search_cmd . ' | ' . fzf_cmd
-    
-    call visidian#debug#debug('SEARCH', 'Running command: ' . full_cmd)
-    
-    " Run fzf in a terminal buffer
-    let buf = term_start(['/bin/sh', '-c', full_cmd], {
-        \ 'term_name': 'visidian-search',
-        \ 'hidden': 1,
-        \ 'term_finish': 'close',
-        \ 'curwin': 1,
-        \ })
-    
-    if buf == 0
-        call visidian#debug#error('SEARCH', 'Failed to start terminal for fzf')
+        call visidian#debug#error('SEARCH', 'FZF search failed: ' . v:exception)
         call s:vim_search(a:query)  " Fallback to vim search
-    else
-        call visidian#debug#debug('SEARCH', 'System FZF search started successfully')
-    endif
+    endtry
 endfunction
 
 "FUNCTION: Vim search

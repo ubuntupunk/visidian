@@ -65,20 +65,16 @@ hi def VisidianResources  term=bold cterm=bold ctermfg=110 gui=bold guifg=#87afd
 hi def VisidianArchives   term=bold cterm=bold ctermfg=242 gui=bold guifg=#6c6c6c
 
 " Check search method availability
-let s:has_fzf = executable('fzf')
-let s:has_fzf_vim = exists('*fzf#vim#with_preview')
+let s:has_fzf = exists('*fzf#run')
 
 if g:visidian_debug_level == 'DEBUG'
     call visidian#debug#debug('CORE', 'Search capabilities:')
-    call visidian#debug#debug('CORE', '  FZF.vim: ' . (s:has_fzf_vim ? 'yes' : 'no'))
-    call visidian#debug#debug('CORE', '  System FZF: ' . (s:has_fzf ? 'yes' : 'no'))
+    call visidian#debug#debug('CORE', '  FZF: ' . (s:has_fzf ? 'yes' : 'no'))
     call visidian#debug#debug('CORE', '  Vim built-in: yes')
 endif
 
-if s:has_fzf_vim
-    call visidian#debug#info('CORE', 'Using FZF.vim for enhanced search')
-elseif s:has_fzf
-    call visidian#debug#info('CORE', 'Using system FZF for search')
+if s:has_fzf
+    call visidian#debug#info('CORE', 'Using FZF for search')
 else
     call visidian#debug#info('CORE', 'Using Vim built-in search')
 endif
