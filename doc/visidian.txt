@@ -1,0 +1,60 @@
+*visidian.txt*  A Vim plugin for Obsidian-like Personal Knowledge Management
+
+                                                    *visidian*
+
+==============================================================================
+CONTENTS                                            *visidian-contents*
+
+    1. Introduction ................ |visidian-introduction|
+    2. Commands ................... |visidian-commands|
+    3. PARA Method ................ |visidian-para|
+    4. Bookmarks .................. |visidian-bookmarks|
+    5. Debugging .................. |visidian-debugging|
+
+==============================================================================
+DEBUGGING                                           *visidian-debugging*
+
+Visidian provides two main commands for debugging purposes:
+
+                                                    *:VisidianDebug*
+:VisidianDebug {level}     Set the debug level
+                        Supports tab completion for available levels:
+                        - ERROR  : Only show errors
+                        - WARN   : Show warnings and errors
+                        - INFO   : Show general information
+                        - DEBUG  : Show detailed debug information
+                        - TRACE  : Show very detailed trace information
+
+                                                    *:VisidianDebugCat*
+:VisidianDebugCat {categories}
+                        Set which categories to debug
+                        Supports tab completion for available categories:
+                        - ALL      : Enable all categories
+                        - CORE     : Core functionality
+                        - SESSION  : Session management
+                        - PREVIEW  : Markdown preview
+                        - SEARCH   : Search functionality
+                        - CACHE    : Cache operations
+                        - PARA     : PARA system
+                        - UI       : User interface
+                        - SYNC     : Sync operations
+                        - BOOKMARKS: Bookmarking system
+
+Example Usage:~
+
+Enable debug logging for bookmarks: >
+    :VisidianDebug DEBUG
+    :VisidianDebugCat BOOKMARKS
+<
+Enable all debug output: >
+    :VisidianDebug DEBUG
+    :VisidianDebugCat ALL
+<
+Only show errors for sync operations: >
+    :VisidianDebug ERROR
+    :VisidianDebugCat SYNC
+<
+View debug messages using the Vim |:messages| command.
+
+==============================================================================
+ vim:tw=78:ts=8:ft=help:norl:

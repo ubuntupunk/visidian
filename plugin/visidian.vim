@@ -25,9 +25,8 @@ if !exists('g:visidian_vault_path')
 endif
 
 " Add debug commands
-command! -nargs=1 -complete=customlist,s:debug_level_complete VisidianDebugLevel call visidian#debug#set_level(<q-args>)
-command! -nargs=+ -complete=customlist,s:debug_category_complete VisidianDebugCategories call visidian#debug#set_categories([<f-args>])
-command! -nargs=0 VisidianDebugHelp call visidian#debug#help()
+command! -nargs=1 -complete=customlist,s:debug_level_complete VisidianDebug call visidian#debug#set_level(<q-args>)
+command! -nargs=+ -complete=customlist,s:debug_category_complete VisidianDebugCat call visidian#debug#set_categories([<f-args>])
 
 " Command completion functions
 function! s:debug_level_complete(ArgLead, CmdLine, CursorPos)
@@ -35,7 +34,7 @@ function! s:debug_level_complete(ArgLead, CmdLine, CursorPos)
 endfunction
 
 function! s:debug_category_complete(ArgLead, CmdLine, CursorPos)
-    return filter(['ALL', 'CORE', 'SESSION', 'PREVIEW', 'SEARCH', 'CACHE', 'PARA', 'UI', 'SYNC'], 'v:val =~? "^" . a:ArgLead')
+    return filter(['ALL', 'CORE', 'SESSION', 'PREVIEW', 'SEARCH', 'CACHE', 'PARA', 'UI', 'SYNC', 'BOOKMARKS', 'LINK', 'NOTES'], 'v:val =~? "^" . a:ArgLead')
 endfunction
 
 " Initialize essential commands

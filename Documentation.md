@@ -272,5 +272,50 @@ The debug system uses these categories to organize messages:
 - TAGS: Tag generation and management
 - PARA: PARA method implementation
 
+### Debugging
+
+### Debug Commands
+
+Visidian provides two main commands for debugging:
+
+1. `:VisidianDebug <level>` - Set the debug level
+   - ERROR: Only show errors
+   - WARN: Show warnings and errors
+   - INFO: Show general information
+   - DEBUG: Show detailed debug information
+   - TRACE: Show very detailed trace information
+
+2. `:VisidianDebugCat <categories...>` - Set which categories to debug
+   - ALL: Enable all categories
+   - CORE: Core functionality
+   - SESSION: Session management
+   - PREVIEW: Markdown preview
+   - SEARCH: Search functionality
+   - CACHE: Cache operations
+   - PARA: PARA system
+   - UI: User interface
+   - SYNC: Sync operations
+   - BOOKMARKS: Bookmarking system
+
+Both commands support tab completion for available options.
+
+### Example Usage
+
+```vim
+" Enable debug logging for bookmarks
+:VisidianDebug DEBUG
+:VisidianDebugCat BOOKMARKS
+
+" Enable all debug output
+:VisidianDebug DEBUG
+:VisidianDebugCat ALL
+
+" Only show errors for sync operations
+:VisidianDebug ERROR
+:VisidianDebugCat SYNC
+```
+
+Debug messages can be viewed using the Vim `:messages` command.
+
 ### Usage
 The popup menu can be accessed using the default keybinding or command (refer to README.md for details). Menu items will now execute their intended commands reliably without interference from previous actions.
