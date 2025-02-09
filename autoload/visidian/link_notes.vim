@@ -336,52 +336,44 @@ call visidian#debug#debug('LINK', 'Updating YAML frontmatter in: ' . a:file)
     let lines = readfile(a:file)
     let new_lines = []
     let in_yaml = 0
-    let yaml_end = 0
-    
-    " Handle existing frontmatter
-    for line in lines
+    let yaml_processed = 0
+
+       " Process the file line by line
+    let i = 0
+    while i < len(lines)
+        let line = lines[i]
+        
+        " Handle YAML frontmatter
         if line =~ '^---\s*$'
             if !in_yaml
+                " Start of YAML block
                 let in_yaml = 1
                 call add(new_lines, line)
+                
+                " Add all new YAML content here
+                if !yaml_processed
+                    for [key, value] in items(a:yaml)
+                        if type(value) == v:t_list
+                            let line = key . ': [' . join(value, ', ') . ']'
+                        else
+                            let line = key . ': ' . value
+                        endif
+                        call add(new_lines, line)
+                    endfor
+                    let yaml_processed = 1
+                endif
             else
-                let yaml_end = 1
-                " Don't add closing --- yet
-                break
-            endif
-        elseif in_yaml && !yaml_end
-            " Keep existing YAML lines that aren't in the update
-            let matches = matchlist(line, '^\s*\(\w\+\):\s*\(.*\)\s*$')
-            if !empty(matches) && !has_key(a:yaml, matches[1])
+                " End of YAML block
                 call add(new_lines, line)
+                let in_yaml = 0
             endif
-        endif
-    endfor
-    
-    " Add updated YAML content
-    for [key, value] in items(a:yaml)
-        if type(value) == v:t_list
-            let line = key . ': [' . join(value, ', ') . ']'
-        else
-            let line = key . ': ' . value
-        endif
-        call add(new_lines, line)
-    endfor
-    
-    " Add closing --- and rest of file content
-    call add(new_lines, '---')
-    let found_end = 0
-    for line in lines
-        if !found_end && line =~ '^---\s*$'
-            if in_yaml
-                let found_end = 1
-            endif
-            continue
-        endif
-        if found_end
+        elseif !in_yaml
+            " Outside YAML block - copy line as is
             call add(new_lines, line)
         endif
-    endfor
+        
+        let i += 1
+    endwhile
     
     " Write back to file
     call writefile(new_lines, a:file)
