@@ -137,12 +137,19 @@ function! s:UpdateVisidianStatusLine()
         " Get PARA context
         let l:path = expand('%:p')
         let l:hi_group = ''
-        
+        let l:filetype_indicator = ''
+
+        " Set filetype indicator
+        if &filetype == 'visidian'
+            let l:filetype_indicator = '[Visidian]'
+
         " Debug path matching
         if g:visidian_debug_level == 'DEBUG'
             call visidian#debug#trace('UI', 'Statusline Path: ' . l:path)
         endif
-        
+
+    
+        " Set PARA context color    
         if l:path =~? '/Projects/'
             let l:hi_group = '%#VisidianProjects#'
         elseif l:path =~? '/Areas/'
@@ -152,11 +159,17 @@ function! s:UpdateVisidianStatusLine()
         elseif l:path =~? '/Archive\|Archives/'
             let l:hi_group = '%#VisidianArchives#'
         endif
-
-        " Preserve existing statusline or set a basic one
-        if empty(&statusline)
-            setlocal statusline=%<%f\ %h%m%r%=%-14.(%l,%c%V%)\ %P
+    else
+        let l:filetype_indicator = '[Markdown]'
         endif
+        
+        " Preserve existing statusline or set a basic one
+        "if empty(&statusline)
+            "setlocal statusline=%<%f\ %h%m%r%=%-14.(%l,%c%V%)\ %P
+        "endif
+        
+        " Set statusline with filetype and timestamp
+        let &l:statusline = '%<%f\ %h%m%r\ ' . l:filetype_indicator . '\ %{strftime(''%c'',getftime(expand(''%'')))}%=%-14.(%l,%c%V%)\ %P'
         
         " Add PARA context with color if not already present
         if !empty(l:hi_group)

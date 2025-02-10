@@ -892,41 +892,35 @@ function! SignLines() range
 endfunction
 map <F4> :call SignLines()<CR>
 
+" " FUNCTION to set custom statusline for markdown files
+" function! s:SetMarkdownStatusline()
+"    call visidian#debug#debug('UI', "Setting markdown statusline...")
+"     if s:IsMarkdownFile()
+"       call visidian#debug#debug('UI', "File is markdown, setting statusline...")
+"         " Set statusline:
+"         " - %m: modified flag
+"         " - %{strftime('%c', getftime(expand('%')))}: File last modified timestamp
+"         " - Plugin name
+"       call timer_start(10, {-> execute('setlocal statusline=%m%{strftime('%c',getftime(expand('%')))}\ Visidian\ Project')})
+"     endif
+" endfunction
 
-" FUNCTION to set custom statusline for markdown files
-function! s:IsMarkdownFile()
-    return &filetype == 'markdown'
-endfunction
+" " Autocommand to set statusline when entering a buffer or when the filetype changes
+" augroup markdown_statusline
+"     autocmd!
+"     autocmd FileType markdown call SetMarkdownStatusline()
+" augroup END
 
-" FUNCTION to set custom statusline for markdown files
-function! s:SetMarkdownStatusline()
-   call visidian#debug#debug('UI', "Setting markdown statusline...")
-    if s:IsMarkdownFile()
-      call visidian#debug#debug('UI', "File is markdown, setting statusline...")
-        " Set statusline:
-        " - %m: modified flag
-        " - %{strftime('%c', getftime(expand('%')))}: File last modified timestamp
-        " - Plugin name
-      call timer_start(10, {-> execute('setlocal statusline=%m%{strftime('%c',getftime(expand('%')))}\ Visidian\ Project')})
-    endif
-endfunction
-
-" Autocommand to set statusline when entering a buffer or when the filetype changes
-augroup markdown_statusline
-    autocmd!
-    autocmd FileType markdown call SetMarkdownStatusline()
-augroup END
-
-" Function to check if the current buffer is a markdown file (global version)
-function! SetMarkdownStatusline()
-    if &filetype == 'markdown'
-        " Set statusline:
-        " - %m: modified flag
-        " - %{strftime('%c', getftime(expand('%')))}: File last modified timestamp
-        " - Plugin name
-        setlocal statusline=%m%{strftime('%c',getftime(expand('%')))}\ Visidian\ Plugin
-    endif
-endfunction
+" " Function to check if the current buffer is a markdown file (global version)
+" function! SetMarkdownStatusline()
+"     if &filetype == 'markdown'
+"         " Set statusline:
+"         " - %m: modified flag
+"         " - %{strftime('%c', getftime(expand('%')))}: File last modified timestamp
+"         " - Plugin name
+"         setlocal statusline=%m%{strftime('%c',getftime(expand('%')))}\ Visidian\ Plugin
+"     endif
+" endfunction
 
 
 " FUNCTION VisidianToggleSidebar
