@@ -12,7 +12,7 @@ function! visidian#start#welcome() abort
         \ '     |_| |_|___/_|\__,_|_|\__,_|_| |_|',
         \ '',
         \ '    Welcome to Visidian - Your Vim-based Personal Knowledge Management System',
-        \ '    Version: ' . g:visidian_version,
+        \ '    Version: ' . get(g:, 'visidian_version', 'development'),
         \ '',
         \ '    This guide will help you set up Visidian for the first time.',
         \ '    Press any key to continue...'
@@ -268,7 +268,7 @@ endfunction
 
 function! visidian#start#finish() abort
     let msg = [
-        \ 'Setup Complete! 🎉',
+        \ 'Setup Complete! ',
         \ '',
         \ 'You can now start using Visidian:',
         \ '',
