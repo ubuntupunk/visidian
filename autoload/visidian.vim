@@ -647,8 +647,11 @@ function! visidian#menu() abort
         return
     endif
 
-    " Check if we can use Nerd Font icons
-      let icons = has_nerdfont ? {
+     " Check if we can use Nerd Font icons
+    let has_nerdfont = s:has_nerdfont()
+    
+    " Define icons based on font support
+    let icons = has_nerdfont ? {
         \ 'note': "\uf481",      " File icon
         \ 'folder': "\uf74a",    " Folder icon
         \ 'search': "\uf002",    " Search icon
