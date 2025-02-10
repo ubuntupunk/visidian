@@ -648,10 +648,7 @@ function! visidian#menu() abort
     endif
 
     " Check if we can use Nerd Font icons
-    let has_nerdfont = s:has_nerdfont()
-    
-    " Define icons based on font support
-    let icons = has_nerdfont ? {
+      let icons = has_nerdfont ? {
         \ 'note': "\uf481",      " File icon
         \ 'folder': "\uf74a",    " Folder icon
         \ 'search': "\uf002",    " Search icon
@@ -668,7 +665,7 @@ function! visidian#menu() abort
         \ 'sidebar': "\uf0db",   " Layout icon
         \ 'help': "\uf059",      " Question mark icon
         \ 'bookmark': "\uf02e",  " Bookmark icon
-        \ 'close': "\uf00d"     " X icon
+        \ 'close': "\uf00d"      " X icon
         \ } : {
         \ 'note': '[+]',
         \ 'folder': '[D]',
@@ -686,8 +683,8 @@ function! visidian#menu() abort
         \ 'sidebar': '[B]',
         \ 'help': '[?]',
         \ 'bookmark': '[M]',
-        \ 'close': '[Q]'   
-         }
+        \ 'close': '[Q]'
+        \ }
 
     " Define menu items with descriptions and commands
     let menu_items = [
