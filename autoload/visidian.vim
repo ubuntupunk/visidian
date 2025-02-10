@@ -670,23 +670,23 @@ function! visidian#menu() abort
         \ 'bookmark': "\uf02e",  " Bookmark icon
         \ 'close': "\uf00d"      " X icon
         \ } : {
-        \ 'note': '[+]',
-        \ 'folder': '[D]',
-        \ 'search': '[S]',
-        \ 'link': '[L]',
-        \ 'para': '[P]',
-        \ 'save': '[W]',
-        \ 'load': '[R]',
-        \ 'list': '[LS]',
-        \ 'choose': '[C]',
-        \ 'clear': '[X]',
-        \ 'setup': '[S]',
-        \ 'sync': '[Y]',
-        \ 'preview': '[V]',
-        \ 'sidebar': '[B]',
-        \ 'help': '[?]',
-        \ 'bookmark': '[M]',
-        \ 'close': '[Q]'
+            \ 'note': '[+]',
+            \ 'folder': '[D]',
+            \ 'search': '[S]',
+            \ 'link': '[L]',
+            \ 'para': '[P]',
+            \ 'save': '[W]',
+            \ 'load': '[R]',
+            \ 'list': '[LS]',
+            \ 'choose': '[C]',
+            \ 'clear': '[X]',
+            \ 'setup': '[S]',
+            \ 'sync': '[Y]',
+            \ 'preview': '[V]',
+            \ 'sidebar': '[B]',
+            \ 'help': '[?]',
+            \ 'bookmark': '[M]',
+            \ 'close': '[Q]'
         \ }
 
  " Log the icons dictionary
