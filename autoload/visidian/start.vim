@@ -309,7 +309,7 @@ endfunction
 
 function! visidian#start#customize() abort
     let msg = [
-        \ 'Would you like to customize Visidian?',
+        \ 'Would you like to view and customize settings?',
         \ '',
         \ 'You can customize various aspects such as:',
         \ '  - Key mappings',
@@ -318,12 +318,12 @@ function! visidian#start#customize() abort
         \ '  - Status line integration',
         \ '',
         \ 'Press:',
-        \ '  [y] to view customization options',
+        \ '  [y] to view settings',
         \ '  [n] to finish setup'
         \ ]
     
     let winid = popup_create(msg, {
-        \ 'title': ' Customize ',
+        \ 'title': ' Settings ',
         \ 'padding': [1,2,1,2],
         \ 'border': [],
         \ 'borderchars': ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
@@ -343,7 +343,34 @@ endfunction
 function! s:customize_filter(winid, key) abort
     if a:key ==# 'y'
         call popup_close(a:winid)
-        call visidian#setup()
+        " Open settings in a new buffer
+        new
+        setlocal buftype=nofile
+        setlocal bufhidden=wipe
+        setlocal noswapfile
+        
+        " Add settings content
+        call append(0, [
+            \ '# Visidian Settings',
+            \ '',
+            \ '## Key Mappings',
+            \ 'let g:visidian_map_prefix = "\v"       " Default prefix for all mappings',
+            \ '',
+            \ '## Preview Options',
+            \ 'let g:visidian_preview_enabled = 1     " Enable/disable preview (1/0)',
+            \ '',
+            \ '## Auto-sync Settings',
+            \ 'let g:visidian_autosync = 1           " Enable/disable auto-sync (1/0)',
+            \ '',
+            \ '## Status Line',
+            \ 'let g:visidian_statusline = 1         " Enable/disable status line integration (1/0)',
+            \ '',
+            \ '# Save these settings to your vimrc to make them permanent',
+            \ ])
+        
+        " Move cursor to top
+        normal! gg
+        
         return 1
     elseif a:key ==# 'n'
         call popup_close(a:winid)
