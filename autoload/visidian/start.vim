@@ -1,8 +1,11 @@
 " Visidian First Start
 " Maintainer: ubuntupunk
-" License: MIT
+" License: GPL3
 
 function! visidian#start#welcome() abort
+    " Force immediate redraw
+    redraw!
+    
     " Create welcome message
     let welcome = [
         \ '   __   ___     _     _ _             ',
@@ -89,6 +92,9 @@ endfunction
 function! visidian#start#first_start() abort
     " Reset setup step
     let s:setup_step = 0
+    
+    " Force immediate screen refresh
+    redraw!
     
     " Main onboarding function
     call visidian#debug#info('START', 'Beginning first-time setup')
