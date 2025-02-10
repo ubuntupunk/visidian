@@ -148,7 +148,6 @@ function! s:UpdateVisidianStatusLine()
             call visidian#debug#trace('UI', 'Statusline Path: ' . l:path)
         endif
 
-    
         " Set PARA context color    
         if l:path =~? '/Projects/'
             let l:hi_group = '%#VisidianProjects#'
@@ -169,8 +168,18 @@ function! s:UpdateVisidianStatusLine()
         "endif
         
         " Set statusline with filetype and timestamp
-        let &l:statusline = '%<%f\ %h%m%r\ ' . l:filetype_indicator . '\ %{strftime(''%c'',getftime(expand(''%'')))}%=%-14.(%l,%c%V%)\ %P'
+        "let &l:statusline = '%<%f\ %h%m%r\ ' . l:filetype_indicator . '\ %{strftime(''%c'',getftime(expand(''%'')))}%=%-14.(%l,%c%V%)\ %P'
         
+        " Format: [P/A/R/A] filename Type: Visidian/Markdown │ HH:MM
+        let &l:statusline = ''
+        if !empty(l:hi_group)
+            let l:para_status = l:hi_group . visidian#para_status() . '%* '
+            let &l:statusline .= l:para_status
+        endif
+        let &l:statusline .= '%<%f %h%m%r'
+        let &l:statusline .= '%='
+        let &l:statusline .= l:filetype_indicator . ' │ %{strftime("%H:%M")} '
+
         " Add PARA context with color if not already present
         if !empty(l:hi_group)
             let l:para_status = l:hi_group . visidian#para_status() . '%*'
