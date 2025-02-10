@@ -140,6 +140,19 @@ function! visidian#start#setup_vault() abort
     call visidian#debug#info('START', 'Displayed vault setup options')
 endfunction
 
+function! s:select_vault_path() abort
+    " Try using browse() first
+    if has('browse')
+        let path = browse(0, 'Select Vault Directory', expand('~'), '')
+    else
+        " Fallback to input() in console mode
+        echo "\nEnter vault path (or press Enter to cancel):"
+        let path = input('Path: ', expand('~'), 'dir')
+        echo "\n"  " Add newline after input
+    endif
+    return path
+endfunction
+
 function! s:vault_filter(winid, key) abort
     if a:key ==# 'n'
         call popup_close(a:winid)
@@ -147,9 +160,22 @@ function! s:vault_filter(winid, key) abort
         return 1
     elseif a:key ==# 'e'
         call popup_close(a:winid)
-        " Use browse() for directory selection
-        let path = browse(0, 'Select Vault Directory', expand('~'), '')
+        let path = s:select_vault_path()
         if !empty(path)
+            " Expand path to handle ~ and environment variables
+            let path = expand(path)
+            " Ensure directory exists
+            if !isdirectory(path)
+                echo "\nDirectory does not exist. Create it? (y/n)"
+                let choice = nr2char(getchar())
+                echo "\n"
+                if choice ==? 'y'
+                    call mkdir(path, 'p')
+                else
+                    call visidian#start#setup_vault()
+                    return 1
+                endif
+            endif
             let g:visidian_vault_path = path
             call visidian#debug#info('START', 'Selected vault path: ' . path)
             return 1
