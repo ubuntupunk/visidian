@@ -68,6 +68,41 @@ function! visidian#start#check_dependencies() abort
     endif
 endfunction
 
+" Track the current step in the setup process
+let s:setup_step = 0
+
+function! s:continue_setup() abort
+    let s:setup_step += 1
+    if s:setup_step == 1
+        call visidian#start#setup_para()
+    elseif s:setup_step == 2
+        call visidian#start#import_notes()
+    elseif s:setup_step == 3
+        call visidian#start#setup_sync()
+    elseif s:setup_step == 4
+        call visidian#start#customize()
+    elseif s:setup_step == 5
+        call visidian#start#finish()
+    endif
+endfunction
+
+function! visidian#start#first_start() abort
+    " Reset setup step
+    let s:setup_step = 0
+    
+    " Main onboarding function
+    call visidian#debug#info('START', 'Beginning first-time setup')
+    
+    " Welcome screen
+    call visidian#start#welcome()
+    
+    " Check dependencies
+    call visidian#start#check_dependencies()
+    
+    " Setup vault
+    call visidian#start#setup_vault()
+endfunction
+
 function! visidian#start#setup_vault() abort
     let msg = [
         \ 'First, lets set up your vault!',
@@ -77,7 +112,7 @@ function! visidian#start#setup_vault() abort
         \ '',
         \ 'Press:',
         \ '  [n] to create a New vault',
-        \ '  [e] to use an Existing folder as vault',
+        \ '  [e] to select an Existing folder',
         \ '  [q] to Quit setup'
         \ ]
     
@@ -88,8 +123,13 @@ function! visidian#start#setup_vault() abort
         \ 'borderchars': ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
         \ 'pos': 'center',
         \ 'filter': function('s:vault_filter'),
-        \ 'callback': function('s:vault_callback')
+        \ 'callback': function('s:vault_callback'),
+        \ 'focusable': 1,
         \ })
+    
+    " Focus the popup immediately
+    call win_execute(winid, 'redraw')
+    call popup_setoptions(winid, {'focused': 1})
     
     call visidian#debug#info('START', 'Displayed vault setup options')
 endfunction
@@ -98,18 +138,14 @@ function! s:vault_filter(winid, key) abort
     if a:key ==# 'n'
         call popup_close(a:winid)
         call visidian#create_vault()
-        " Wait for vault creation to complete
-        sleep 500m
-        if !empty(g:visidian_vault_path)
-            call visidian#debug#info('START', 'New vault created successfully')
-            return 1
-        endif
+        return 1
     elseif a:key ==# 'e'
         call popup_close(a:winid)
-        call visidian#choose_vault()
-        sleep 500m
-        if !empty(g:visidian_vault_path)
-            call visidian#debug#info('START', 'Existing vault selected successfully')
+        " Use built-in directory selection
+        let path = input('Enter vault path: ', '', 'dir')
+        if !empty(path)
+            let g:visidian_vault_path = path
+            call visidian#debug#info('START', 'Selected vault path: ' . path)
             return 1
         endif
     elseif a:key ==# 'q'
@@ -120,10 +156,12 @@ function! s:vault_filter(winid, key) abort
 endfunction
 
 function! s:vault_callback(id, result) abort
-    if empty(g:visidian_vault_path)
-        call visidian#debug#error('START', 'Vault setup did not complete successfully')
-    else
+    if !empty(g:visidian_vault_path)
         call visidian#debug#info('START', 'Vault setup completed successfully')
+        " Continue with next step
+        call timer_start(500, {-> s:continue_setup()})
+    else
+        call visidian#debug#error('START', 'Vault setup did not complete successfully')
     endif
 endfunction
 
@@ -152,7 +190,13 @@ function! visidian#start#setup_para() abort
         \ 'borderchars': ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
         \ 'pos': 'center',
         \ 'filter': function('s:para_filter'),
+        \ 'callback': {id, result -> timer_start(500, {-> s:continue_setup()})},
+        \ 'focusable': 1,
         \ })
+    
+    " Focus the popup immediately
+    call win_execute(winid, 'redraw')
+    call popup_setoptions(winid, {'focused': 1})
     
     call visidian#debug#info('START', 'Displayed PARA setup options')
 endfunction
@@ -192,7 +236,13 @@ function! visidian#start#import_notes() abort
         \ 'borderchars': ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
         \ 'pos': 'center',
         \ 'filter': function('s:import_filter'),
+        \ 'callback': {id, result -> timer_start(500, {-> s:continue_setup()})},
+        \ 'focusable': 1,
         \ })
+    
+    " Focus the popup immediately
+    call win_execute(winid, 'redraw')
+    call popup_setoptions(winid, {'focused': 1})
     
     call visidian#debug#info('START', 'Displayed import options')
 endfunction
@@ -228,7 +278,13 @@ function! visidian#start#setup_sync() abort
         \ 'borderchars': ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
         \ 'pos': 'center',
         \ 'filter': function('s:sync_filter'),
+        \ 'callback': {id, result -> timer_start(500, {-> s:continue_setup()})},
+        \ 'focusable': 1,
         \ })
+    
+    " Focus the popup immediately
+    call win_execute(winid, 'redraw')
+    call popup_setoptions(winid, {'focused': 1})
     
     call visidian#debug#info('START', 'Displayed sync options')
 endfunction
@@ -267,7 +323,13 @@ function! visidian#start#customize() abort
         \ 'borderchars': ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
         \ 'pos': 'center',
         \ 'filter': function('s:customize_filter'),
+        \ 'callback': {id, result -> timer_start(500, {-> s:continue_setup()})},
+        \ 'focusable': 1,
         \ })
+    
+    " Focus the popup immediately
+    call win_execute(winid, 'redraw')
+    call popup_setoptions(winid, {'focused': 1})
     
     call visidian#debug#info('START', 'Displayed customization options')
 endfunction
@@ -286,7 +348,7 @@ endfunction
 
 function! visidian#start#finish() abort
     let msg = [
-        \ 'Setup Complete! ',
+        \ 'Setup Complete!',
         \ '',
         \ 'You can now start using Visidian:',
         \ '',
@@ -305,54 +367,18 @@ function! visidian#start#finish() abort
         \ 'border': [],
         \ 'borderchars': ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
         \ 'pos': 'center',
-        \ 'close': 'click',
+        \ 'filter': function('s:finish_filter'),
+        \ 'focusable': 1,
         \ })
     
+    " Focus the popup immediately
+    call win_execute(winid, 'redraw')
+    call popup_setoptions(winid, {'focused': 1})
+    
     call visidian#debug#info('START', 'Setup completed')
-    call getchar()
-    call popup_close(winid)
 endfunction
 
-function! visidian#start#first_start() abort
-    " Main onboarding function
-    call visidian#debug#info('START', 'Beginning first-time setup')
-    
-    " Welcome screen
-    call visidian#start#welcome()
-    
-    " Check dependencies
-    call visidian#start#check_dependencies()
-    
-    " Setup vault
-    call visidian#start#setup_vault()
-    " Wait a bit for vault setup to complete
-    sleep 500m
-    
-    " Verify vault path is set before continuing
-    if empty(g:visidian_vault_path)
-        call visidian#debug#error('START', 'Vault setup was cancelled')
-        return
-    endif
-    
-    call visidian#debug#info('START', 'Vault created at: ' . g:visidian_vault_path)
-    
-    " Setup PARA folders
-    sleep 500m
-    call visidian#start#setup_para()
-    
-    " Import existing notes
-    sleep 500m
-    call visidian#start#import_notes()
-    
-    " Setup sync
-    sleep 500m
-    call visidian#start#setup_sync()
-    
-    " Customize
-    sleep 500m
-    call visidian#start#customize()
-    
-    " Finish
-    sleep 500m
-    call visidian#start#finish()
+function! s:finish_filter(winid, key) abort
+    call popup_close(a:winid)
+    return 1
 endfunction
