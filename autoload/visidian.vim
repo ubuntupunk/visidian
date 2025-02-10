@@ -668,7 +668,7 @@ function! visidian#menu() abort
         \ 'sidebar': "\uf0db",   " Layout icon
         \ 'help': "\uf059",      " Question mark icon
         \ 'bookmark': "\uf02e",  " Bookmark icon
-        \ 'close': "\uf00d",     " X icon
+        \ 'close': "\uf00d"     " X icon
         \ } : {
         \ 'note': '[+]',
         \ 'folder': '[D]',
@@ -686,7 +686,7 @@ function! visidian#menu() abort
         \ 'sidebar': '[B]',
         \ 'help': '[?]',
         \ 'bookmark': '[M]',
-        \ 'close': '[Q]',   
+        \ 'close': '[Q]'   
         \ }
 
     " Define menu items with descriptions and commands
