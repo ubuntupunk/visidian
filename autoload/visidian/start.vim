@@ -147,13 +147,15 @@ function! s:vault_filter(winid, key) abort
         return 1
     elseif a:key ==# 'e'
         call popup_close(a:winid)
-        " Use built-in directory selection
-        let path = input('Enter vault path: ', '', 'dir')
+        " Use browse() for directory selection
+        let path = browse(0, 'Select Vault Directory', expand('~'), '')
         if !empty(path)
             let g:visidian_vault_path = path
             call visidian#debug#info('START', 'Selected vault path: ' . path)
             return 1
         endif
+        " If selection was cancelled, show vault setup again
+        call visidian#start#setup_vault()
     elseif a:key ==# 'q'
         call popup_close(a:winid)
         return 1
@@ -311,14 +313,11 @@ function! visidian#start#customize() abort
     let msg = [
         \ 'Would you like to view and customize settings?',
         \ '',
-        \ 'You can customize various aspects such as:',
-        \ '  - Key mappings',
-        \ '  - Preview options',
-        \ '  - Auto-sync settings',
-        \ '  - Status line integration',
+        \ 'A new buffer will open with all available settings.',
+        \ 'You can copy the ones you want to your vimrc.',
         \ '',
         \ 'Press:',
-        \ '  [y] to view settings',
+        \ '  [y] to view settings (press any key to continue after viewing)',
         \ '  [n] to finish setup'
         \ ]
     
@@ -348,28 +347,57 @@ function! s:customize_filter(winid, key) abort
         setlocal buftype=nofile
         setlocal bufhidden=wipe
         setlocal noswapfile
+        setlocal filetype=markdown
         
         " Add settings content
         call append(0, [
             \ '# Visidian Settings',
             \ '',
             \ '## Key Mappings',
-            \ 'let g:visidian_map_prefix = "\v"       " Default prefix for all mappings',
+            \ '```vim',
+            \ '" Default prefix for all mappings',
+            \ 'let g:visidian_map_prefix = "\v"',
+            \ '```',
             \ '',
             \ '## Preview Options',
-            \ 'let g:visidian_preview_enabled = 1     " Enable/disable preview (1/0)',
+            \ '```vim',
+            \ '" Enable/disable preview (1/0)',
+            \ 'let g:visidian_preview_enabled = 1',
+            \ '```',
             \ '',
             \ '## Auto-sync Settings',
-            \ 'let g:visidian_autosync = 1           " Enable/disable auto-sync (1/0)',
+            \ '```vim',
+            \ '" Enable/disable auto-sync (1/0)',
+            \ 'let g:visidian_autosync = 1',
+            \ '```',
             \ '',
             \ '## Status Line',
-            \ 'let g:visidian_statusline = 1         " Enable/disable status line integration (1/0)',
+            \ '```vim',
+            \ '" Enable/disable status line integration (1/0)',
+            \ 'let g:visidian_statusline = 1',
+            \ '```',
             \ '',
-            \ '# Save these settings to your vimrc to make them permanent',
+            \ '# Instructions',
+            \ '1. Review the settings above',
+            \ '2. Copy desired settings to your vimrc',
+            \ '3. Close this buffer when done (use :q)',
+            \ '',
+            \ 'Press any key to continue setup...'
             \ ])
         
         " Move cursor to top
         normal! gg
+        
+        " Wait for user to read and close the buffer
+        while bufexists('%')
+            redraw
+            let char = getchar()
+            if char != 0
+                bwipeout
+                break
+            endif
+            sleep 100m
+        endwhile
         
         return 1
     elseif a:key ==# 'n'
