@@ -88,6 +88,7 @@ function! visidian#start#setup_vault() abort
         \ 'borderchars': ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
         \ 'pos': 'center',
         \ 'filter': function('s:vault_filter'),
+        \ 'callback': function('s:vault_callback')
         \ })
     
     call visidian#debug#info('START', 'Displayed vault setup options')
@@ -97,16 +98,33 @@ function! s:vault_filter(winid, key) abort
     if a:key ==# 'n'
         call popup_close(a:winid)
         call visidian#create_vault()
-        return 1
+        " Wait for vault creation to complete
+        sleep 500m
+        if !empty(g:visidian_vault_path)
+            call visidian#debug#info('START', 'New vault created successfully')
+            return 1
+        endif
     elseif a:key ==# 'e'
         call popup_close(a:winid)
         call visidian#choose_vault()
-        return 1
+        sleep 500m
+        if !empty(g:visidian_vault_path)
+            call visidian#debug#info('START', 'Existing vault selected successfully')
+            return 1
+        endif
     elseif a:key ==# 'q'
         call popup_close(a:winid)
         return 1
     endif
     return 0
+endfunction
+
+function! s:vault_callback(id, result) abort
+    if empty(g:visidian_vault_path)
+        call visidian#debug#error('START', 'Vault setup did not complete successfully')
+    else
+        call visidian#debug#info('START', 'Vault setup completed successfully')
+    endif
 endfunction
 
 function! visidian#start#setup_para() abort
@@ -307,23 +325,34 @@ function! visidian#start#first_start() abort
     
     " Setup vault
     call visidian#start#setup_vault()
+    " Wait a bit for vault setup to complete
+    sleep 500m
+    
+    " Verify vault path is set before continuing
     if empty(g:visidian_vault_path)
         call visidian#debug#error('START', 'Vault setup was cancelled')
         return
     endif
     
+    call visidian#debug#info('START', 'Vault created at: ' . g:visidian_vault_path)
+    
     " Setup PARA folders
+    sleep 500m
     call visidian#start#setup_para()
     
     " Import existing notes
+    sleep 500m
     call visidian#start#import_notes()
     
     " Setup sync
+    sleep 500m
     call visidian#start#setup_sync()
     
     " Customize
+    sleep 500m
     call visidian#start#customize()
     
     " Finish
+    sleep 500m
     call visidian#start#finish()
 endfunction
