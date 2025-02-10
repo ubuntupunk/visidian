@@ -687,7 +687,7 @@ function! visidian#menu() abort
         \ 'help': '[?]',
         \ 'bookmark': '[M]',
         \ 'close': '[Q]'   
-        \ }
+         }
 
     " Define menu items with descriptions and commands
     let menu_items = [
