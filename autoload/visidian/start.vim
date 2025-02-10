@@ -146,9 +146,11 @@ function! s:select_vault_path() abort
         let path = browse(0, 'Select Vault Directory', expand('~'), '')
     else
         " Fallback to input() in console mode
-        echo "\nEnter vault path (or press Enter to cancel):"
+        echohl Question
+        echo 'Enter vault path (or press Enter to cancel):'
+        echohl None
         let path = input('Path: ', expand('~'), 'dir')
-        echo "\n"  " Add newline after input
+        redraw!
     endif
     return path
 endfunction
@@ -166,9 +168,11 @@ function! s:vault_filter(winid, key) abort
             let path = expand(path)
             " Ensure directory exists
             if !isdirectory(path)
-                echo "\nDirectory does not exist. Create it? (y/n)"
+                echohl Question
+                echo 'Directory does not exist. Create it? (y/n)'
+                echohl None
                 let choice = nr2char(getchar())
-                echo "\n"
+                redraw!
                 if choice ==? 'y'
                     call mkdir(path, 'p')
                 else
