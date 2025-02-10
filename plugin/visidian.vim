@@ -110,6 +110,7 @@ command! -nargs=0 VisidianMenu call visidian#menu()
 command! -nargs=0 VisidianImport call visidian#import()
 command! -nargs=0 VisidianBook call visidian#bookmarking#menu()
 command! -nargs=0 VisidianToggleSearch call visidian#search#toggle()
+command! -nargs=0 VisidianFirstStart call visidian#start#first_start()
 
 " Generate & Browse Ctags
 command! -nargs=0 VisidianGenCtags call VisidianGenerateTags()
