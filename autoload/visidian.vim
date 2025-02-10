@@ -686,7 +686,7 @@ function! visidian#menu() abort
         \ 'sidebar': '[B]',
         \ 'help': '[?]',
         \ 'bookmark': '[M]',
-        \ 'close': '[Q]'
+        \ 'close': '[Q]',   
         \ }
 
     " Define menu items with descriptions and commands
