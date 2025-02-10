@@ -691,10 +691,10 @@ function! visidian#menu() abort
 
     " Define menu items with descriptions and commands
     let menu_items = [
-        \ {'id': 1,  'text': icons.note . ' New Note',          'cmd': 'call visidian#new_md_file()',         'desc': 'Create a new markdown note'},
+        \ {'id': 1,  'text': icons.note . ' New Note',          'cmd': 'call visidian#new_md_file()',       'desc': 'Create a new markdown note'},
         \ {'id': 2,  'text': icons.folder . ' New Folder',      'cmd': 'call visidian#new_folder()',       'desc': 'Create a new folder'},
-        \ {'id': 3,  'text': icons.search . ' Search Notes',    'cmd': 'call visidian#search()',       'desc': 'Search through your notes'},
-        \ {'id': 4,  'text': icons.link . ' Link Notes',        'cmd': 'call visidian#link_notes()',         'desc': 'Create links between notes'},
+        \ {'id': 3,  'text': icons.search . ' Search Notes',    'cmd': 'call visidian#search()',     'desc': 'Search through your notes'},
+        \ {'id': 4,  'text': icons.link . ' Link Notes',        'cmd': 'call visidian#link_notes()',     'desc': 'Create links between notes'},
         \ {'id': 5,  'text': icons.para . ' PARA Folders',      'cmd': 'call visidian#create_para_folders()',      'desc': 'Generate PARA folder structure'},
         \ {'id': 6,  'text': icons.save . ' Save Session',      'cmd': 'call visidian#save_session()',  'desc': 'Save current session'},
         \ {'id': 7,  'text': icons.load . ' Load Session',      'cmd': 'call visidian#load_session()',  'desc': 'Load saved session'},
@@ -705,11 +705,11 @@ function! visidian#menu() abort
         \ {'id': 12, 'text': icons.sync . ' Toggle AutoSync',   'cmd': 'call visidian#toggle_auto_sync()', 'desc': 'Toggle auto-sync feature'},
         \ {'id': 13, 'text': icons.preview . ' Toggle Preview', 'cmd': 'call visidian#toggle_preview()', 'desc': 'Toggle markdown preview'},
         \ {'id': 14, 'text': icons.sidebar . ' Toggle Sidebar', 'cmd': 'call visidian#toggle_sidebar()', 'desc': 'Toggle sidebar visibility'},
-        \ {'id': 15, 'text': icons.help . ' Help',              'cmd': 'call visidian#help()',         'desc': 'Show help documentation'},
+        \ {'id': 15, 'text': icons.help . ' Help',              'cmd': 'call visidian#help()',         'desc': 'Show help'},
         \ {'id': 16, 'text': icons.para . ' Import & Sort',     'cmd': 'call visidian#import_sort()', 'desc': 'Import and sort files using PARA'},
         \ {'id': 17, 'text': icons.bookmark . ' Bookmarks',     'cmd': 'call visidian#bookmarking#menu()', 'desc': 'Bookmarks'},
-        \ {'id': 18, 'text': icons.close . ' Close Menu',       'cmd': 'close',                'desc': 'Close this menu'}
-    \ ]
+        \ {'id': 18, 'text': icons.close . ' Close Menu'       'cmd': 'close',                'desc': 'Close this menu'},
+     ]
 
     " Calculate menu dimensions
     let max_text_len = max(map(copy(menu_items), 'strwidth(v:val.text)'))
