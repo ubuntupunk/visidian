@@ -652,22 +652,23 @@ function! visidian#menu() abort
     
     " Define icons based on font support
     let icons = has_nerdfont ? {
-        \ 'note': '',
-        \ 'folder': '',
-        \ 'search': '',
-        \ 'link': '',
-        \ 'para': '',
-        \ 'save': '',
-        \ 'load': '',
-        \ 'list': '',
-        \ 'choose': '',
-        \ 'clear': '',
-        \ 'sync': '',
-        \ 'preview': '',
-        \ 'sidebar': '',
-        \ 'help': '',
-        \ 'bookmark': '',
-        \ 'close': ''
+    \ 'note': "\uf481",      " File icon
+    \ 'folder': "\uf74a",    " Folder icon
+    \ 'search': "\uf002",    " Search icon
+    \ 'link': "\uf0c1",      " Link icon
+    \ 'para': "\uf45c",      " Organization icon
+    \ 'save': "\uf0c7",      " Save icon
+    \ 'load': "\uf019",      " Load icon
+    \ 'list': "\uf03a",      " List icon
+    \ 'choose': "\uf0a4",    " Pointer icon
+    \ 'clear': "\uf2ed",     " Trash icon
+    \ 'setup': "\u2699",     " Gear icon
+    \ 'sync': "\uf021",      " Sync icon
+    \ 'preview': "\uf06e",   " Eye icon
+    \ 'sidebar': "\uf0db",   " Layout icon
+    \ 'help': "\uf059",      " Question mark icon
+    \ 'bookmark': "\uf02e",  " Bookmark icon
+    \ 'close': "\uf00d"      " X icon
     \ } : {
         \ 'note': '[+]',
         \ 'folder': '[D]',
@@ -679,6 +680,7 @@ function! visidian#menu() abort
         \ 'list': '[LS]',
         \ 'choose': '[C]',
         \ 'clear': '[X]',
+        \ 'setup': '[S]',
         \ 'sync': '[Y]',
         \ 'preview': '[V]',
         \ 'sidebar': '[B]',
@@ -699,13 +701,14 @@ function! visidian#menu() abort
         \ {'id': 8,  'text': icons.list . ' List Sessions',     'cmd': 'call visidian#list_sessions()', 'desc': 'View available sessions'},
         \ {'id': 9,  'text': icons.choose . ' Choose Session',  'cmd': 'call visidian#choose_session()','desc': 'Select a previous session'},
         \ {'id': 10, 'text': icons.clear . ' Clear Sessions',   'cmd': 'call visidian#clear_sessions()','desc': 'Clear session history'},
-        \ {'id': 11, 'text': icons.sync . ' Toggle AutoSync',   'cmd': 'call visidian#toggle_auto_sync()', 'desc': 'Toggle auto-sync feature'},
-        \ {'id': 12, 'text': icons.preview . ' Toggle Preview', 'cmd': 'call visidian#toggle_preview()', 'desc': 'Toggle markdown preview'},
-        \ {'id': 13, 'text': icons.sidebar . ' Toggle Sidebar', 'cmd': 'call visidian#toggle_sidebar()', 'desc': 'Toggle sidebar visibility'},
-        \ {'id': 14, 'text': icons.help . ' Help',              'cmd': 'call visidian#help()',         'desc': 'Show help documentation'},
-        \ {'id': 15, 'text': icons.para . ' Import & Sort',     'cmd': 'call visidian#import_sort()', 'desc': 'Import and sort files using PARA'},
-        \ {'id': 16, 'text': icons.bookmark . ' Bookmarks',     'cmd': 'call visidian#bookmarking#menu()', 'desc': 'Bookmarks'},
-        \ {'id': 17, 'text': icons.close . ' Close Menu',       'cmd': 'close',                'desc': 'Close this menu'}
+        \ {'id': 11, 'text': icons.setup . ' Setup Sync',       'cmd': 'call visidian#sync()', 'desc': 'Setup sync method'},
+        \ {'id': 12, 'text': icons.sync . ' Toggle AutoSync',   'cmd': 'call visidian#toggle_auto_sync()', 'desc': 'Toggle auto-sync feature'},
+        \ {'id': 13, 'text': icons.preview . ' Toggle Preview', 'cmd': 'call visidian#toggle_preview()', 'desc': 'Toggle markdown preview'},
+        \ {'id': 14, 'text': icons.sidebar . ' Toggle Sidebar', 'cmd': 'call visidian#toggle_sidebar()', 'desc': 'Toggle sidebar visibility'},
+        \ {'id': 15, 'text': icons.help . ' Help',              'cmd': 'call visidian#help()',         'desc': 'Show help documentation'},
+        \ {'id': 16, 'text': icons.para . ' Import & Sort',     'cmd': 'call visidian#import_sort()', 'desc': 'Import and sort files using PARA'},
+        \ {'id': 17, 'text': icons.bookmark . ' Bookmarks',     'cmd': 'call visidian#bookmarking#menu()', 'desc': 'Bookmarks'},
+        \ {'id': 18, 'text': icons.close . ' Close Menu',       'cmd': 'close',                'desc': 'Close this menu'}
     \ ]
 
     " Calculate menu dimensions
@@ -865,7 +868,6 @@ function! s:menu_callback(winid, result) abort
     endif
 endfunction
 
-
 " FUNCTION: Highlight Todo
  function! HighlightTodo()
  execute(":highlight TODO ctermbg=grey ctermfg=white")
@@ -891,37 +893,6 @@ function! SignLines() range
   endwhile  
 endfunction
 map <F4> :call SignLines()<CR>
-
-" " FUNCTION to set custom statusline for markdown files
-" function! s:SetMarkdownStatusline()
-"    call visidian#debug#debug('UI', "Setting markdown statusline...")
-"     if s:IsMarkdownFile()
-"       call visidian#debug#debug('UI', "File is markdown, setting statusline...")
-"         " Set statusline:
-"         " - %m: modified flag
-"         " - %{strftime('%c', getftime(expand('%')))}: File last modified timestamp
-"         " - Plugin name
-"       call timer_start(10, {-> execute('setlocal statusline=%m%{strftime('%c',getftime(expand('%')))}\ Visidian\ Project')})
-"     endif
-" endfunction
-
-" " Autocommand to set statusline when entering a buffer or when the filetype changes
-" augroup markdown_statusline
-"     autocmd!
-"     autocmd FileType markdown call SetMarkdownStatusline()
-" augroup END
-
-" " Function to check if the current buffer is a markdown file (global version)
-" function! SetMarkdownStatusline()
-"     if &filetype == 'markdown'
-"         " Set statusline:
-"         " - %m: modified flag
-"         " - %{strftime('%c', getftime(expand('%')))}: File last modified timestamp
-"         " - Plugin name
-"         setlocal statusline=%m%{strftime('%c',getftime(expand('%')))}\ Visidian\ Plugin
-"     endif
-" endfunction
-
 
 " FUNCTION VisidianToggleSidebar
 function! visidian#toggle_sidebar()
