@@ -652,24 +652,24 @@ function! visidian#menu() abort
     
     " Define icons based on font support
     let icons = has_nerdfont ? {
-    \ 'note': "\uf481",      " File icon
-    \ 'folder': "\uf74a",    " Folder icon
-    \ 'search': "\uf002",    " Search icon
-    \ 'link': "\uf0c1",      " Link icon
-    \ 'para': "\uf45c",      " Organization icon
-    \ 'save': "\uf0c7",      " Save icon
-    \ 'load': "\uf019",      " Load icon
-    \ 'list': "\uf03a",      " List icon
-    \ 'choose': "\uf0a4",    " Pointer icon
-    \ 'clear': "\uf2ed",     " Trash icon
-    \ 'setup': "\u2699",     " Gear icon
-    \ 'sync': "\uf021",      " Sync icon
-    \ 'preview': "\uf06e",   " Eye icon
-    \ 'sidebar': "\uf0db",   " Layout icon
-    \ 'help': "\uf059",      " Question mark icon
-    \ 'bookmark': "\uf02e",  " Bookmark icon
-    \ 'close': "\uf00d"      " X icon
-    \ } : {
+        \ 'note': "\uf481",      " File icon
+        \ 'folder': "\uf74a",    " Folder icon
+        \ 'search': "\uf002",    " Search icon
+        \ 'link': "\uf0c1",      " Link icon
+        \ 'para': "\uf45c",      " Organization icon
+        \ 'save': "\uf0c7",      " Save icon
+        \ 'load': "\uf019",      " Load icon
+        \ 'list': "\uf03a",      " List icon
+        \ 'choose': "\uf0a4",    " Pointer icon
+        \ 'clear': "\uf2ed",     " Trash icon
+        \ 'setup': "\u2699",     " Gear icon
+        \ 'sync': "\uf021",      " Sync icon
+        \ 'preview': "\uf06e",   " Eye icon
+        \ 'sidebar': "\uf0db",   " Layout icon
+        \ 'help': "\uf059",      " Question mark icon
+        \ 'bookmark': "\uf02e",  " Bookmark icon
+        \ 'close': "\uf00d"      " X icon
+        \ } : {
         \ 'note': '[+]',
         \ 'folder': '[D]',
         \ 'search': '[S]',
@@ -687,7 +687,7 @@ function! visidian#menu() abort
         \ 'help': '[?]',
         \ 'bookmark': '[M]',
         \ 'close': '[Q]'
-    \ }
+        \ }
 
     " Define menu items with descriptions and commands
     let menu_items = [
