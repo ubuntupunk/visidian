@@ -689,6 +689,9 @@ function! visidian#menu() abort
         \ 'close': '[Q]'
         \ }
 
+ " Log the icons dictionary
+    call visidian#debug#info('DEBUG', "Icons dictionary: " . string(icons))
+  
     " Define menu items with descriptions and commands
     let menu_items = [
         \ {'id': 1,  'text': icons.note . ' New Note',          'cmd': 'call visidian#new_md_file()',       'desc': 'Create a new markdown note'},
@@ -710,6 +713,8 @@ function! visidian#menu() abort
         \ {'id': 17, 'text': icons.bookmark . ' Bookmarks',     'cmd': 'call visidian#bookmarking#menu()', 'desc': 'Bookmarks'},
         \ {'id': 18, 'text': icons.close . ' Close Menu',       'cmd': 'close',                'desc': 'Close this menu'},
      ]
+" Log the menu items
+    call visidian#debug#info('DEBUG', "Menu items: " . string(menu_items))
 
     " Calculate menu dimensions
     let max_text_len = max(map(copy(menu_items), 'strwidth(v:val.text)'))
@@ -747,6 +752,8 @@ function! visidian#menu() abort
         \ 'filter': function('s:menu_filter'),
         \ 'callback': function('s:menu_callback')
         \ })
+    
+    call visidian#debug#info('UI', "Popup window created with ID: " . popup_winid)
 
     " Store menu items for the filter function
     let s:current_menu_items = menu_items
@@ -765,7 +772,6 @@ function! visidian#menu() abort
     call win_execute(popup_winid, 'highlight VisidianMenuText ctermfg=223 guifg=#ebdbb2')
     call win_execute(popup_winid, 'highlight PopupSelected ctermfg=208 guifg=#fe8019 gui=bold')
 endfunction
-
 
 " Execute menu command safely
 function! s:execute_menu_command(cmd) abort
