@@ -169,23 +169,52 @@ function! s:UpdateVisidianStatusLine()
         
         " Set statusline with filetype and timestamp
         "let &l:statusline = '%<%f\ %h%m%r\ ' . l:filetype_indicator . '\ %{strftime(''%c'',getftime(expand(''%'')))}%=%-14.(%l,%c%V%)\ %P'
-        
-        " Format: [P/A/R/A] filename Type: Visidian/Markdown │ HH:MM
-        let &l:statusline = ''
+     
+        " Process the display path first
+        let l:display_path = expand('%:p') 
         if !empty(l:hi_group)
-            let l:para_status = l:hi_group . visidian#para_status() . '%* '
-            let &l:statusline .= l:para_status
-        endif
-        let &l:statusline .= '%<%f %h%m%r'
-        let &l:statusline .= '%='
-        let &l:statusline .= l:filetype_indicator . ' │ %{strftime("%H:%M")} '
-
-        " Add PARA context with color if not already present
-        if !empty(l:hi_group)
-            let l:para_status = l:hi_group . visidian#para_status() . '%*'
-            if &statusline !~# escape(l:para_status, '[]')
-                execute 'setlocal statusline^=' . escape(l:para_status, ' ')
+            " Remove the PARA directory from the display path
+            if l:display_path =~? '/Projects/'
+                let l:display_path = substitute(l:display_path, '.*/Projects/', '', '')
+            elseif l:display_path =~? '/Areas/'
+                let l:display_path = substitute(l:display_path, '.*/Areas/', '', '')
+            elseif l:display_path =~? '/Resources/'
+                let l:display_path = substitute(l:display_path, '.*/Resources/', '', '')
+            elseif l:display_path =~? '/Archive\|Archives/'
+                let l:display_path = substitute(l:display_path, '.*/Arch\(ive\|ives\)/', '', '')
             endif
         endif
+             
+        " " Format: [P/A/R/A] filename Type: Visidian/Markdown │ HH:MM
+        " let &l:statusline = ''
+        " if !empty(l:hi_group)
+        "     let l:para_status = l:hi_group . visidian#para_status() . '%* '
+        "     let &l:statusline .= l:para_status
+        " endif
+        " let &l:statusline .= '%<%f %h%m%r'
+        " let &l:statusline .= '%='
+        " let &l:statusline .= l:filetype_indicator . ' │ %{strftime("%H:%M")} '
+        
+        " Build statusline components
+        let l:left_section = ''
+            if !empty(l:hi_group)
+                let l:left_section .= l:hi_group . visidian#para_status() . '%* '
+            endif
+            let l:left_section .= '%<' . l:display_path . ' %h%m%r'
+
+        let l:right_section = l:filetype_indicator . ' │ %{strftime("%H:%M")} '
+
+        " Set the complete statusline
+        let &l:statusline = l:left_section
+        let &l:statusline .= '%='  " Right align divider
+        let &l:statusline .= l:right_section
+
+        " Add PARA context with color if not already present
+        " if !empty(l:hi_group)
+        "     let l:para_status = l:hi_group . visidian#para_status() . '%*'
+        "     if &statusline !~# escape(l:para_status, '[]')
+        "         execute 'setlocal statusline^=' . escape(l:para_status, ' ')
+        "     endif
+        " endif
     endif
 endfunction
