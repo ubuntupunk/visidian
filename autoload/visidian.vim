@@ -708,7 +708,7 @@ function! visidian#menu() abort
         \ {'id': 15, 'text': icons.help . ' Help',              'cmd': 'call visidian#help()',         'desc': 'Show help'},
         \ {'id': 16, 'text': icons.para . ' Import & Sort',     'cmd': 'call visidian#import_sort()', 'desc': 'Import and sort files using PARA'},
         \ {'id': 17, 'text': icons.bookmark . ' Bookmarks',     'cmd': 'call visidian#bookmarking#menu()', 'desc': 'Bookmarks'},
-        \ {'id': 18, 'text': icons.close . ' Close Menu'       'cmd': 'close',                'desc': 'Close this menu'},
+        \ {'id': 18, 'text': icons.close . ' Close Menu',       'cmd': 'close',                'desc': 'Close this menu'},
      ]
 
     " Calculate menu dimensions
