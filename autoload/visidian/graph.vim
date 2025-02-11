@@ -1,4 +1,4 @@
-function! DrawLineGraph(data)
+function! visidian#graph#DrawLineGraph(data)
   let max_y = max(a:data)
   let min_y = min(a:data)
   let height = 10 " Fixed height for simplicity
@@ -25,7 +25,7 @@ endfunction
 
 " Example data
 "let data = [2, 4, 6, 3, 5, 7, 1, 9]
-"call DrawLineGraph(data)
+"call visidian#graph#DrawLineGraph(data)
 
 function! PlotData(data)
   " Check if gnuplot is available
@@ -48,7 +48,7 @@ function! PlotData(data)
     setlocal nomodifiable
   else
     " Fallback to DrawLineGraph if gnuplot is not available
-    call DrawLineGraph(map(copy(a:data), 'v:val[1]'))
+    call visidian#graph#DrawLineGraph(map(copy(a:data), 'v:val[1]'))
   endif
 endfunction
 
