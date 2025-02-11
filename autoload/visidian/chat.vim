@@ -91,7 +91,7 @@ function! s:get_headers() abort
     let l:api_key = s:get_api_key()
     
     if empty(l:api_key)
-        throw 'No API key found for provider: ' . l:provider . '. Please set GEMINI_API_KEY environment variable.'
+        throw 'No API key found for provider: ' . l:provider
     endif
     
     if l:provider == 'openai'
@@ -531,7 +531,7 @@ endfunction
 function! visidian#chat#list_models() abort
     try
         let l:provider = g:visidian_chat_provider
-        let l:api_key = s:get_api_key(l:provider)
+        let l:api_key = s:get_api_key()
         
         if l:provider == 'gemini'
             let l:endpoint = 'https://generativelanguage.googleapis.com/v1beta/models'
