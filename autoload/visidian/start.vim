@@ -79,12 +79,14 @@ function! s:continue_setup() abort
     if s:setup_step == 1
         call visidian#start#setup_para()
     elseif s:setup_step == 2
-        call visidian#start#import_notes()
+        call visidian#start#create_note()
     elseif s:setup_step == 3
-        call visidian#start#setup_sync()
+        call visidian#start#create_folder()
     elseif s:setup_step == 4
-        call visidian#start#customize()
+        call visidian#start#setup_sync()
     elseif s:setup_step == 5
+        call visidian#start#show_settings()
+    elseif s:setup_step == 6
         call visidian#start#finish()
     endif
 endfunction
@@ -159,6 +161,8 @@ function! s:vault_filter(winid, key) abort
     if a:key ==# 'n'
         call popup_close(a:winid)
         call visidian#create_vault()
+        " After creating a new vault, show settings
+        call visidian#start#show_settings()
         return 1
     elseif a:key ==# 'e'
         call popup_close(a:winid)
@@ -182,6 +186,8 @@ function! s:vault_filter(winid, key) abort
             endif
             let g:visidian_vault_path = path
             call visidian#debug#info('START', 'Selected vault path: ' . path)
+            " After selecting an existing vault, show settings
+            call visidian#start#show_settings()
             return 1
         endif
         " If selection was cancelled, show vault setup again
@@ -201,6 +207,25 @@ function! s:vault_callback(id, result) abort
     else
         call visidian#debug#error('START', 'Vault setup did not complete successfully')
     endif
+endfunction
+
+function! visidian#start#show_settings() abort
+    let msg = [
+        \ 'Settings have been loaded in the buffer.',
+        \ 'Please review them before proceeding.',
+        \ 'Press any key to continue...'
+        \ ]
+    let winid = popup_create(msg, {
+        \ 'title': ' Settings Alert ',
+        \ 'padding': [1,2,1,2],
+        \ 'border': [],
+        \ 'borderchars': ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
+        \ 'pos': 'center',
+        \ 'close': 'click',
+        \ })
+    call getchar()
+    call popup_close(winid)
+    call s:continue_setup()
 endfunction
 
 function! visidian#start#setup_para() abort
@@ -250,6 +275,76 @@ function! s:para_filter(winid, key) abort
     elseif a:key ==# '?'
         call popup_close(a:winid)
         call visidian#help#show_para()
+        return 1
+    endif
+    return 0
+endfunction
+
+function! visidian#start#create_note() abort
+    let msg = [
+        \ 'Would you like to create a new note?',
+        \ '',
+        \ 'Press:',
+        \ '  [y] to create a new note',
+        \ '  [n] to skip this step'
+        \ ]
+    let winid = popup_create(msg, {
+        \ 'title': ' Create Note ',
+        \ 'padding': [1,2,1,2],
+        \ 'border': [],
+        \ 'borderchars': ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
+        \ 'pos': 'center',
+        \ 'filter': function('s:note_filter'),
+        \ 'callback': {id, result -> timer_start(500, {-> s:continue_setup()})},
+        \ 'focusable': 1,
+        \ })
+    call win_execute(winid, 'redraw')
+    call popup_setoptions(winid, {'focused': 1})
+    call visidian#debug#info('START', 'Displayed create note options')
+endfunction
+
+function! s:note_filter(winid, key) abort
+    if a:key ==# 'y'
+        call popup_close(a:winid)
+        call visidian#create_note()
+        return 1
+    elseif a:key ==# 'n'
+        call popup_close(a:winid)
+        return 1
+    endif
+    return 0
+endfunction
+
+function! visidian#start#create_folder() abort
+    let msg = [
+        \ 'Would you like to create a new folder?',
+        \ '',
+        \ 'Press:',
+        \ '  [y] to create a new folder',
+        \ '  [n] to skip this step'
+        \ ]
+    let winid = popup_create(msg, {
+        \ 'title': ' Create Folder ',
+        \ 'padding': [1,2,1,2],
+        \ 'border': [],
+        \ 'borderchars': ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
+        \ 'pos': 'center',
+        \ 'filter': function('s:folder_filter'),
+        \ 'callback': {id, result -> timer_start(500, {-> s:continue_setup()})},
+        \ 'focusable': 1,
+        \ })
+    call win_execute(winid, 'redraw')
+    call popup_setoptions(winid, {'focused': 1})
+    call visidian#debug#info('START', 'Displayed create folder options')
+endfunction
+
+function! s:folder_filter(winid, key) abort
+    if a:key ==# 'y'
+        call popup_close(a:winid)
+        call visidian#create_folder()
+        return 1
+    elseif a:key ==# 'n'
+        call popup_close(a:winid)
         return 1
     endif
     return 0
