@@ -83,7 +83,10 @@ function! s:get_embeddings(text) abort
             call add(l:cmd, '-H')
             call add(l:cmd, l:header)
         endfor
-        call extend(l:cmd, ['-d', l:payload, l:endpoint])
+        
+        " Escape payload for shell
+        let l:escaped_payload = shellescape(l:payload)
+        call extend(l:cmd, ['-d', l:escaped_payload, l:endpoint])
         
         call s:debug('Making API request to: ' . l:endpoint)
         call s:debug('Provider: ' . l:provider)
@@ -113,18 +116,19 @@ function! s:parse_embedding_response(response) abort
     
     try
         let l:json_response = json_decode(a:response)
+        call s:debug('Parsed JSON response type: ' . type(l:json_response))
         
         if l:provider == 'openai'
-            if has_key(l:json_response, 'data') && len(l:json_response.data) > 0
+            if type(l:json_response) == v:t_dict && has_key(l:json_response, 'data') && len(l:json_response.data) > 0
                 call s:debug('Successfully parsed OpenAI embedding response')
                 return l:json_response.data[0].embedding
             endif
             call s:debug('Invalid OpenAI API response: ' . a:response)
             throw 'Invalid OpenAI API response: ' . a:response
         elseif l:provider == 'gemini'
-            if has_key(l:json_response, 'embedding') && has_key(l:json_response.embedding, 'values')
+            if type(l:json_response) == v:t_dict && has_key(l:json_response, 'embedding')
                 call s:debug('Successfully parsed Gemini embedding response')
-                return l:json_response.embedding.values
+                return l:json_response.embedding
             endif
             call s:debug('Invalid Gemini API response: ' . a:response)
             throw 'Invalid Gemini API response: ' . a:response
@@ -133,6 +137,7 @@ function! s:parse_embedding_response(response) abort
     catch
         let l:error_msg = 'Error parsing embedding response: ' . v:exception
         call s:debug(l:error_msg)
+        call s:debug('Raw response: ' . a:response)
         echohl ErrorMsg
         echom l:error_msg
         echohl None

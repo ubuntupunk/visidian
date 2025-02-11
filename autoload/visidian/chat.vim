@@ -257,19 +257,24 @@ function! visidian#chat#send_to_llm(query, context) abort
         call add(l:cmd, '-H')
         call add(l:cmd, l:header)
     endfor
-    call extend(l:cmd, ['-d', l:payload, l:endpoint])
+    
+    " Escape payload for shell
+    let l:escaped_payload = shellescape(l:payload)
+    call extend(l:cmd, ['-d', l:escaped_payload, l:endpoint])
+    
+    call s:debug('Making API request to: ' . l:endpoint)
+    call s:debug('Provider: ' . g:visidian_chat_provider)
+    call s:debug('Payload length: ' . len(l:payload))
     
     let l:response = system(join(l:cmd, ' '))
     
+    call s:debug('API Response: ' . l:response)
+    
     if v:shell_error
-        throw 'Visidian Chat Error: API request failed: ' . l:response
+        throw 'API request failed: ' . l:response
     endif
     
-    try
-        return s:parse_response(l:response)
-    catch
-        throw 'Visidian Chat Error: Failed to parse API response: ' . v:exception
-    endtry
+    return s:parse_response(l:response)
 endfunction
 
 function! visidian#chat#display_response(response) abort
