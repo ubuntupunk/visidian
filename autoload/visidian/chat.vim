@@ -175,37 +175,48 @@ function! s:process_response(response) abort
     call s:debug('Processing cleaned response: ' . l:clean_response)
     
     try
-        let l:json = json_decode(l:clean_response)
-        
-        " Check for API errors
-        if type(l:json) == v:t_dict && has_key(l:json, 'error')
-            throw 'API Error: ' . l:json.error.message
+        " Handle array of responses
+        let l:json_array = json_decode(l:clean_response)
+        if type(l:json_array) != v:t_list
+            let l:json_array = [l:json_array]
         endif
         
-        if l:provider == 'gemini'
-            if type(l:json) != v:t_dict
-                throw 'Invalid response format: Not a dictionary'
-            endif
-            if !has_key(l:json, 'candidates') || len(l:json.candidates) == 0
-                throw 'Invalid response format: No candidates'
-            endif
-            
-            let l:candidate = l:json.candidates[0]
-            if !has_key(l:candidate, 'content')
-                throw 'Invalid response format: No content'
+        let l:result = ''
+        for l:json in l:json_array
+            " Check for API errors
+            if type(l:json) == v:t_dict && has_key(l:json, 'error')
+                throw 'API Error: ' . l:json.error.message
             endif
             
-            let l:content = l:candidate.content
-            if !has_key(l:content, 'parts') || len(l:content.parts) == 0
-                throw 'Invalid response format: No parts'
+            if l:provider == 'gemini'
+                if type(l:json) != v:t_dict
+                    continue
+                endif
+                if !has_key(l:json, 'candidates') || len(l:json.candidates) == 0
+                    continue
+                endif
+                
+                let l:candidate = l:json.candidates[0]
+                if !has_key(l:candidate, 'content')
+                    continue
+                endif
+                
+                let l:content = l:candidate.content
+                if !has_key(l:content, 'parts') || len(l:content.parts) == 0
+                    continue
+                endif
+                
+                let l:text = l:content.parts[0].text
+                let l:result .= l:text
+                call s:append_to_chat_buffer(l:text)
             endif
-            
-            let l:text = l:content.parts[0].text
-            call s:append_to_chat_buffer(l:text)
-            return l:text
+        endfor
+        
+        if empty(l:result)
+            throw 'No valid response content found'
         endif
         
-        return l:clean_response
+        return l:result
     catch
         call s:debug('Error processing response: ' . v:exception)
         call s:debug('Raw response: ' . a:response)
