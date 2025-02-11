@@ -170,64 +170,56 @@ endfunction
 
 " Process response from API
 function! s:process_response(response) abort
-    call s:debug('Processing response: ' . a:response)
     let l:provider = g:visidian_chat_provider
+    let l:clean_response = s:clean_response(a:response)
+    call s:debug('Processing cleaned response: ' . l:clean_response)
     
     try
-        " Split response into lines for streaming
-        let l:lines = split(a:response, "\n")
-        let l:result = ''
+        let l:json = json_decode(l:clean_response)
         
-        for l:line in l:lines
-            if empty(l:line)
-                continue
-            endif
-            
-            try
-                let l:json = json_decode(l:line)
-                
-                " Check for API errors
-                if type(l:json) == v:t_dict && has_key(l:json, 'error')
-                    throw 'API Error: ' . l:json.error.message
-                endif
-                
-                if l:provider == 'gemini'
-                    if type(l:json) != v:t_dict
-                        continue
-                    endif
-                    if !has_key(l:json, 'candidates')
-                        continue
-                    endif
-                    if len(l:json.candidates) == 0
-                        continue
-                    endif
-                    let l:content = l:json.candidates[0].content
-                    if type(l:content) != v:t_dict
-                        continue
-                    endif
-                    if !has_key(l:content, 'parts') || len(l:content.parts) == 0
-                        continue
-                    endif
-                    let l:text = l:content.parts[0].text
-                    let l:result .= l:text
-                    call s:append_to_chat_buffer(l:text)
-                endif
-            catch
-                call s:debug('Error processing chunk: ' . v:exception)
-                continue
-            endtry
-        endfor
-        
-        if empty(l:result)
-            throw 'No valid response received from API'
+        " Check for API errors
+        if type(l:json) == v:t_dict && has_key(l:json, 'error')
+            throw 'API Error: ' . l:json.error.message
         endif
         
-        return l:result
+        if l:provider == 'gemini'
+            if type(l:json) != v:t_dict
+                throw 'Invalid response format: Not a dictionary'
+            endif
+            if !has_key(l:json, 'candidates') || len(l:json.candidates) == 0
+                throw 'Invalid response format: No candidates'
+            endif
+            
+            let l:candidate = l:json.candidates[0]
+            if !has_key(l:candidate, 'content')
+                throw 'Invalid response format: No content'
+            endif
+            
+            let l:content = l:candidate.content
+            if !has_key(l:content, 'parts') || len(l:content.parts) == 0
+                throw 'Invalid response format: No parts'
+            endif
+            
+            let l:text = l:content.parts[0].text
+            call s:append_to_chat_buffer(l:text)
+            return l:text
+        endif
+        
+        return l:clean_response
     catch
         call s:debug('Error processing response: ' . v:exception)
         call s:debug('Raw response: ' . a:response)
         throw v:exception
     endtry
+endfunction
+
+" Clean response text by removing null bytes and normalizing newlines
+function! s:clean_response(text) abort
+    " Remove null bytes (^@)
+    let l:text = substitute(a:text, '\%x00', '', 'g')
+    " Normalize newlines
+    let l:text = substitute(l:text, '\r\n\|\r', '\n', 'g')
+    return l:text
 endfunction
 
 " Parse response based on provider
