@@ -68,21 +68,19 @@ function! s:get_embeddings(text) abort
                 \ 'Authorization: Bearer ' . l:api_key
                 \ ]
         elseif l:provider == 'gemini'
-            let l:endpoint = 'https://generativelanguage.googleapis.com/v1beta/embeddings'
+            let l:endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent'
             let l:payload = json_encode({
-                \ 'model': 'embedding-001',
-                \ 'instances': [
-                \   {
-                \     'task_type': 'RETRIEVAL_DOCUMENT',
-                \     'content': a:text
-                \   }
-                \ ]
+                \ 'model': 'models/text-embedding-004',
+                \ 'content': {
+                \   'parts': [
+                \     { 'text': a:text }
+                \   ]
+                \ }
                 \ })
             let l:headers = [
                 \ 'Content-Type: application/json',
                 \ 'x-goog-api-key: ' . l:api_key
                 \ ]
-            let l:endpoint = l:endpoint . '?key=' . l:api_key
         endif
         
         let l:cmd = ['curl', '-s', '-X', 'POST']
