@@ -275,9 +275,14 @@ function! visidian#chat#create_window() abort
     setlocal wrap
     setlocal nomodifiable
     
+    " Add buffer-local mappings
+    nnoremap <buffer> q :q<CR>
+    nnoremap <buffer> <CR> :call visidian#chat#send_message()<CR>
+    
     " Clear any existing content
     setlocal modifiable
     silent! %delete _
+    call appendbufline(bufnr('%'), 0, ['Welcome to Visidian Chat!', '', 'Press Enter to ask a question, q to quit', ''])
     setlocal nomodifiable
 endfunction
 
@@ -542,60 +547,24 @@ function! visidian#chat#display_response(response) abort
     " Create or get chat buffer
     let l:bufnr = bufnr('Visidian Chat')
     if l:bufnr == -1
-        " Create new buffer in vertical split
-        execute 'vertical rightbelow new'
-        execute 'vertical resize ' . g:visidian_chat_window_width
-        setlocal buftype=nofile
-        setlocal bufhidden=wipe
-        setlocal noswapfile
-        setlocal filetype=markdown
-        setlocal wrap
-        setlocal nonumber
-        setlocal norelativenumber
-        file Visidian Chat
-        let l:bufnr = bufnr('%')
-    endif
-    
-    " Focus the chat window
-    let l:winnr = bufwinnr(l:bufnr)
-    if l:winnr == -1
-        " Buffer exists but window is closed, create new window
-        execute 'vertical rightbelow sbuffer ' . l:bufnr
-        execute 'vertical resize ' . g:visidian_chat_window_width
-    else
-        " Window exists, switch to it
-        execute l:winnr . 'wincmd w'
+        call visidian#chat#create_window()
+        let l:bufnr = bufnr('Visidian Chat')
     endif
     
     " Make buffer modifiable
-    setlocal modifiable
+    call setbufvar(l:bufnr, '&modifiable', 1)
     
-    " Get current content
-    let l:content = getline(1, '$')
+    " Add response with a newline
+    call appendbufline(l:bufnr, line('$'), ['', a:response, ''])
     
-    " Format new response
-    let l:timestamp = strftime('%H:%M')
-    let l:formatted_response = ['', '**[' . l:timestamp . '] Assistant:**', '']
-    let l:formatted_response += split(a:response, "\n")
+    " Add prompt for next query
+    call appendbufline(l:bufnr, line('$'), ['Is there anything else you would like to know? (Press Enter to ask a question, q to quit)'])
     
-    " Add horizontal line if there's existing content
-    if !empty(l:content) && l:content != ['']
-        let l:formatted_response = ['---'] + l:formatted_response
-    endif
+    " Make buffer unmodifiable
+    call setbufvar(l:bufnr, '&modifiable', 0)
     
-    " Append new response to end of buffer
-    call append(line('$'), l:formatted_response)
-    
-    " Clean up empty lines at start of buffer
-    while getline(1) == '' && line('$') > 1
-        1delete _
-    endwhile
-    
-    " Move cursor to end
-    normal! G
-    
-    " Make buffer unmodifiable again
-    setlocal nomodifiable
+    " Move cursor to the end
+    call win_execute(bufwinid(l:bufnr), 'normal! G')
 endfunction
 
 function! visidian#chat#send_message() abort
