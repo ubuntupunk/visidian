@@ -14,7 +14,7 @@ function! visidian#graph#DrawLineGraph(data, ...)
   call visidian#debug#debug('GRAPH', 'Starting DrawLineGraph with data: ' . string(a:data))
 
   " Check if data is valid
-  if empty(a:data) || type(a:data) != v:t_list || !v:val is# filter(a:data, 'type(v:val) == v:t_number')
+  if empty(a:data) || type(a:data) != v:t_list || empty(filter(copy(a:data), 'type(v:val) == v:t_number'))
     call visidian#debug#debug('GRAPH', 'Invalid data provided for graph')
     return
   endif
