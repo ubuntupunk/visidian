@@ -59,27 +59,23 @@ let s:api_endpoints = {
     \ 'deepseek': 'https://api.deepseek.com/v1/chat/completions'
     \ }
 
-" Get API key for provider
-function! s:get_api_key(provider) abort
-    if a:provider == 'openai'
-        return exists('g:visidian_chat_openai_key') ? g:visidian_chat_openai_key : $OPENAI_API_KEY
-    elseif a:provider == 'gemini'
-        return exists('g:visidian_chat_gemini_key') ? g:visidian_chat_gemini_key : $GEMINI_API_KEY
-    elseif a:provider == 'anthropic'
-        return exists('g:visidian_chat_anthropic_key') ? g:visidian_chat_anthropic_key : $ANTHROPIC_API_KEY
-    elseif a:provider == 'deepseek'
-        return exists('g:visidian_chat_deepseek_key') ? g:visidian_chat_deepseek_key : $DEEPSEEK_API_KEY
-    endif
-    throw 'Invalid provider: ' . a:provider
-endfunction
-
 " Get API key based on provider
 function! s:get_api_key() abort
     let l:provider = g:visidian_chat_provider
+    
+    " Try to get from environment first
+    if l:provider == 'gemini'
+        let l:env_key = $GEMINI_API_KEY
+        if !empty(l:env_key)
+            return l:env_key
+        endif
+    endif
+    
+    " Fall back to vim variables
     if l:provider == 'openai'
         return exists('g:visidian_chat_openai_key') ? g:visidian_chat_openai_key : $OPENAI_API_KEY
     elseif l:provider == 'gemini'
-        return exists('g:visidian_chat_gemini_key') ? g:visidian_chat_gemini_key : $GEMINI_API_KEY
+        return exists('g:visidian_chat_gemini_key') ? g:visidian_chat_gemini_key : ''
     elseif l:provider == 'anthropic'
         return exists('g:visidian_chat_anthropic_key') ? g:visidian_chat_anthropic_key : $ANTHROPIC_API_KEY
     elseif l:provider == 'deepseek'
@@ -95,7 +91,7 @@ function! s:get_headers() abort
     let l:api_key = s:get_api_key()
     
     if empty(l:api_key)
-        throw 'No API key found for provider: ' . l:provider
+        throw 'No API key found for provider: ' . l:provider . '. Please set GEMINI_API_KEY environment variable.'
     endif
     
     if l:provider == 'openai'
@@ -110,53 +106,6 @@ function! s:get_headers() abort
     endif
     
     return l:headers
-endfunction
-
-" Format request payload based on provider
-function! s:format_request_payload(query, context)
-    let l:provider = g:visidian_chat_provider
-    let l:model = g:visidian_chat_model[l:provider]
-    let l:content = "Context:\n" . a:context . "\n\nQuery:\n" . a:query
-
-    if l:provider == 'openai'
-        return json_encode({
-            \ 'model': l:model,
-            \ 'messages': [
-            \   {'role': 'system', 'content': 'You are a helpful assistant analyzing markdown notes.'},
-            \   {'role': 'user', 'content': l:content}
-            \ ]
-            \})
-    elseif l:provider == 'gemini'
-        return json_encode({
-            \ 'contents': [{
-            \   'parts': [{'text': l:content}]
-            \ }],
-            \ 'generationConfig': {
-            \   'temperature': 0.7,
-            \   'topK': 40,
-            \   'topP': 0.95,
-            \   'maxOutputTokens': 2048,
-            \ }
-            \})
-    elseif l:provider == 'anthropic'
-        return json_encode({
-            \ 'model': l:model,
-            \ 'messages': [{
-            \   'role': 'user',
-            \   'content': l:content
-            \ }],
-            \ 'max_tokens': 2048
-            \})
-    elseif l:provider == 'deepseek'
-        return json_encode({
-            \ 'model': l:model,
-            \ 'messages': [
-            \   {'role': 'system', 'content': 'You are a helpful assistant analyzing markdown notes.'},
-            \   {'role': 'user', 'content': l:content}
-            \ ]
-            \})
-    endif
-    throw 'Invalid provider: ' . l:provider
 endfunction
 
 " Process streaming response chunk
