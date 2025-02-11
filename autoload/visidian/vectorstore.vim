@@ -105,106 +105,27 @@ function! s:get_embeddings(text) abort
             throw 'API error: ' . l:error_msg
         endif
 
-        " Handle Gemini streaming response
-        if l:provider == 'gemini'
-            " Clean up the response first
-            let l:clean_response = substitute(l:response, '\^@', '', 'g')
-            let l:clean_response = substitute(l:clean_response, '^\[', '', '') " Remove leading [
-            let l:clean_response = substitute(l:clean_response, '\]$', '', '') " Remove trailing ]
-            
-            let l:chunks = split(l:clean_response, ",\r\n")
-            let l:full_text = ''
-            call s:debug('Processing ' . len(l:chunks) . ' response chunks')
-            
-            for l:chunk in l:chunks
-                if empty(l:chunk)
-                    continue
-                endif
-                try
-                    let l:clean_chunk = substitute(l:chunk, '^\s*', '', '')  " Remove leading whitespace
-                    call s:debug('Processing chunk: ' . l:clean_chunk)
-                    let l:json = json_decode(l:clean_chunk)
-                    
-                    if has_key(l:json, 'candidates') && len(l:json.candidates) > 0
-                        let l:candidate = l:json.candidates[0]
-                        if has_key(l:candidate, 'content') && has_key(l:candidate.content, 'parts')
-                            let l:parts = l:candidate.content.parts
-                            if len(l:parts) > 0 && has_key(l:parts[0], 'text')
-                                let l:text = l:parts[0].text
-                                call s:debug('Found text: ' . l:text)
-                                let l:full_text .= l:text
-                            endif
-                        endif
-                    endif
-                catch
-                    call s:debug('Failed to parse chunk: ' . v:exception)
-                    continue
-                endtry
-            endfor
-            
-            if empty(l:full_text)
-                throw 'No valid text found in response'
-            endif
-            
-            return l:full_text
-        endif
-
-        " Handle other providers' responses
-        try
-            let l:json = json_decode(l:response)
-        catch
-            let l:error_msg = substitute(v:exception, '\^@', '', 'g')
-            throw 'Failed to parse response: ' . l:error_msg
-        endtry
+        " Parse response
+        let l:json_response = json_decode(l:response)
         
         " Check for API errors
-        if type(l:json) == v:t_dict && has_key(l:json, 'error')
-            let l:error_msg = substitute(l:json.error.message, '\^@', '', 'g')
+        if type(l:json_response) == v:t_dict && has_key(l:json_response, 'error')
+            let l:error_msg = l:json_response.error.message
             call s:debug('API error: ' . l:error_msg)
             throw 'API error: ' . l:error_msg
         endif
-        
-        call s:debug('API Response received')
-        
-        return s:parse_embedding_response(l:response)
+
+        if l:provider == 'gemini'
+            if has_key(l:json_response, 'embedding')
+                return l:json_response.embedding.values
+            endif
+            throw 'No embedding found in response'
+        endif
     catch /API key not set for provider:/
         throw v:exception
     catch
         call s:debug('Error in get_embeddings: ' . v:exception)
         throw v:exception
-    endtry
-endfunction
-
-" Parse the embedding response based on the provider
-function! s:parse_embedding_response(response) abort
-    let l:provider = g:visidian_vectorstore_provider
-    let l:json_response = json_decode(a:response)
-        call s:debug('Parsed JSON response type: ' . type(l:json_response))
-    
-    if l:provider == 'openai'
-            if type(l:json_response) == v:t_dict && has_key(l:json_response, 'data') && len(l:json_response.data) > 0
-                call s:debug('Successfully parsed OpenAI embedding response')
-        return l:json_response.data[0].embedding
-            endif
-            call s:debug('Invalid OpenAI API response: ' . a:response)
-            throw 'Invalid OpenAI API response: ' . a:response
-    elseif l:provider == 'gemini'
-            if type(l:json_response) == v:t_dict && has_key(l:json_response, 'embedding')
-                call s:debug('Successfully parsed Gemini embedding response')
-                return l:json_response.embedding
-    endif
-            call s:debug('Invalid Gemini API response: ' . a:response)
-            throw 'Invalid Gemini API response: ' . a:response
-        endif
-    throw 'Invalid provider: ' . l:provider
-    catch
-        let l:error_msg = 'Error parsing embedding response: ' . v:exception
-        call s:debug(l:error_msg)
-        call s:debug('Raw response: ' . a:response)
-        echohl ErrorMsg
-        echom l:error_msg
-        echohl None
-        return []
     endtry
 endfunction
 

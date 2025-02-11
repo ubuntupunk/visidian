@@ -54,7 +54,7 @@ endif
 " Provider-specific API endpoints
 let s:api_endpoints = {
     \ 'openai': 'https://api.openai.com/v1/chat/completions',
-    \ 'gemini': 'https://generativelanguage.googleapis.com/v1beta/chatCompletions',
+    \ 'gemini': 'https://generativelanguage.googleapis.com/v1beta/models/' . g:visidian_chat_model['gemini'] . ':streamGenerateContent',
     \ 'anthropic': 'https://api.anthropic.com/v1/messages',
     \ 'deepseek': 'https://api.deepseek.com/v1/chat/completions'
     \ }
@@ -140,7 +140,6 @@ function! s:format_request_payload(query, context)
             \})
     elseif l:provider == 'gemini'
         return json_encode({
-            \ 'model': l:model,
             \ 'contents': [{
             \   'parts': [{'text': l:content}]
             \ }],
@@ -316,9 +315,8 @@ function! visidian#chat#send_to_llm(query, context) abort
                 \ 'Authorization: Bearer ' . l:api_key
                 \ ]
         elseif l:provider == 'gemini'
-            let l:endpoint = 'https://generativelanguage.googleapis.com/v1beta/chatCompletions'
+            let l:endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/' . g:visidian_chat_model[l:provider] . ':streamGenerateContent'
             let l:payload = json_encode({
-                \ 'model': g:visidian_chat_model[l:provider],
                 \ 'contents': [{
                 \   'parts': [{'text': l:content}]
                 \ }],
@@ -366,7 +364,7 @@ function! visidian#chat#send_to_llm(query, context) abort
         let l:cmd = ['curl', '-s', '-X', 'POST']
         for l:header in l:headers
             call add(l:cmd, '-H')
-            call add(l:cmd, l:header)
+            call add(l:header)
         endfor
         
         " Escape payload for shell
@@ -378,25 +376,116 @@ function! visidian#chat#send_to_llm(query, context) abort
         call s:debug('Payload length: ' . len(l:payload))
         
         let l:response = system(join(l:cmd, ' '))
-        let l:json_response = json_decode(l:response)
         
-        " Check for API errors
-        if type(l:json_response) == v:t_dict && has_key(l:json_response, 'error')
-            let l:error_msg = l:json_response.error.message
+        " Check for shell errors
+        if v:shell_error
+            let l:error_msg = substitute(l:response, '\^@', '', 'g')
             call s:debug('API error: ' . l:error_msg)
             throw 'API error: ' . l:error_msg
         endif
         
-        call s:debug('API Response: ' . l:response)
-        
-        if v:shell_error
-            throw 'API request failed: ' . l:response
+        " Parse response based on provider
+        if l:provider == 'openai'
+            let l:json_response = json_decode(l:response)
+            if type(l:json_response) == v:t_dict && has_key(l:json_response, 'error')
+                throw 'API error: ' . l:json_response.error.message
+            endif
+            return l:json_response.choices[0].message.content
+        elseif l:provider == 'gemini'
+            " Handle streaming response
+            let l:chunks = split(l:response, ",\r\n")
+            let l:full_text = ''
+            
+            for l:chunk in l:chunks
+                if empty(l:chunk)
+                    continue
+                endif
+                try
+                    let l:clean_chunk = substitute(l:chunk, '\^@', '', 'g')
+                    let l:clean_chunk = substitute(l:clean_chunk, '^\s*', '', '')
+                    let l:json = json_decode(l:clean_chunk)
+                    
+                    if has_key(l:json, 'candidates') && len(l:json.candidates) > 0
+                        let l:candidate = l:json.candidates[0]
+                        if has_key(l:candidate, 'content') && has_key(l:candidate.content, 'parts')
+                            let l:parts = l:candidate.content.parts
+                            if len(l:parts) > 0 && has_key(l:parts[0], 'text')
+                                let l:text = l:parts[0].text
+                                let l:full_text .= l:text
+                                
+                                " Display chunk in chat buffer as it arrives
+                                call visidian#chat#display_chunk(l:text)
+                            endif
+                        endif
+                    endif
+                catch
+                    continue
+                endtry
+            endfor
+            
+            if empty(l:full_text)
+                throw 'No valid text found in response'
+            endif
+            
+            return l:full_text
+        elseif l:provider == 'anthropic'
+            let l:json_response = json_decode(l:response)
+            if type(l:json_response) == v:t_dict && has_key(l:json_response, 'error')
+                throw 'API error: ' . l:json_response.error.message
+            endif
+            return l:json_response.content[0].text
+        elseif l:provider == 'deepseek'
+            let l:json_response = json_decode(l:response)
+            if type(l:json_response) == v:t_dict && has_key(l:json_response, 'error')
+                throw 'API error: ' . l:json_response.error.message
+            endif
+            return l:json_response.choices[0].message.content
         endif
         
-        return s:parse_response(l:response)
+        throw 'Invalid provider: ' . l:provider
     catch
         throw 'Visidian Chat Error: ' . v:exception
     endtry
+endfunction
+
+" Display a chunk of text in the chat buffer as it arrives
+function! visidian#chat#display_chunk(text) abort
+    let l:bufnr = bufnr('Visidian Chat')
+    if l:bufnr == -1
+        return
+    endif
+    
+    " Get window number
+    let l:winnr = bufwinnr(l:bufnr)
+    if l:winnr == -1
+        return
+    endif
+    
+    " Save current window
+    let l:cur_winnr = winnr()
+    
+    " Switch to chat window
+    execute l:winnr . 'wincmd w'
+    
+    " Make buffer modifiable
+    setlocal modifiable
+    
+    " Append text to last line
+    let l:last_line = getline('$')
+    if empty(l:last_line)
+        call setline('$', a:text)
+    else
+        call setline('$', l:last_line . a:text)
+    endif
+    
+    " Make buffer unmodifiable
+    setlocal nomodifiable
+    
+    " Switch back to original window
+    execute l:cur_winnr . 'wincmd w'
+    
+    " Force screen update
+    redraw
 endfunction
 
 function! visidian#chat#display_response(response) abort
