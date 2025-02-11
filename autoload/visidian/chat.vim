@@ -415,13 +415,24 @@ function! visidian#chat#list_models() abort
         
         if l:provider == 'gemini'
             let l:endpoint = 'https://generativelanguage.googleapis.com/v1beta/models'
+            let l:url = shellescape(l:endpoint . '?key=' . l:api_key)
             let l:cmd = ['curl', '-s', '-X', 'GET']
             call add(l:cmd, '-H')
             call add(l:cmd, 'x-goog-api-key: ' . l:api_key)
-            call add(l:cmd, l:endpoint . '?key=' . l:api_key)
+            call add(l:cmd, l:url)
             
+            call s:debug('Making API request to: ' . l:endpoint)
             let l:response = system(join(l:cmd, ' '))
-            let l:json_response = json_decode(l:response)
+            call s:debug('Raw response: ' . l:response)
+            
+            " Try to parse the response
+            try
+                let l:json_response = json_decode(l:response)
+            catch
+                call s:debug('JSON decode error: ' . v:exception)
+                call s:debug('Raw response: ' . l:response)
+                throw 'Failed to parse API response: ' . v:exception
+            endtry
             
             " Check for API errors
             if type(l:json_response) == v:t_dict && has_key(l:json_response, 'error')
