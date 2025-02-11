@@ -42,8 +42,12 @@ function! visidian#image#display_graph(data, ...)
         setlocal buftype=nofile
         setlocal modifiable
 
-        " Display image using timg
-        let output = system('timg ' . tempfile . '.png')
+        " Get terminal dimensions
+        let width = winwidth(0)
+        let height = winheight(0)
+
+        " Display image using timg with geometry parameters
+        let output = system('timg -g' . width . 'x' . height . ' --clear ' . tempfile . '.png')
         put =output
         normal! gg
         setlocal nomodifiable
