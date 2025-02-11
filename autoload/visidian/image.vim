@@ -43,56 +43,76 @@ function! visidian#image#display_graph(data, ...)
         return
     endif
 
-    " Check if image viewer is available (using timg for terminal)
-    if executable('timg')
-        " Create new vsplit buffer for the graph
-        vsplit
-        enew
+    " Create new vsplit buffer for the graph
+    vsplit
+    enew
 
-        " Set buffer name
-        let buffer_name = a:0 > 0 ? a:1 : 'GraphOutput'
-        if buflisted(buffer_name)
-            let buffer_name .= '_' . localtime()
+    " Set buffer name
+    let buffer_name = a:0 > 0 ? a:1 : 'GraphOutput'
+    if buflisted(buffer_name)
+        let buffer_name .= '_' . localtime()
+    endif
+
+    " Set buffer options before naming it
+    setlocal buftype=nofile
+    setlocal noswapfile
+    setlocal modifiable
+    setlocal noreadonly
+    setlocal bufhidden=wipe
+
+    " Name the buffer
+    execute 'silent file ' . buffer_name
+
+    " Get terminal dimensions
+    let width = winwidth(0)
+    let height = winheight(0)
+
+    " Check if we're in Kitty terminal
+    if exists('$KITTY_WINDOW_ID') && executable('timg')
+        " Use timg with Kitty protocol
+        let timg_cmd = 'timg -pk --compress -g' . width . 'x' . height . ' --clear ' . pngfile
+        let output = system(timg_cmd)
+        
+        if v:shell_error != 0
+            call visidian#debug#debug('IMAGE', 'Error running timg with Kitty protocol: ' . output)
+            " Try fallback to regular timg
+            let timg_cmd = 'timg -g' . width . 'x' . height . ' --clear ' . pngfile
+            let output = system(timg_cmd)
+            
+            if v:shell_error != 0
+                call visidian#debug#debug('IMAGE', 'Error running timg fallback: ' . output)
+                " Fallback to ASCII art
+                call visidian#graph#PlotData(a:data, a:0 > 0 ? a:1 : '')
+                return
+            endif
         endif
-
-        " Set buffer options before naming it
-        setlocal buftype=nofile
-        setlocal noswapfile
-        setlocal modifiable
-        setlocal noreadonly
-        setlocal bufhidden=wipe
-
-        " Name the buffer
-        execute 'silent file ' . buffer_name
-
-        " Get terminal dimensions
-        let width = winwidth(0)
-        let height = winheight(0)
-
-        " Display image using timg with geometry parameters
+    elseif executable('timg')
+        " Use regular timg
         let timg_cmd = 'timg -g' . width . 'x' . height . ' --clear ' . pngfile
         let output = system(timg_cmd)
         
-        " Check if timg succeeded
         if v:shell_error != 0
             call visidian#debug#debug('IMAGE', 'Error running timg: ' . output)
+            " Fallback to ASCII art
+            call visidian#graph#PlotData(a:data, a:0 > 0 ? a:1 : '')
             return
         endif
-
-        " Clear buffer and insert output
-        silent! %delete _
-        silent! 0put =output
-        normal! gg
-        setlocal nomodifiable
-
-        " Clean up temporary files
-        call delete(datafile)
-        call delete(scriptfile)
-        call delete(pngfile)
     else
-        " Fallback to ASCII art if timg is not available
+        " Fallback to ASCII art if no image display is available
         call visidian#graph#PlotData(a:data, a:0 > 0 ? a:1 : '')
+        return
     endif
+
+    " Clear buffer and insert output
+    silent! %delete _
+    silent! 0put =output
+    normal! gg
+    setlocal nomodifiable
+
+    " Clean up temporary files
+    call delete(datafile)
+    call delete(scriptfile)
+    call delete(pngfile)
 
     call visidian#debug#debug('IMAGE', 'Completed display_graph')
 endfunction
