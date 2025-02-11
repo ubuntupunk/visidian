@@ -317,6 +317,7 @@ endfunction
 
 " Map a key to open the chat window
 if !hasmapto('<Plug>VisidianChatOpen')
-    nmap <unique> <Leader>cc <Plug>VisidianChatOpen
+    " Remove the default mapping to avoid conflicts
+    " Users can set their own mapping in their vimrc
 endif
 nnoremap <unique> <Plug>VisidianChatOpen :call visidian#chat#create_window()<CR>

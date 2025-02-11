@@ -22,6 +22,16 @@ function! visidian#vectorstore#init() abort
     endif
 endfunction
 
+" Get API key based on provider
+function! s:get_provider_key(provider) abort
+    if a:provider == 'openai'
+        return g:visidian_chat_openai_key
+    elseif a:provider == 'gemini'
+        return g:visidian_chat_gemini_key
+    endif
+    throw 'Invalid provider: ' . a:provider
+endfunction
+
 " Get embeddings for text using selected provider
 function! s:get_embeddings(text) abort
     let l:provider = g:visidian_vectorstore_provider
