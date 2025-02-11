@@ -69,7 +69,7 @@ function! s:get_embeddings(text) abort
                 \ ]
         elseif l:provider == 'gemini'
             let l:model = exists('g:visidian_chat_gemini_model') ? g:visidian_chat_gemini_model : 'gemini-1.0-pro'
-            let l:endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/' . l:model . ':embedContent'
+            let l:endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/' . l:model . ':embedContent?key=' . l:api_key
             let l:payload = json_encode({
                 \ 'model': 'models/' . l:model,
                 \ 'content': {
@@ -79,8 +79,7 @@ function! s:get_embeddings(text) abort
                 \ }
                 \ })
             let l:headers = [
-                \ 'Content-Type: application/json',
-                \ 'x-goog-api-key: ' . l:api_key
+                \ 'Content-Type: application/json'
                 \ ]
         endif
         
