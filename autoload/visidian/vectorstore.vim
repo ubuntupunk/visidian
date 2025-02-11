@@ -37,6 +37,10 @@ function! s:get_embeddings(text) abort
     let l:provider = g:visidian_vectorstore_provider
     let l:api_key = s:get_provider_key(l:provider)
     
+    if empty(l:api_key)
+        throw 'API key not set for provider: ' . l:provider
+    endif
+    
     if l:provider == 'openai'
         let l:endpoint = 'https://api.openai.com/v1/embeddings'
         let l:payload = json_encode({
@@ -65,20 +69,52 @@ function! s:get_embeddings(text) abort
     endfor
     call extend(l:cmd, ['-d', l:payload, l:endpoint])
     
+    " Debug logging
+    if exists('g:visidian_debug') && g:visidian_debug
+        echom 'Making API request to: ' . l:endpoint
+        echom 'Provider: ' . l:provider
+        echom 'Payload length: ' . len(l:payload)
+    endif
+    
     let l:response = system(join(l:cmd, ' '))
+    
+    " Debug logging
+    if exists('g:visidian_debug') && g:visidian_debug
+        echom 'API Response: ' . l:response
+    endif
+    
+    if v:shell_error
+        throw 'API request failed: ' . l:response
+    endif
+    
     return s:parse_embedding_response(l:response)
 endfunction
 
 " Parse embedding response based on provider
 function! s:parse_embedding_response(response) abort
-    let l:json_response = json_decode(a:response)
     let l:provider = g:visidian_vectorstore_provider
     
-    if l:provider == 'openai'
-        return l:json_response.data[0].embedding
-    elseif l:provider == 'gemini'
-        return l:json_response.embedding.values
-    endif
+    try
+        let l:json_response = json_decode(a:response)
+        
+        if l:provider == 'openai'
+            if has_key(l:json_response, 'data') && len(l:json_response.data) > 0
+                return l:json_response.data[0].embedding
+            endif
+            throw 'Invalid OpenAI API response: ' . a:response
+        elseif l:provider == 'gemini'
+            if has_key(l:json_response, 'embedding') && has_key(l:json_response.embedding, 'values')
+                return l:json_response.embedding.values
+            endif
+            throw 'Invalid Gemini API response: ' . a:response
+        endif
+        throw 'Invalid provider: ' . l:provider
+    catch
+        echohl ErrorMsg
+        echom 'Error parsing embedding response: ' . v:exception
+        echohl None
+        return []
+    endtry
 endfunction
 
 " Store embeddings for a note
