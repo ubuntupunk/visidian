@@ -387,6 +387,15 @@ function! visidian#chat#send_to_llm(query, context) abort
     endtry
 endfunction
 
+" Get model for provider
+function! s:get_model(provider) abort
+    if !has_key(g:visidian_chat_model, a:provider)
+        throw 'No model configured for provider: ' . a:provider
+    endif
+    return g:visidian_chat_model[a:provider]
+endfunction
+
+" Send request to LLM
 function! s:send_to_llm(prompt, context) abort
     let l:provider = g:visidian_chat_provider
     let l:model = s:get_model(l:provider)
