@@ -336,19 +336,26 @@ function! visidian#chat#send_to_llm(query, context) abort
             let l:headers = s:get_headers()
         endif
         
+        call s:debug('Using provider: ' . l:provider)
+        call s:debug('Using model: ' . g:visidian_chat_model[l:provider])
+        call s:debug('Headers: ' . string(l:headers))
+        
         let l:cmd = ['curl', '-s', '-X', 'POST']
         for l:header in l:headers
-            call extend(l:cmd, ['-H', l:header])
+            call add(l:cmd, '-H')
+            call add(l:cmd, l:header)
         endfor
         
         " Escape payload for shell
         let l:escaped_payload = shellescape(l:payload)
-        call extend(l:cmd, ['-d', l:escaped_payload])
-        call extend(l:cmd, [l:endpoint])
+        call add(l:cmd, '-d')
+        call add(l:cmd, l:escaped_payload)
+        call add(l:cmd, l:endpoint)
         
         call s:debug('Making API request to: ' . l:endpoint)
         call s:debug('Provider: ' . l:provider)
         call s:debug('Payload length: ' . len(l:payload))
+        call s:debug('Command: ' . string(l:cmd))
         
         let l:response = system(join(l:cmd, ' '))
         
