@@ -415,11 +415,10 @@ function! visidian#chat#list_models() abort
         
         if l:provider == 'gemini'
             let l:endpoint = 'https://generativelanguage.googleapis.com/v1beta/models'
-            let l:url = shellescape(l:endpoint)
             let l:cmd = ['curl', '-s', '-X', 'GET']
             call add(l:cmd, '-H')
             call add(l:cmd, 'x-goog-api-key: ' . l:api_key)
-            call add(l:cmd, l:url)
+            call add(l:cmd, shellescape(l:endpoint . '?key=' . l:api_key))
             
             call s:debug('Making API request to list models')
             let l:response = system(join(l:cmd, ' '))

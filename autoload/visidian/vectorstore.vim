@@ -77,6 +77,7 @@ function! s:get_embeddings(text) abort
                 \ 'Content-Type: application/json',
                 \ 'x-goog-api-key: ' . l:api_key
                 \ ]
+            let l:endpoint = l:endpoint . '?key=' . l:api_key
         endif
         
         let l:cmd = ['curl', '-s', '-X', 'POST']
@@ -87,9 +88,9 @@ function! s:get_embeddings(text) abort
         
         " Escape payload for shell
         let l:escaped_payload = shellescape(l:payload)
-        call extend(l:cmd, ['-d', l:escaped_payload, l:endpoint])
+        call extend(l:cmd, ['-d', l:escaped_payload, shellescape(l:endpoint)])
         
-        call s:debug('Making API request to: ' . l:endpoint)
+        call s:debug('Making API request')
         call s:debug('Provider: ' . l:provider)
         call s:debug('Payload length: ' . len(l:payload))
         
@@ -103,11 +104,11 @@ function! s:get_embeddings(text) abort
             throw 'API error: ' . l:error_msg
         endif
         
-        call s:debug('API Response: ' . l:response)
+        call s:debug('API Response received')
         
         if v:shell_error
-            call s:debug('API request failed: ' . l:response)
-            throw 'API request failed: ' . l:response
+            call s:debug('API request failed')
+            throw 'API request failed'
         endif
         
         return s:parse_embedding_response(l:response)
