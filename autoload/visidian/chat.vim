@@ -168,24 +168,34 @@ function! s:verify_api_key() abort
     return l:api_key
 endfunction
 
-" Process streaming response
+" Process response from API
 function! s:process_response(response) abort
-    let l:text = ''
-    for l:chunk in split(a:response, "\n")
-        if empty(l:chunk)
-            continue
-        endif
-        let l:chunk_text = s:process_chunk(l:chunk)
-        if !empty(l:chunk_text)
-            let l:text .= l:chunk_text
-            call s:append_to_chat_buffer(l:chunk_text)
-        endif
-    endfor
+    call s:debug('Processing response: ' . a:response)
+    let l:provider = g:visidian_chat_provider
     
-    if empty(l:text)
-        throw 'No valid text found in response'
-    endif
-    return l:text
+    try
+        let l:json = json_decode(a:response)
+        
+        " Check for API errors
+        if type(l:json) == v:t_dict && has_key(l:json, 'error')
+            throw 'API Error: ' . l:json.error.message
+        endif
+        
+        if l:provider == 'gemini'
+            if type(l:json) == v:t_dict && has_key(l:json, 'candidates') && len(l:json.candidates) > 0
+                let l:content = l:json.candidates[0].content
+                if type(l:content) == v:t_dict && has_key(l:content, 'parts') && len(l:content.parts) > 0
+                    return l:content.parts[0].text
+                endif
+            endif
+            throw 'Invalid response format from Gemini API'
+        endif
+        
+        return a:response
+    catch
+        call s:debug('Error processing response: ' . v:exception)
+        throw v:exception
+    endtry
 endfunction
 
 " Parse response based on provider
@@ -377,6 +387,61 @@ function! visidian#chat#send_to_llm(query, context) abort
     endtry
 endfunction
 
+function! s:send_to_llm(prompt, context) abort
+    let l:provider = g:visidian_chat_provider
+    let l:model = s:get_model(l:provider)
+    let l:api_key = s:get_api_key()
+    
+    call s:debug('Using provider: ' . l:provider)
+    call s:debug('Using model: ' . l:model)
+    
+    if l:provider == 'gemini'
+        let l:endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/' . l:model . ':streamGenerateContent?key=' . l:api_key
+        let l:content = "Context:\n" . a:context . "\n\nQuery:\n" . a:prompt
+        let l:payload = json_encode({
+            \ 'contents': [
+            \   {
+            \     'role': 'user',
+            \     'parts': [
+            \       {
+            \         'text': l:content
+            \       }
+            \     ]
+            \   }
+            \ ],
+            \ 'generationConfig': {
+            \   'temperature': 0.7,
+            \   'maxOutputTokens': 2048,
+            \   'topK': 40,
+            \   'topP': 0.95
+            \ }
+            \})
+        let l:headers = ['Content-Type: application/json']
+    endif
+    
+    let l:cmd = ['curl', '-s', '-X', 'POST']
+    for l:header in l:headers
+        call add(l:cmd, '-H')
+        call add(l:cmd, l:header)
+    endfor
+    
+    " Escape payload for shell
+    let l:escaped_payload = shellescape(l:payload)
+    call add(l:cmd, '-d')
+    call add(l:cmd, l:escaped_payload)
+    call add(l:cmd, shellescape(l:endpoint))
+    
+    call s:debug('Making API request to: ' . l:endpoint)
+    call s:debug('Provider: ' . l:provider)
+    call s:debug('Payload length: ' . len(l:payload))
+    call s:debug('Command: ' . string(l:cmd))
+    
+    let l:response = system(join(l:cmd, ' '))
+    let l:text = s:process_response(l:response)
+    call s:append_to_chat_buffer(l:text)
+    return l:text
+endfunction
+
 " Display a chunk of text in the chat buffer as it arrives
 function! visidian#chat#display_chunk(text) abort
     let l:bufnr = bufnr('Visidian Chat')
@@ -527,7 +592,7 @@ function! visidian#chat#send_message() abort
         
         " Process and display response
         redraw | echo "Processing..."
-        let l:response = visidian#chat#send_to_llm(l:query, l:context)
+        let l:response = s:send_to_llm(l:query, l:context)
         call visidian#chat#display_response(l:response)
         redraw | echo ""
     catch
@@ -613,7 +678,7 @@ function! visidian#chat#start_chat_with_context() abort
         if !empty(l:query)
             call s:debug('Processing query: ' . l:query)
             echo "\nProcessing..."
-            let l:response = visidian#chat#send_to_llm(l:query, l:context)
+            let l:response = s:send_to_llm(l:query, l:context)
             call visidian#chat#display_response(l:response)
         else
             call s:debug('Empty query, aborting')
