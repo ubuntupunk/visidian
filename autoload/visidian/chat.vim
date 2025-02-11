@@ -3,17 +3,155 @@
 " License: GPL3
 
 " Configuration variables
-if !exists('g:visidian_chat_api_key')
-    let g:visidian_chat_api_key = $OPENAI_API_KEY
+if !exists('g:visidian_chat_provider')
+    let g:visidian_chat_provider = 'openai'  " Options: 'openai', 'gemini', 'anthropic', 'deepseek'
+endif
+
+if !exists('g:visidian_chat_openai_key')
+    let g:visidian_chat_openai_key = $OPENAI_API_KEY
+endif
+
+if !exists('g:visidian_chat_gemini_key')
+    let g:visidian_chat_gemini_key = $GEMINI_API_KEY
+endif
+
+if !exists('g:visidian_chat_anthropic_key')
+    let g:visidian_chat_anthropic_key = $ANTHROPIC_API_KEY
+endif
+
+if !exists('g:visidian_chat_deepseek_key')
+    let g:visidian_chat_deepseek_key = $DEEPSEEK_API_KEY
 endif
 
 if !exists('g:visidian_chat_model')
-    let g:visidian_chat_model = 'gpt-3.5-turbo'
+    let g:visidian_chat_model = {
+        \ 'openai': 'gpt-3.5-turbo',
+        \ 'gemini': 'gemini-pro',
+        \ 'anthropic': 'claude-3-opus',
+        \ 'deepseek': 'deepseek-chat'
+        \ }
 endif
 
 if !exists('g:visidian_chat_window_width')
     let g:visidian_chat_window_width = 80
 endif
+
+" Provider-specific API endpoints
+let s:api_endpoints = {
+    \ 'openai': 'https://api.openai.com/v1/chat/completions',
+    \ 'gemini': 'https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent',
+    \ 'anthropic': 'https://api.anthropic.com/v1/messages',
+    \ 'deepseek': 'https://api.deepseek.com/v1/chat/completions'
+    \ }
+
+" Get API key based on provider
+function! s:get_api_key()
+    let l:provider = g:visidian_chat_provider
+    if l:provider == 'openai'
+        return g:visidian_chat_openai_key
+    elseif l:provider == 'gemini'
+        return g:visidian_chat_gemini_key
+    elseif l:provider == 'anthropic'
+        return g:visidian_chat_anthropic_key
+    elseif l:provider == 'deepseek'
+        return g:visidian_chat_deepseek_key
+    endif
+    throw 'Invalid provider: ' . l:provider
+endfunction
+
+" Format request payload based on provider
+function! s:format_request_payload(query, context)
+    let l:provider = g:visidian_chat_provider
+    let l:model = g:visidian_chat_model[l:provider]
+    let l:content = "Context:\n" . a:context . "\n\nQuery:\n" . a:query
+
+    if l:provider == 'openai'
+        return json_encode({
+            \ 'model': l:model,
+            \ 'messages': [
+            \   {'role': 'system', 'content': 'You are a helpful assistant analyzing markdown notes.'},
+            \   {'role': 'user', 'content': l:content}
+            \ ]
+            \})
+    elseif l:provider == 'gemini'
+        return json_encode({
+            \ 'contents': [{
+            \   'parts': [{'text': l:content}]
+            \ }],
+            \ 'generationConfig': {
+            \   'temperature': 0.7,
+            \   'topK': 40,
+            \   'topP': 0.95,
+            \   'maxOutputTokens': 2048,
+            \ }
+            \})
+    elseif l:provider == 'anthropic'
+        return json_encode({
+            \ 'model': l:model,
+            \ 'messages': [{
+            \   'role': 'user',
+            \   'content': l:content
+            \ }],
+            \ 'max_tokens': 2048
+            \})
+    elseif l:provider == 'deepseek'
+        return json_encode({
+            \ 'model': l:model,
+            \ 'messages': [
+            \   {'role': 'system', 'content': 'You are a helpful assistant analyzing markdown notes.'},
+            \   {'role': 'user', 'content': l:content}
+            \ ]
+            \})
+    endif
+    throw 'Invalid provider: ' . l:provider
+endfunction
+
+" Get API headers based on provider
+function! s:get_api_headers()
+    let l:provider = g:visidian_chat_provider
+    let l:api_key = s:get_api_key()
+    
+    if l:provider == 'openai'
+        return [
+            \ 'Content-Type: application/json',
+            \ 'Authorization: Bearer ' . l:api_key
+            \ ]
+    elseif l:provider == 'gemini'
+        return [
+            \ 'Content-Type: application/json',
+            \ 'x-goog-api-key: ' . l:api_key
+            \ ]
+    elseif l:provider == 'anthropic'
+        return [
+            \ 'Content-Type: application/json',
+            \ 'x-api-key: ' . l:api_key,
+            \ 'anthropic-version: 2023-06-01'
+            \ ]
+    elseif l:provider == 'deepseek'
+        return [
+            \ 'Content-Type: application/json',
+            \ 'Authorization: Bearer ' . l:api_key
+            \ ]
+    endif
+    throw 'Invalid provider: ' . l:provider
+endfunction
+
+" Parse response based on provider
+function! s:parse_response(response)
+    let l:provider = g:visidian_chat_provider
+    let l:json_response = json_decode(a:response)
+
+    if l:provider == 'openai'
+        return l:json_response.choices[0].message.content
+    elseif l:provider == 'gemini'
+        return l:json_response.candidates[0].content.parts[0].text
+    elseif l:provider == 'anthropic'
+        return l:json_response.content[0].text
+    elseif l:provider == 'deepseek'
+        return l:json_response.choices[0].message.content
+    endif
+    throw 'Invalid provider: ' . l:provider
+endfunction
 
 " Create a new vertical split window for the chat
 function! visidian#chat#create_window() abort
@@ -74,23 +212,20 @@ function! visidian#chat#get_markdown_context() abort
 endfunction
 
 function! visidian#chat#send_to_llm(query, context) abort
-    if empty(g:visidian_chat_api_key)
-        throw 'Visidian Chat Error: API key not set. Please set g:visidian_chat_api_key or OPENAI_API_KEY environment variable.'
+    if empty(s:get_api_key())
+        throw 'Visidian Chat Error: API key not set for provider ' . g:visidian_chat_provider
     endif
     
-    let l:full_prompt = json_encode({
-        \ 'model': g:visidian_chat_model,
-        \ 'messages': [
-        \   {'role': 'system', 'content': 'You are a helpful assistant analyzing markdown notes.'},
-        \   {'role': 'user', 'content': "Context:\n" . a:context . "\n\nQuery:\n" . a:query}
-        \ ]
-        \})
+    let l:payload = s:format_request_payload(a:query, a:context)
+    let l:headers = s:get_api_headers()
+    let l:endpoint = s:api_endpoints[g:visidian_chat_provider]
     
-    let l:cmd = ['curl', '-s', '-X', 'POST',
-        \ '-H', 'Content-Type: application/json',
-        \ '-H', 'Authorization: Bearer ' . g:visidian_chat_api_key,
-        \ '-d', l:full_prompt,
-        \ 'https://api.openai.com/v1/chat/completions']
+    let l:cmd = ['curl', '-s', '-X', 'POST']
+    for l:header in l:headers
+        call add(l:cmd, '-H')
+        call add(l:cmd, l:header)
+    endfor
+    call extend(l:cmd, ['-d', l:payload, l:endpoint])
     
     let l:response = system(join(l:cmd, ' '))
     
@@ -99,8 +234,7 @@ function! visidian#chat#send_to_llm(query, context) abort
     endif
     
     try
-        let l:json_response = json_decode(l:response)
-        return l:json_response.choices[0].message.content
+        return s:parse_response(l:response)
     catch
         throw 'Visidian Chat Error: Failed to parse API response: ' . v:exception
     endtry

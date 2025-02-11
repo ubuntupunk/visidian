@@ -29,6 +29,7 @@ This is currently just a markdown note-taking tool with some extra functionality
 6. [Bookmarking](#bookmarking)
 7. [Recommended Usage & Project Direction](#recommended-usage--project-direction)
 8. [Debugging](#debugging)
+9. [Chat Integration](#chat-integration)
 
 ---
 ## Installation
@@ -248,6 +249,49 @@ While we currently emphasize folder-based organization, Visidian is evolving tow
 - Upcoming: Chat-with-your-notes functionality (planned for future releases)
 
 This hybrid approach allows you to maintain organized structures while preparing for more advanced knowledge management features.
+
+## Chat Integration
+
+Visidian includes an AI-powered chat feature that can help analyze and work with your notes. The chat system supports multiple LLM providers:
+
+### Supported Providers
+- OpenAI (GPT-3.5/4)
+- Google Gemini
+- Anthropic Claude
+- DeepSeek
+
+### Configuration
+Add the following to your vimrc to configure the chat feature:
+
+```vim
+" Select your preferred provider (default: 'openai')
+" Options: 'openai', 'gemini', 'anthropic', 'deepseek'
+let g:visidian_chat_provider = 'openai'
+
+" Configure API keys (or use environment variables)
+let g:visidian_chat_openai_key = 'your-openai-key'
+let g:visidian_chat_gemini_key = 'your-gemini-key'
+let g:visidian_chat_anthropic_key = 'your-anthropic-key'
+let g:visidian_chat_deepseek_key = 'your-deepseek-key'
+
+" Customize models (optional)
+let g:visidian_chat_model = {
+    \ 'openai': 'gpt-4',
+    \ 'gemini': 'gemini-pro',
+    \ 'anthropic': 'claude-3-opus',
+    \ 'deepseek': 'deepseek-chat'
+    \ }
+
+" Set chat window width (default: 80)
+let g:visidian_chat_window_width = 100
+```
+
+### Usage
+- Press `<Leader>cc` to open the chat window
+- Type your query and press Enter
+- Press `q` to close the chat window
+
+The chat feature automatically includes context from your current note and any linked notes (via `[[links]]`), allowing the AI to provide more relevant responses.
 
 ## Configuration
 

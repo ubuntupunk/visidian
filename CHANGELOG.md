@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- Multi-provider chat support with OpenAI, Google Gemini, Anthropic Claude, and DeepSeek
+- Configurable model selection for each provider
+- Improved error handling and response parsing for chat functionality
+- Environment variable support for API keys
+- Documentation for chat configuration and usage
+
 ## [v0.1.1] - 2025-02-10
 
 ### Added
