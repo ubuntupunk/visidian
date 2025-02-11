@@ -91,7 +91,7 @@ function! s:continue_setup() abort
     elseif s:setup_step == 4
         call visidian#start#setup_sync()
     elseif s:setup_step == 5
-        call visidian#start#show_settings()
+        call visidian#start#customize()
     elseif s:setup_step == 6
         call visidian#start#finish()
     endif
@@ -235,6 +235,59 @@ function! visidian#start#show_settings() abort
     call getchar()
     call popup_close(winid)
     call s:continue_setup()
+endfunction
+
+function! visidian#start#setup_sync() abort
+    let msg = [
+        \ 'Sync Setup Options:',
+        \ '',
+        \ '  [1] Enable/Disable Sync',
+        \ '  [2] Configure Sync Settings',
+        \ '  [3] View Sync Status',
+        \ '  [q] Quit and proceed with setup',
+        \ '',
+        \ 'Select an option:'
+        \ ]
+    
+    let winid = popup_create(msg, {
+        \ 'title': ' Sync Setup ',
+        \ 'padding': [1,2,1,2],
+        \ 'border': [],
+        \ 'borderchars': ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
+        \ 'pos': 'center',
+        \ 'filter': function('s:sync_menu_filter'),
+        \ 'focusable': 1,
+        \ })
+    call win_execute(winid, 'redraw')
+    call popup_setoptions(winid, {'focused': 1})
+    
+    call visidian#debug#info('START', 'Displayed sync setup options')
+endfunction
+
+function! s:sync_menu_filter(winid, key) abort
+    if a:key ==# '1'
+        call popup_close(a:winid)
+        call visidian#toggle_auto_sync()
+        call visidian#start#setup_sync()
+        return 1
+    elseif a:key ==# '2'
+        call popup_close(a:winid)
+        " Placeholder for configuring sync settings
+        echo 'Configuring Sync Settings...'
+        call visidian#start#setup_sync()
+        return 1
+    elseif a:key ==# '3'
+        call popup_close(a:winid)
+        " Placeholder for viewing sync status
+        echo 'Viewing Sync Status...'
+        call visidian#start#setup_sync()
+        return 1
+    elseif a:key ==# 'q'
+        call popup_close(a:winid)
+        call s:continue_setup()
+        return 1
+    endif
+    return 0
 endfunction
 
 function! visidian#start#setup_para() abort
@@ -392,48 +445,6 @@ function! s:import_filter(winid, key) abort
         return 1
     elseif a:key ==# 'n'
         call popup_close(a:winid)
-        return 1
-    endif
-    return 0
-endfunction
-
-function! visidian#start#setup_sync() abort
-    let msg = [
-        \ 'Would you like to set up note synchronization?',
-        \ '',
-        \ 'Visidian can help you keep your notes backed up',
-        \ 'and synchronized across devices.',
-        \ '',
-        \ 'Press:',
-        \ '  [y] to configure sync settings',
-        \ '  [n] to skip this step'
-        \ ]
-    
-    let winid = popup_create(msg, {
-        \ 'title': ' Sync Setup ',
-        \ 'padding': [1,2,1,2],
-        \ 'border': [],
-        \ 'borderchars': ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
-        \ 'pos': 'center',
-        \ 'filter': function('s:sync_filter'),
-        \ 'callback': {id, result -> timer_start(500, {-> s:continue_setup()})},
-        \ 'focusable': 1,
-        \ })
-    call win_execute(winid, 'redraw')
-    call popup_setoptions(winid, {'focused': 1})
-    
-    call visidian#debug#info('START', 'Displayed sync options')
-endfunction
-
-function! s:sync_filter(winid, key) abort
-    if a:key ==# 'y'
-        call popup_close(a:winid)
-        call visidian#sync()
-        call s:continue_setup()
-        return 1
-    elseif a:key ==# 'n'
-        call popup_close(a:winid)
-        call s:continue_setup()
         return 1
     endif
     return 0
