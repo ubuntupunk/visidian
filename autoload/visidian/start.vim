@@ -29,7 +29,10 @@ function! visidian#start#welcome() abort
         \ 'borderchars': ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
         \ 'pos': 'center',
         \ 'close': 'click',
+        \ 'focusable': 1,
         \ })
+    call win_execute(winid, 'redraw')
+    call popup_setoptions(winid, {'focused': 1})
     
     call visidian#debug#info('START', 'Displayed welcome message')
     call getchar()
@@ -63,7 +66,10 @@ function! visidian#start#check_dependencies() abort
             \ 'borderchars': ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
             \ 'pos': 'center',
             \ 'close': 'click',
+            \ 'focusable': 1,
             \ })
+        call win_execute(winid, 'redraw')
+        call popup_setoptions(winid, {'focused': 1})
         
         call visidian#debug#info('START', 'Displayed missing dependencies: ' . string(missing_deps))
         call getchar()
@@ -222,7 +228,10 @@ function! visidian#start#show_settings() abort
         \ 'borderchars': ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
         \ 'pos': 'center',
         \ 'close': 'click',
+        \ 'focusable': 1,
         \ })
+    call win_execute(winid, 'redraw')
+    call popup_setoptions(winid, {'focused': 1})
     call getchar()
     call popup_close(winid)
     call s:continue_setup()
@@ -256,8 +265,6 @@ function! visidian#start#setup_para() abort
         \ 'callback': {id, result -> timer_start(500, {-> s:continue_setup()})},
         \ 'focusable': 1,
         \ })
-    
-    " Focus the popup immediately
     call win_execute(winid, 'redraw')
     call popup_setoptions(winid, {'focused': 1})
     
@@ -306,7 +313,7 @@ endfunction
 function! s:note_filter(winid, key) abort
     if a:key ==# 'y'
         call popup_close(a:winid)
-        call visidian#create_note()
+        call visidian#new_md_file()
         return 1
     elseif a:key ==# 'n'
         call popup_close(a:winid)
@@ -372,8 +379,6 @@ function! visidian#start#import_notes() abort
         \ 'callback': {id, result -> timer_start(500, {-> s:continue_setup()})},
         \ 'focusable': 1,
         \ })
-    
-    " Focus the popup immediately
     call win_execute(winid, 'redraw')
     call popup_setoptions(winid, {'focused': 1})
     
@@ -414,8 +419,6 @@ function! visidian#start#setup_sync() abort
         \ 'callback': {id, result -> timer_start(500, {-> s:continue_setup()})},
         \ 'focusable': 1,
         \ })
-    
-    " Focus the popup immediately
     call win_execute(winid, 'redraw')
     call popup_setoptions(winid, {'focused': 1})
     
@@ -426,9 +429,11 @@ function! s:sync_filter(winid, key) abort
     if a:key ==# 'y'
         call popup_close(a:winid)
         call visidian#sync()
+        call s:continue_setup()
         return 1
     elseif a:key ==# 'n'
         call popup_close(a:winid)
+        call s:continue_setup()
         return 1
     endif
     return 0
@@ -456,8 +461,6 @@ function! visidian#start#customize() abort
         \ 'callback': {id, result -> timer_start(500, {-> s:continue_setup()})},
         \ 'focusable': 1,
         \ })
-    
-    " Focus the popup immediately
     call win_execute(winid, 'redraw')
     call popup_setoptions(winid, {'focused': 1})
     
@@ -556,8 +559,6 @@ function! visidian#start#finish() abort
         \ 'filter': function('s:finish_filter'),
         \ 'focusable': 1,
         \ })
-    
-    " Focus the popup immediately
     call win_execute(winid, 'redraw')
     call popup_setoptions(winid, {'focused': 1})
     
