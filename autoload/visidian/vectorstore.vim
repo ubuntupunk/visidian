@@ -54,9 +54,10 @@ endfunction
 " Get embeddings for text using selected provider
 function! s:get_embeddings(text) abort
     let l:provider = g:visidian_vectorstore_provider
-    
     try
         let l:api_key = s:get_provider_key(l:provider)
+        call s:debug('Provider: ' . l:provider)
+        call s:debug('Text length: ' . len(a:text))
         
         if l:provider == 'openai'
             let l:endpoint = 'https://api.openai.com/v1/embeddings'
@@ -84,6 +85,7 @@ function! s:get_embeddings(text) abort
                 \ ]
         endif
         
+        call s:debug('Payload: ' . l:payload)
         let l:cmd = ['curl', '-s', '-X', 'POST']
         for l:header in l:headers
             call add(l:cmd, '-H')
@@ -94,11 +96,9 @@ function! s:get_embeddings(text) abort
         let l:escaped_payload = shellescape(l:payload)
         call extend(l:cmd, ['-d', l:escaped_payload, shellescape(l:endpoint)])
         
-        call s:debug('Making API request')
-        call s:debug('Provider: ' . l:provider)
-        call s:debug('Payload length: ' . len(l:payload))
-        
+        call s:debug('Making API request to: ' . l:endpoint)
         let l:response = system(join(l:cmd, ' '))
+        call s:debug('API response length: ' . len(l:response))
         if v:shell_error
             let l:error_msg = substitute(l:response, '\^@', '', 'g')
             call s:debug('API error: ' . l:error_msg)
@@ -107,6 +107,7 @@ function! s:get_embeddings(text) abort
 
         " Parse response
         let l:json_response = json_decode(l:response)
+        call s:debug('Parsed JSON response')
         
         " Check for API errors
         if type(l:json_response) == v:t_dict && has_key(l:json_response, 'error')
@@ -151,7 +152,8 @@ function! visidian#vectorstore#store_note(file_path) abort
     call visidian#vectorstore#init()
     
     " Read file content
-    let l:content = join(readfile(a:file_path), "\n")
+    let l:content = join(readfile(a:file_path, 'b'), "\n")  " Ensure binary read
+    call s:debug('Read file content of length: ' . len(l:content))
     let l:chunks = s:chunk_text(l:content, 1000)  " Split into ~1000 token chunks
     let l:metadata = []
     
@@ -166,7 +168,8 @@ function! visidian#vectorstore#store_note(file_path) abort
     
     " Store metadata as JSON
     let l:store_file = s:get_store_filename(a:file_path)
-    call writefile([json_encode(l:metadata)], l:store_file)
+    call writefile([json_encode(l:metadata)], l:store_file, 'b')  " Ensure binary write
+    call s:debug('Stored metadata in: ' . l:store_file)
 endfunction
 
 " Find relevant notes using cosine similarity
@@ -179,7 +182,7 @@ function! visidian#vectorstore#find_relevant_notes(query, max_results) abort
     for l:file in glob(l:store_path . '/*.json', 0, 1)
         if filereadable(l:file)
             try
-                let l:metadata = json_decode(join(readfile(l:file), "\n"))
+                let l:metadata = json_decode(join(readfile(l:file, 'b'), "\n"))  " Ensure binary read
                 for l:chunk in l:metadata
                     let l:similarity = s:cosine_similarity(l:query_embedding, l:chunk.embedding)
                     call add(l:results, {

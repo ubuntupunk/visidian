@@ -349,6 +349,7 @@ function! visidian#chat#send_to_llm(query, context) abort
         let l:provider = g:visidian_chat_provider
         let l:api_key = s:get_api_key()
         let l:content = "Context:\n" . a:context . "\n\nQuery:\n" . a:query
+        call s:debug('Sending to LLM with context length: ' . len(a:context) . ' and query length: ' . len(a:query))
         
         if l:provider == 'openai'
             let l:endpoint = 'https://api.openai.com/v1/chat/completions'
@@ -435,9 +436,12 @@ function! visidian#chat#send_to_llm(query, context) abort
         endif
         
         " Parse response based on provider
-        return s:parse_response(l:response)
+        let l:result = s:parse_response(l:response)
+        call s:debug('Response received with length: ' . len(l:result))
+        return l:result
     catch
-        throw 'Visidian Chat Error: ' . v:exception
+        call s:debug('Error sending to LLM: ' . v:exception)
+        throw v:exception
     endtry
 endfunction
 
@@ -595,13 +599,12 @@ function! visidian#chat#display_chunk(text) abort
 endfunction
 
 function! visidian#chat#display_response(response) abort
-    " Create or get chat buffer
     let l:bufnr = bufnr('Visidian Chat')
     if l:bufnr == -1
         call visidian#chat#create_window()
-        let l:bufnr = bufnr('Visidian Chat')
     endif
-    
+    call s:debug('Displaying response of length: ' . len(a:response))
+    " Create or get chat buffer
     " Make buffer modifiable
     call setbufvar(l:bufnr, '&modifiable', 1)
     
