@@ -175,24 +175,11 @@ endfunction
 function! s:process_response(response) abort
     call s:debug('Raw response: ' . a:response)
     " Clean up response data
-    let l:clean_response = substitute(a:response, '
-', '', 'g')  " Remove newlines
-    let l:clean_response = substitute(l:clean_response, '', '', 'g')  " Remove carriage returns
-    let l:clean_response = substitute(l:clean_response, '	', '', 'g')  " Remove tabs
-    let l:clean_response = substitute(l:clean_response, '', '', 'g')  " Remove backspaces
-    let l:clean_response = substitute(l:clean_response, '', '', 'g')  " Remove form feeds
-    let l:clean_response = substitute(l:clean_response, '
-', '', 'g')  " Remove newlines again
-    let l:clean_response = substitute(l:clean_response, '', '', 'g')  " Remove carriage returns again
-    let l:clean_response = substitute(l:clean_response, '	', '', 'g')  " Remove tabs again
-    let l:clean_response = substitute(l:clean_response, '', '', 'g')  " Remove backspaces again
-    let l:clean_response = substitute(l:clean_response, '', '', 'g')  " Remove form feeds again
-    let l:clean_response = substitute(l:clean_response, '
-', '', 'g')  " Remove newlines again
-    let l:clean_response = substitute(l:clean_response, '', '', 'g')  " Remove carriage returns again
-    let l:clean_response = substitute(l:clean_response, '	', '', 'g')  " Remove tabs again
-    let l:clean_response = substitute(l:clean_response, '', '', 'g')  " Remove backspaces again
-    let l:clean_response = substitute(l:clean_response, '', '', 'g')  " Remove form feeds again
+    let l:clean_response = substitute(a:response, '\n', '', 'g')  " Remove newlines
+    let l:clean_response = substitute(l:clean_response, '\r', '', 'g')  " Remove carriage returns
+    let l:clean_response = substitute(l:clean_response, '\t', '', 'g')  " Remove tabs
+    let l:clean_response = substitute(l:clean_response, '\b', '', 'g')  " Remove backspaces
+    let l:clean_response = substitute(l:clean_response, '\f', '', 'g')  " Remove form feeds
     call s:debug('Cleaned response: ' . l:clean_response)
     return l:clean_response
 endfunction
