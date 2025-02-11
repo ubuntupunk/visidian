@@ -171,6 +171,51 @@ function! s:format_request_payload(query, context)
     throw 'Invalid provider: ' . l:provider
 endfunction
 
+" Process streaming response chunk
+function! s:process_chunk(chunk) abort
+    try
+        let l:json = json_decode(a:chunk)
+        
+        if has_key(l:json, 'candidates') && len(l:json.candidates) > 0
+            let l:candidate = l:json.candidates[0]
+            if has_key(l:candidate, 'content') && has_key(l:candidate.content, 'parts')
+                let l:parts = l:candidate.content.parts
+                if len(l:parts) > 0 && has_key(l:parts[0], 'text')
+                    return l:parts[0].text
+                endif
+            endif
+        endif
+        
+        if has_key(l:json, 'error')
+            throw 'API Error: ' . l:json.error.message
+        endif
+    catch
+        call s:debug('Error processing chunk: ' . v:exception)
+        return ''
+    endtry
+    return ''
+endfunction
+
+" Process streaming response
+function! s:process_response(response) abort
+    let l:text = ''
+    for l:chunk in split(a:response, "\n")
+        if empty(l:chunk)
+            continue
+        endif
+        let l:chunk_text = s:process_chunk(l:chunk)
+        if !empty(l:chunk_text)
+            let l:text .= l:chunk_text
+            call s:append_to_chat_buffer(l:chunk_text)
+        endif
+    endfor
+    
+    if empty(l:text)
+        throw 'No valid text found in response'
+    endif
+    return l:text
+endfunction
+
 " Parse response based on provider
 function! s:parse_response(response)
     let l:provider = g:visidian_chat_provider
@@ -179,39 +224,7 @@ function! s:parse_response(response)
     if l:provider == 'openai'
         return l:json_response.choices[0].message.content
     elseif l:provider == 'gemini'
-        " Handle streaming response format
-        let l:chunks = split(a:response, ",\r\n")
-        let l:full_text = ''
-        
-        for l:chunk in l:chunks
-            if empty(l:chunk)
-                continue
-            endif
-            try
-                let l:clean_chunk = substitute(l:chunk, '\^@', '', 'g')
-                let l:clean_chunk = substitute(l:clean_chunk, '^\s*', '', '')  " Remove leading whitespace
-                let l:json = json_decode(l:clean_chunk)
-                
-                if has_key(l:json, 'candidates') && len(l:json.candidates) > 0
-                    let l:candidate = l:json.candidates[0]
-                    if has_key(l:candidate, 'content') && has_key(l:candidate.content, 'parts')
-                        let l:parts = l:candidate.content.parts
-                        if len(l:parts) > 0 && has_key(l:parts[0], 'text')
-                            let l:text = l:parts[0].text
-                            let l:full_text .= l:text
-                        endif
-                    endif
-                endif
-            catch
-                continue
-            endtry
-        endfor
-        
-        if empty(l:full_text)
-            throw 'No valid text found in response'
-        endif
-        
-        return l:full_text
+        return s:process_response(a:response)
     elseif l:provider == 'anthropic'
         return l:json_response.content[0].text
     elseif l:provider == 'deepseek'
@@ -385,64 +398,7 @@ function! visidian#chat#send_to_llm(query, context) abort
         endif
         
         " Parse response based on provider
-        if l:provider == 'openai'
-            let l:json_response = json_decode(l:response)
-            if type(l:json_response) == v:t_dict && has_key(l:json_response, 'error')
-                throw 'API error: ' . l:json_response.error.message
-            endif
-            return l:json_response.choices[0].message.content
-        elseif l:provider == 'gemini'
-            " Handle streaming response
-            let l:chunks = split(l:response, ",\r\n")
-            let l:full_text = ''
-            
-            for l:chunk in l:chunks
-                if empty(l:chunk)
-                    continue
-                endif
-                try
-                    let l:clean_chunk = substitute(l:chunk, '\^@', '', 'g')
-                    let l:clean_chunk = substitute(l:clean_chunk, '^\s*', '', '')
-                    let l:json = json_decode(l:clean_chunk)
-                    
-                    if has_key(l:json, 'candidates') && len(l:json.candidates) > 0
-                        let l:candidate = l:json.candidates[0]
-                        if has_key(l:candidate, 'content') && has_key(l:candidate.content, 'parts')
-                            let l:parts = l:candidate.content.parts
-                            if len(l:parts) > 0 && has_key(l:parts[0], 'text')
-                                let l:text = l:parts[0].text
-                                let l:full_text .= l:text
-                                
-                                " Display chunk in chat buffer as it arrives
-                                call visidian#chat#display_chunk(l:text)
-                            endif
-                        endif
-                    endif
-                catch
-                    continue
-                endtry
-            endfor
-            
-            if empty(l:full_text)
-                throw 'No valid text found in response'
-            endif
-            
-            return l:full_text
-        elseif l:provider == 'anthropic'
-            let l:json_response = json_decode(l:response)
-            if type(l:json_response) == v:t_dict && has_key(l:json_response, 'error')
-                throw 'API error: ' . l:json_response.error.message
-            endif
-            return l:json_response.content[0].text
-        elseif l:provider == 'deepseek'
-            let l:json_response = json_decode(l:response)
-            if type(l:json_response) == v:t_dict && has_key(l:json_response, 'error')
-                throw 'API error: ' . l:json_response.error.message
-            endif
-            return l:json_response.choices[0].message.content
-        endif
-        
-        throw 'Invalid provider: ' . l:provider
+        return s:parse_response(l:response)
     catch
         throw 'Visidian Chat Error: ' . v:exception
     endtry
@@ -477,6 +433,40 @@ function! visidian#chat#display_chunk(text) abort
     else
         call setline('$', l:last_line . a:text)
     endif
+    
+    " Make buffer unmodifiable
+    setlocal nomodifiable
+    
+    " Switch back to original window
+    execute l:cur_winnr . 'wincmd w'
+    
+    " Force screen update
+    redraw
+endfunction
+
+function! s:append_to_chat_buffer(text) abort
+    let l:bufnr = bufnr('Visidian Chat')
+    if l:bufnr == -1
+        return
+    endif
+    
+    " Get window number
+    let l:winnr = bufwinnr(l:bufnr)
+    if l:winnr == -1
+        return
+    endif
+    
+    " Save current window
+    let l:cur_winnr = winnr()
+    
+    " Switch to chat window
+    execute l:winnr . 'wincmd w'
+    
+    " Make buffer modifiable
+    setlocal modifiable
+    
+    " Append text to last line
+    call append(line('$'), a:text)
     
     " Make buffer unmodifiable
     setlocal nomodifiable
