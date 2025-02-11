@@ -122,6 +122,19 @@ command! -nargs=0 VisidianBrowseCtags call VisidianBrowseTags()
 "Toggle Spelling
 command! -nargs=0 VisidianToggleSpell call visidian#toggle_spell()
 
+" Chat commands
+if !exists(':VisidianChat')
+    command! -nargs=0 VisidianChat call visidian#chat#create_window()
+endif
+
+if !exists(':VisidianChatIndex')
+    command! -nargs=0 VisidianChatIndex call visidian#chat#index_current_note()
+endif
+
+if !exists(':VisidianChatIndexVault')
+    command! -nargs=0 VisidianChatIndexVault call visidian#chat#index_vault()
+endif
+
 " Optional: Map YAML link clicking to <CR> in YAML frontmatter
 augroup VisidianYAMLLinks
     autocmd!
