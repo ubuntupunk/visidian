@@ -74,38 +74,42 @@ function! s:get_api_key(provider) abort
 endfunction
 
 " Get API key based on provider
-function! s:get_api_key()
+function! s:get_api_key() abort
     let l:provider = g:visidian_chat_provider
-    return s:get_api_key(l:provider)
+    if l:provider == 'openai'
+        return exists('g:visidian_chat_openai_key') ? g:visidian_chat_openai_key : $OPENAI_API_KEY
+    elseif l:provider == 'gemini'
+        return exists('g:visidian_chat_gemini_key') ? g:visidian_chat_gemini_key : $GEMINI_API_KEY
+    elseif l:provider == 'anthropic'
+        return exists('g:visidian_chat_anthropic_key') ? g:visidian_chat_anthropic_key : $ANTHROPIC_API_KEY
+    elseif l:provider == 'deepseek'
+        return exists('g:visidian_chat_deepseek_key') ? g:visidian_chat_deepseek_key : $DEEPSEEK_API_KEY
+    endif
+    throw 'Invalid provider: ' . l:provider
 endfunction
 
 " Get headers based on provider
-function! s:get_headers(provider) abort
+function! s:get_headers() abort
+    let l:provider = g:visidian_chat_provider
     let l:headers = ['Content-Type: application/json']
-    let l:api_key = s:get_api_key(a:provider)
+    let l:api_key = s:get_api_key()
     
     if empty(l:api_key)
-        throw 'No API key found for provider: ' . a:provider
+        throw 'No API key found for provider: ' . l:provider
     endif
     
-    if a:provider == 'openai'
+    if l:provider == 'openai'
         call add(l:headers, 'Authorization: Bearer ' . l:api_key)
-    elseif a:provider == 'gemini'
+    elseif l:provider == 'gemini'
         call add(l:headers, 'x-goog-api-key: ' . l:api_key)
-    elseif a:provider == 'anthropic'
+    elseif l:provider == 'anthropic'
         call add(l:headers, 'x-api-key: ' . l:api_key)
         call add(l:headers, 'anthropic-version: 2023-06-01')
-    elseif a:provider == 'deepseek'
+    elseif l:provider == 'deepseek'
         call add(l:headers, 'Authorization: Bearer ' . l:api_key)
     endif
     
     return l:headers
-endfunction
-
-" Get headers
-function! s:get_headers()
-    let l:provider = g:visidian_chat_provider
-    return s:get_headers(l:provider)
 endfunction
 
 " Format request payload based on provider
