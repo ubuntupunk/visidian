@@ -309,7 +309,10 @@ function! visidian#chat#send_to_llm(query, context) abort
                 \   'maxOutputTokens': 2048,
                 \ }
                 \})
-            let l:headers = s:get_headers()
+            let l:headers = [
+                \ 'Content-Type: application/json',
+                \ 'x-goog-api-key: ' . l:api_key
+                \ ]
         elseif l:provider == 'anthropic'
             let l:endpoint = 'https://api.anthropic.com/v1/messages'
             let l:payload = json_encode({
