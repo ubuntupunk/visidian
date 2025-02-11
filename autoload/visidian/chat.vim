@@ -286,6 +286,7 @@ function! visidian#chat#create_window() abort
     setlocal nomodifiable
 endfunction
 
+" Get context from current buffer and vector store
 function! visidian#chat#get_markdown_context() abort
     let l:current_content = join(getline(1, '$'), "\n")
     
@@ -434,6 +435,30 @@ function! visidian#chat#send_to_llm(query, context) abort
     endtry
 endfunction
 
+" Send message to chat
+function! visidian#chat#send_message() abort
+    try
+        " Get context from current markdown buffer and vector store
+        let l:context = visidian#chat#get_markdown_context()
+        call s:debug('Retrieved context: ' . len(l:context) . ' characters')
+        
+        " Get query from user
+        let l:query = input('Enter your query: ')
+        if empty(l:query)
+            call s:debug('Empty query, aborting')
+            return
+        endif
+        call s:debug('Processing query: ' . l:query)
+        
+        echo "\nProcessing..."
+        let l:response = s:send_to_llm(l:query, l:context)
+        call visidian#chat#display_response(l:response)
+    catch
+        call s:debug('Unexpected error: ' . v:exception)
+        echoerr 'Visidian Chat Error: ' . v:exception
+    endtry
+endfunction
+
 " Send request to LLM
 function! s:send_to_llm(prompt, context) abort
     let l:provider = g:visidian_chat_provider
@@ -565,33 +590,6 @@ function! visidian#chat#display_response(response) abort
     
     " Move cursor to the end
     call win_execute(bufwinid(l:bufnr), 'normal! G')
-endfunction
-
-function! visidian#chat#send_message() abort
-    try
-        let l:context = visidian#chat#get_markdown_context()
-        let l:query = input('Enter your query: ')
-        
-        if empty(l:query)
-            return
-        endif
-        
-        " Format and display user query first
-        let l:timestamp = strftime('%H:%M')
-        let l:user_message = ['', '**[' . l:timestamp . '] You:**', '', l:query]
-        call visidian#chat#display_response(join(l:user_message, "\n"))
-        
-        " Process and display response
-        redraw | echo "Processing..."
-        let l:response = s:send_to_llm(l:query, l:context)
-        call visidian#chat#display_response(l:response)
-        redraw | echo ""
-    catch
-        redraw | echohl ErrorMsg
-        echomsg v:exception
-        echohl None
-        call s:debug('Unexpected error: ' . v:exception)
-    endtry
 endfunction
 
 " List available models for the current provider
