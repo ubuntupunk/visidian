@@ -98,12 +98,44 @@ function! s:get_embeddings(text) abort
         call s:debug('Provider: ' . l:provider)
         call s:debug('Payload length: ' . len(l:payload))
         
-        let l:response = system(join(l:cmd, ' '))
-        let l:json_response = json_decode(l:response)
+        let l:response = system(l:cmd)
+        if v:shell_error
+            throw 'API error: ' . l:response
+        endif
+
+        " Handle Gemini streaming response
+        if l:provider == 'gemini'
+            let l:chunks = split(l:response, "\n")
+            let l:full_text = ''
+            for l:chunk in l:chunks
+                if empty(l:chunk)
+                    continue
+                endif
+                try
+                    let l:json = json_decode(l:chunk)
+                    if has_key(l:json, 'candidates') && len(l:json.candidates) > 0
+                        let l:candidate = l:json.candidates[0]
+                        if has_key(l:candidate, 'content') && has_key(l:candidate.content, 'parts')
+                            let l:parts = l:candidate.content.parts
+                            if len(l:parts) > 0 && has_key(l:parts[0], 'text')
+                                let l:full_text .= l:parts[0].text
+                            endif
+                        endif
+                    endif
+                catch
+                    " Skip invalid JSON chunks
+                    continue
+                endtry
+            endfor
+            return l:full_text
+        endif
+
+        " Handle other providers' responses
+        let l:json = json_decode(l:response)
         
         " Check for API errors
-        if type(l:json_response) == v:t_dict && has_key(l:json_response, 'error')
-            let l:error_msg = l:json_response.error.message
+        if type(l:json) == v:t_dict && has_key(l:json, 'error')
+            let l:error_msg = l:json.error.message
             call s:debug('API error: ' . l:error_msg)
             throw 'API error: ' . l:error_msg
         endif
