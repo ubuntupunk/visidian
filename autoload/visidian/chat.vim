@@ -363,13 +363,13 @@ function! visidian#chat#send_to_llm(query, context) abort
         
         let l:cmd = ['curl', '-s', '-X', 'POST']
         for l:header in l:headers
-            call add(l:cmd, '-H')
-            call add(l:header)
+            call extend(l:cmd, ['-H', l:header])
         endfor
         
         " Escape payload for shell
         let l:escaped_payload = shellescape(l:payload)
-        call extend(l:cmd, ['-d', l:escaped_payload, l:endpoint])
+        call extend(l:cmd, ['-d', l:escaped_payload])
+        call extend(l:cmd, [l:endpoint])
         
         call s:debug('Making API request to: ' . l:endpoint)
         call s:debug('Provider: ' . l:provider)
