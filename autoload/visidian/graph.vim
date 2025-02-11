@@ -72,6 +72,7 @@ function! visidian#graph#PlotData(data, ...)
     enew
     execute 'file ' . buffer_name
     setlocal buftype=nofile
+    setlocal modifiable
     put =graph
     setlocal nomodifiable
   else
