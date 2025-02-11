@@ -4,7 +4,10 @@ function! visidian#graph#DrawLineGraph(data)
   let height = 10 " Fixed height for simplicity
   let width = len(a:data)
 
-  " Clear the current buffer
+  " Clear the current buffer and use a vertical split
+  vsplit
+  enew
+  file LineGraphOutput
   normal! gg"_dG
 
   " Draw axes
@@ -27,7 +30,7 @@ endfunction
 "let data = [2, 4, 6, 3, 5, 7, 1, 9]
 "call visidian#graph#DrawLineGraph(data)
 
-function! PlotData(data)
+function! visidian#graph#PlotData(data)
   " Check if gnuplot is available
   if executable('gnuplot')
     " Write data to a temporary file
@@ -41,8 +44,10 @@ function! PlotData(data)
     " Run gnuplot and capture output
     let graph = system(gnuplotcmd)
 
-    " Display graph in new buffer
-    new
+    " Display graph in a new vertical split buffer and name it
+    vsplit
+    enew
+    file GraphOutput
     setlocal buftype=nofile
     put =graph
     setlocal nomodifiable
@@ -54,4 +59,4 @@ endfunction
 
 " Example data
 "let data = [['0', '2'], ['1', '4'], ['2', '6'], ['3', '3'], ['4', '5'], ['5', '7'], ['6', '1'], ['7', '9']]
-"call PlotData(data)
+"call visidian#graph#PlotData(data)
