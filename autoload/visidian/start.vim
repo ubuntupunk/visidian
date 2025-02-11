@@ -348,7 +348,7 @@ endfunction
 function! s:folder_filter(winid, key) abort
     if a:key ==# 'y'
         call popup_close(a:winid)
-        call visidian#create_folder()
+        call visidian#new_folder()
         return 1
     elseif a:key ==# 'n'
         call popup_close(a:winid)
