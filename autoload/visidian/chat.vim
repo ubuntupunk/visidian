@@ -304,6 +304,17 @@ function! visidian#chat#send_message() abort
     endtry
 endfunction
 
+" Entry point for starting a chat with context
+function! visidian#chat#start_chat_with_context() abort
+    let l:context = visidian#chat#get_markdown_context()
+    let l:query = input("Enter your query: ")
+    if !empty(l:query)
+        echo "\nProcessing..."
+        let l:response = visidian#chat#send_to_llm(l:query, l:context)
+        call visidian#chat#display_response(l:response)
+    endif
+endfunction
+
 " Map a key to open the chat window
 if !hasmapto('<Plug>VisidianChatOpen')
     nmap <unique> <Leader>cc <Plug>VisidianChatOpen
