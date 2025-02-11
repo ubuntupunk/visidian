@@ -70,44 +70,20 @@ function! visidian#graph#PlotData(data, ...)
   call visidian#debug#debug('GRAPH', 'Starting PlotData with data: ' . string(a:data))
 
   " Check if data is valid
-  if empty(a:data) || type(a:data) != v:t_list || !v:val is# filter(a:data, 'type(v:val) == v:t_list && len(v:val) == 2 && type(v:val[0]) == v:t_string && type(v:val[1]) == v:t_string')
+  if empty(a:data) || type(a:data) != v:t_list
     call visidian#debug#debug('GRAPH', 'Invalid data format for PlotData')
     return
   endif
 
-  " Check if gnuplot is available
-  if executable('gnuplot')
-    " Write data to a temporary file
-    let tempfile = tempname()
-    call writefile(map(copy(a:data), 'string(v:val[0]) . " " . string(v:val[1])'), tempfile)
-
-    " Generate gnuplot command
-    let plotcmd = 'plot "' . tempfile . '" with lines'
-    let gnuplotcmd = 'gnuplot -e "set terminal dumb size 80,24; set xlabel \"X Axis\"; set ylabel \"Y Axis\"; ' . plotcmd . '"'
-
-    " Run gnuplot and capture output
-    let graph = system(gnuplotcmd)
-
-    " Use provided title or default
-    let buffer_name = a:0 > 0 ? a:1 : 'GraphOutput'
-    if buflisted(buffer_name)
-      let buffer_name .= '_' . localtime()
-    endif
-
-    " Display graph in a new vertical split buffer and name it
-    vsplit
-    enew
-    execute 'file ' . buffer_name
-    setlocal buftype=nofile
-    setlocal modifiable
-    setlocal noreadonly
-    put =graph
-    setlocal nomodifiable
+  " Use image display if possible
+  if executable('gnuplot') && executable('timg')
+    call visidian#image#display_graph(a:data, a:0 > 0 ? a:1 : '')
   else
-    " Fallback to DrawLineGraph if gnuplot is not available
+    " Fallback to ASCII art if requirements not met
     let y_values = map(copy(a:data), 'str2float(v:val[1])')
     call visidian#graph#DrawLineGraph(y_values, a:0 > 0 ? a:1 : '')
   endif
+
   call visidian#debug#debug('GRAPH', 'Completed PlotData')
 endfunction
 
