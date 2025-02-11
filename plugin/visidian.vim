@@ -114,17 +114,10 @@ command! -nargs=0 VisidianImport call visidian#import()
 command! -nargs=0 VisidianBook call visidian#bookmarking#menu()
 command! -nargs=0 VisidianToggleSearch call visidian#search#toggle()
 command! -nargs=0 -bar VisidianFirstStart call visidian#start#first_start()
-command! -nargs=0 VisidianChat call visidian#chat#start_chat_with_context()
-" Generate & Browse Ctags
-command! -nargs=0 VisidianGenCtags call VisidianGenerateTags()
-command! -nargs=0 VisidianBrowseCtags call VisidianBrowseTags()
-
-"Toggle Spelling
-command! -nargs=0 VisidianToggleSpell call visidian#toggle_spell()
 
 " Chat commands
 if !exists(':VisidianChat')
-    command! -nargs=0 VisidianChat call visidian#chat#create_window()
+    command! -nargs=0 VisidianChat call visidian#chat#start_chat_with_context()
 endif
 
 if !exists(':VisidianChatIndex')
@@ -134,6 +127,18 @@ endif
 if !exists(':VisidianChatIndexVault')
     command! -nargs=0 VisidianChatIndexVault call visidian#chat#index_vault()
 endif
+
+" Model management commands
+if !exists(':VisidianListModels')
+    command! -nargs=0 VisidianListModels call visidian#chat#list_models()
+endif
+
+if !exists(':VisidianSetModel')
+    command! -nargs=1 VisidianSetModel call visidian#chat#set_model(<q-args>)
+endif
+
+"Toggle Spelling
+command! -nargs=0 VisidianToggleSpell call visidian#toggle_spell()
 
 " Optional: Map YAML link clicking to <CR> in YAML frontmatter
 augroup VisidianYAMLLinks

@@ -8,7 +8,7 @@ function! s:debug(msg) abort
         echom '[CHAT] ' . a:msg
     endif
 endfunction
-
+ 
 " Configuration variables
 if !exists('g:visidian_chat_provider')
     let g:visidian_chat_provider = 'gemini'  " Options: 'openai', 'gemini', 'anthropic', 'deepseek'
@@ -34,7 +34,7 @@ if !exists('g:visidian_chat_model')
     let g:visidian_chat_model = {
         \ 'openai': 'gpt-3.5-turbo',
         \ 'gemini': 'gemini-pro',
-        \ 'anthropic': 'claude-3-opus',
+        \ 'anthropic': 'claude-2',
         \ 'deepseek': 'deepseek-chat'
         \ }
 endif
@@ -54,7 +54,7 @@ endif
 " Provider-specific API endpoints
 let s:api_endpoints = {
     \ 'openai': 'https://api.openai.com/v1/chat/completions',
-    \ 'gemini': 'https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent',
+    \ 'gemini': 'https://generativelanguage.googleapis.com/v1beta/chatCompletions',
     \ 'anthropic': 'https://api.anthropic.com/v1/messages',
     \ 'deepseek': 'https://api.deepseek.com/v1/chat/completions'
     \ }
@@ -90,6 +90,7 @@ function! s:format_request_payload(query, context)
             \})
     elseif l:provider == 'gemini'
         return json_encode({
+            \ 'model': l:model,
             \ 'contents': [{
             \   'parts': [{'text': l:content}]
             \ }],
@@ -263,8 +264,9 @@ function! visidian#chat#send_to_llm(query, context) abort
                 \ 'Authorization: Bearer ' . l:api_key
                 \ ]
         elseif l:provider == 'gemini'
-            let l:endpoint = 'https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent'
+            let l:endpoint = 'https://generativelanguage.googleapis.com/v1beta/chatCompletions'
             let l:payload = json_encode({
+                \ 'model': g:visidian_chat_model[l:provider],
                 \ 'contents': [{
                 \   'parts': [{'text': l:content}]
                 \ }],
@@ -382,6 +384,63 @@ function! visidian#chat#send_message() abort
         echomsg v:exception
         echohl None
         call s:debug('Unexpected error: ' . v:exception)
+    endtry
+endfunction
+
+" List available models for the current provider
+function! visidian#chat#list_models() abort
+    try
+        let l:provider = g:visidian_chat_provider
+        let l:api_key = s:get_api_key()
+        
+        if l:provider == 'gemini'
+            let l:endpoint = 'https://generativelanguage.googleapis.com/v1beta/models'
+            let l:cmd = ['curl', '-s', '-X', 'GET']
+            call add(l:cmd, '-H')
+            call add(l:cmd, 'x-goog-api-key: ' . l:api_key)
+            call add(l:cmd, l:endpoint)
+            
+            let l:response = system(join(l:cmd, ' '))
+            let l:json_response = json_decode(l:response)
+            
+            " Check for API errors
+            if type(l:json_response) == v:t_dict && has_key(l:json_response, 'error')
+                let l:error_msg = l:json_response.error.message
+                call s:debug('API error: ' . l:error_msg)
+                throw 'API error: ' . l:error_msg
+            endif
+            
+            " Display available models
+            if type(l:json_response) == v:t_dict && has_key(l:json_response, 'models')
+                echo "Available Gemini Models:"
+                for model in l:json_response.models
+                    echo "- " . model.name
+                endfor
+            else
+                throw 'Invalid response format'
+            endif
+        else
+            throw 'Model listing not supported for provider: ' . l:provider
+        endif
+    catch
+        echohl ErrorMsg
+        echom 'Error listing models: ' . v:exception
+        echohl None
+        call s:debug('Error listing models: ' . v:exception)
+    endtry
+endfunction
+
+" Set model for the current provider
+function! visidian#chat#set_model(model_name) abort
+    try
+        let l:provider = g:visidian_chat_provider
+        let g:visidian_chat_model[l:provider] = a:model_name
+        echo "Set " . l:provider . " model to: " . a:model_name
+    catch
+        echohl ErrorMsg
+        echom 'Error setting model: ' . v:exception
+        echohl None
+        call s:debug('Error setting model: ' . v:exception)
     endtry
 endfunction
 

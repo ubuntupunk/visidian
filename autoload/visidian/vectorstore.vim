@@ -68,8 +68,9 @@ function! s:get_embeddings(text) abort
                 \ 'Authorization: Bearer ' . l:api_key
                 \ ]
         elseif l:provider == 'gemini'
-            let l:endpoint = 'https://generativelanguage.googleapis.com/v1/models/embedding-gecko-001:embedText'
+            let l:endpoint = 'https://generativelanguage.googleapis.com/v1beta/embeddings'
             let l:payload = json_encode({
+                \ 'model': 'embedding-001',
                 \ 'text': a:text
                 \ })
             let l:headers = [
