@@ -54,13 +54,16 @@ function! visidian#image#display_graph(data, ...)
         if buflisted(buffer_name)
             let buffer_name .= '_' . localtime()
         endif
-        execute 'file ' . buffer_name
 
-        " Set buffer options
+        " Set buffer options before naming it
         setlocal buftype=nofile
         setlocal noswapfile
         setlocal modifiable
         setlocal noreadonly
+        setlocal bufhidden=wipe
+
+        " Name the buffer
+        execute 'silent file ' . buffer_name
 
         " Get terminal dimensions
         let width = winwidth(0)
@@ -78,7 +81,7 @@ function! visidian#image#display_graph(data, ...)
 
         " Clear buffer and insert output
         silent! %delete _
-        put =output
+        silent! 0put =output
         normal! gg
         setlocal nomodifiable
 
