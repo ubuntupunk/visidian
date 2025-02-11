@@ -400,23 +400,63 @@ function! visidian#chat#send_to_llm(query, context) abort
 endfunction
 
 function! visidian#chat#display_response(response) abort
+    " Create or get chat buffer
     let l:bufnr = bufnr('Visidian Chat')
     if l:bufnr == -1
-        let l:bufnr = visidian#chat#create_window()
+        " Create new buffer in vertical split
+        execute 'vertical rightbelow new'
+        execute 'vertical resize ' . g:visidian_chat_window_width
+        setlocal buftype=nofile
+        setlocal bufhidden=wipe
+        setlocal noswapfile
+        setlocal filetype=markdown
+        setlocal wrap
+        setlocal nonumber
+        setlocal norelativenumber
+        file Visidian Chat
+        let l:bufnr = bufnr('%')
+    endif
+    
+    " Focus the chat window
+    let l:winnr = bufwinnr(l:bufnr)
+    if l:winnr == -1
+        " Buffer exists but window is closed, create new window
+        execute 'vertical rightbelow sbuffer ' . l:bufnr
+        execute 'vertical resize ' . g:visidian_chat_window_width
+    else
+        " Window exists, switch to it
+        execute l:winnr . 'wincmd w'
     endif
     
     " Make buffer modifiable
-    call setbufvar(l:bufnr, '&modifiable', 1)
+    setlocal modifiable
     
-    " Clear buffer and add response
-    call deletebufline(l:bufnr, 1, '$')
-    call setbufline(l:bufnr, 1, split(a:response, '\n'))
+    " Get current content
+    let l:content = getline(1, '$')
+    
+    " Format new response
+    let l:timestamp = strftime('%H:%M')
+    let l:formatted_response = ['', '**[' . l:timestamp . '] Assistant:**', '']
+    let l:formatted_response += split(a:response, '\n')
+    
+    " Add horizontal line if there's existing content
+    if !empty(l:content) && l:content != ['']
+        let l:formatted_response = ['---'] + l:formatted_response
+    endif
+    
+    " Append new response to end of buffer
+    call append(line('$'), l:formatted_response)
+    
+    " Clean up empty lines at start of buffer
+    while getline(1) == '' && line('$') > 1
+        1delete _
+    endwhile
+    
+    " Move cursor to end
+    normal! G
     
     " Make buffer unmodifiable again
-    call setbufvar(l:bufnr, '&modifiable', 0)
-    
-    " Focus the chat window
-    execute bufwinnr(l:bufnr) . 'wincmd w'
+    setlocal nomodifiable
 endfunction
 
 function! visidian#chat#send_message() abort
@@ -428,11 +468,18 @@ function! visidian#chat#send_message() abort
             return
         endif
         
-        echo "\nProcessing..."
+        " Format and display user query first
+        let l:timestamp = strftime('%H:%M')
+        let l:user_message = ['', '**[' . l:timestamp . '] You:**', '', l:query]
+        call visidian#chat#display_response(join(l:user_message, "\n"))
+        
+        " Process and display response
+        redraw | echo "Processing..."
         let l:response = visidian#chat#send_to_llm(l:query, l:context)
         call visidian#chat#display_response(l:response)
+        redraw | echo ""
     catch
-        echohl ErrorMsg
+        redraw | echohl ErrorMsg
         echomsg v:exception
         echohl None
         call s:debug('Unexpected error: ' . v:exception)
