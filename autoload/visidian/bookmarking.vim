@@ -555,6 +555,14 @@ function! s:show_statistics()
         call add(l:report, 'No view statistics available')
     endif
     
+    " Draw a line graph of total bookmarks by category
+    let l:category_counts = map(copy(l:category_list), 'v:val[1]')
+    call DrawLineGraph(l:category_counts)
+
+    " Plot recent additions as a time series
+    let l:recent_data = map(copy(l:stats.recent_adds), '[v:val.timestamp, 1]')
+    call PlotData(l:recent_data)
+    
     " Display the report in a new buffer
     let l:bufnr = bufnr(s:stats_buffer_name)
     if l:bufnr != -1
