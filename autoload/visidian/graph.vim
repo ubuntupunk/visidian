@@ -4,10 +4,16 @@ function! visidian#graph#DrawLineGraph(data)
   let height = 10 " Fixed height for simplicity
   let width = len(a:data)
 
+  " Check for existing buffer and create a unique name if needed
+  let buffer_name = 'LineGraphOutput'
+  if buflisted(buffer_name)
+    let buffer_name .= '_' . localtime()
+  endif
+
   " Clear the current buffer and use a vertical split
   vsplit
   enew
-  file LineGraphOutput
+  execute 'file ' . buffer_name
   normal! gg"_dG
 
   " Draw axes
@@ -26,10 +32,6 @@ function! visidian#graph#DrawLineGraph(data)
   normal! G$
 endfunction
 
-" Example data
-"let data = [2, 4, 6, 3, 5, 7, 1, 9]
-"call visidian#graph#DrawLineGraph(data)
-
 function! visidian#graph#PlotData(data)
   " Check if gnuplot is available
   if executable('gnuplot')
@@ -44,10 +46,16 @@ function! visidian#graph#PlotData(data)
     " Run gnuplot and capture output
     let graph = system(gnuplotcmd)
 
+    " Check for existing buffer and create a unique name if needed
+    let buffer_name = 'GraphOutput'
+    if buflisted(buffer_name)
+      let buffer_name .= '_' . localtime()
+    endif
+
     " Display graph in a new vertical split buffer and name it
     vsplit
     enew
-    file GraphOutput
+    execute 'file ' . buffer_name
     setlocal buftype=nofile
     put =graph
     setlocal nomodifiable
@@ -56,6 +64,10 @@ function! visidian#graph#PlotData(data)
     call visidian#graph#DrawLineGraph(map(copy(a:data), 'v:val[1]'))
   endif
 endfunction
+
+" Example data
+"let data = [2, 4, 6, 3, 5, 7, 1, 9]
+"call visidian#graph#DrawLineGraph(data)
 
 " Example data
 "let data = [['0', '2'], ['1', '4'], ['2', '6'], ['3', '3'], ['4', '5'], ['5', '7'], ['6', '1'], ['7', '9']]
