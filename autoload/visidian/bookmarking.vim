@@ -557,11 +557,11 @@ function! s:show_statistics()
     
     " Draw a line graph of total bookmarks by category
     let l:category_counts = map(copy(l:category_list), 'v:val[1]')
-    call visidian#graph#DrawLineGraph(l:category_counts)
+    call visidian#graph#DrawLineGraph(l:category_counts, 'Total Bookmarks by Category')
 
     " Plot recent additions as a time series
     let l:recent_data = map(copy(l:stats.recent_adds), '[v:val.timestamp, 1]')
-    call visidian#graph#PlotData(l:recent_data)
+    call visidian#graph#PlotData(l:recent_data, 'Recent Additions Over Time')
     
     " Display the report in a new buffer
     let l:bufnr = bufnr(s:stats_buffer_name)
@@ -582,6 +582,47 @@ function! s:show_statistics()
     
     call visidian#debug#info('BOOK', 'Generated statistics report')
 endfunction
+
+" FUNCTION: Count files and folders in each PARA region
+function! s:count_para_contents() abort
+    let l:para_stats = {}
+    for l:region in s:categories['para']
+        " Initialize counts
+        let l:file_count = 0
+        let l:folder_count = 0
+
+        " Directory path for the region
+        let l:region_path = expand(g:visidian_vault_path . '/' . l:region)
+
+        " Count files and folders
+        if isdirectory(l:region_path)
+            let l:contents = split(globpath(l:region_path, '*', 0, 1), '\n')
+            for l:item in l:contents
+                if isdirectory(l:item)
+                    let l:folder_count += 1
+                else
+                    let l:file_count += 1
+                endif
+            endfor
+        endif
+
+        " Store the stats
+        let l:para_stats[l:region] = {
+            \ 'files': l:file_count,
+            \ 'folders': l:folder_count
+            \ }
+    endfor
+
+    " Generate plots
+    let l:files_data = map(items(l:para_stats), '[v:val[0], v:val[1].files]')
+    let l:folders_data = map(items(l:para_stats), '[v:val[0], v:val[1].folders]')
+
+    call visidian#graph#PlotData(l:files_data, 'Files in PARA Regions')
+    call visidian#graph#PlotData(l:folders_data, 'Folders in PARA Regions')
+endfunction
+
+" Call the function to count and plot
+call s:count_para_contents()
 
 " Load bookmarks and categories when the script is sourced
 call s:load_bookmarks()
