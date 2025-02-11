@@ -71,7 +71,7 @@ function! s:get_embeddings(text) abort
             let l:endpoint = 'https://generativelanguage.googleapis.com/v1beta/embeddings'
             let l:payload = json_encode({
                 \ 'model': 'embedding-001',
-                \ 'text': a:text
+                \ 'content': a:text
                 \ })
             let l:headers = [
                 \ 'Content-Type: application/json',
@@ -120,30 +120,28 @@ function! s:get_embeddings(text) abort
     endtry
 endfunction
 
-" Parse embedding response based on provider
+" Parse the embedding response based on the provider
 function! s:parse_embedding_response(response) abort
     let l:provider = g:visidian_vectorstore_provider
-    
-    try
-        let l:json_response = json_decode(a:response)
+    let l:json_response = json_decode(a:response)
         call s:debug('Parsed JSON response type: ' . type(l:json_response))
-        
-        if l:provider == 'openai'
+    
+    if l:provider == 'openai'
             if type(l:json_response) == v:t_dict && has_key(l:json_response, 'data') && len(l:json_response.data) > 0
                 call s:debug('Successfully parsed OpenAI embedding response')
-                return l:json_response.data[0].embedding
+        return l:json_response.data[0].embedding
             endif
             call s:debug('Invalid OpenAI API response: ' . a:response)
             throw 'Invalid OpenAI API response: ' . a:response
-        elseif l:provider == 'gemini'
+    elseif l:provider == 'gemini'
             if type(l:json_response) == v:t_dict && has_key(l:json_response, 'embedding')
                 call s:debug('Successfully parsed Gemini embedding response')
                 return l:json_response.embedding
-            endif
+    endif
             call s:debug('Invalid Gemini API response: ' . a:response)
             throw 'Invalid Gemini API response: ' . a:response
         endif
-        throw 'Invalid provider: ' . l:provider
+    throw 'Invalid provider: ' . l:provider
     catch
         let l:error_msg = 'Error parsing embedding response: ' . v:exception
         call s:debug(l:error_msg)
