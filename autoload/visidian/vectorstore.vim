@@ -32,65 +32,79 @@ endfunction
 " Get API key based on provider
 function! s:get_provider_key(provider) abort
     if a:provider == 'openai'
-        return g:visidian_chat_openai_key
+        let l:key = g:visidian_chat_openai_key
+        if empty(l:key)
+            call s:debug('OpenAI API key not found in g:visidian_chat_openai_key or $OPENAI_API_KEY')
+            throw 'API key not set for provider: openai'
+        endif
+        return l:key
     elseif a:provider == 'gemini'
-        return g:visidian_chat_gemini_key
+        let l:key = g:visidian_chat_gemini_key
+        if empty(l:key)
+            call s:debug('Gemini API key not found in g:visidian_chat_gemini_key or $GEMINI_API_KEY')
+            throw 'API key not set for provider: gemini'
+        endif
+        return l:key
     endif
+    call s:debug('Invalid provider requested: ' . a:provider)
     throw 'Invalid provider: ' . a:provider
 endfunction
 
 " Get embeddings for text using selected provider
 function! s:get_embeddings(text) abort
     let l:provider = g:visidian_vectorstore_provider
-    let l:api_key = s:get_provider_key(l:provider)
     
-    if empty(l:api_key)
-        call s:debug('API key not set for provider: ' . l:provider)
-        throw 'API key not set for provider: ' . l:provider
-    endif
-    
-    if l:provider == 'openai'
-        let l:endpoint = 'https://api.openai.com/v1/embeddings'
-        let l:payload = json_encode({
-            \ 'model': 'text-embedding-3-small',
-            \ 'input': a:text
-            \ })
-        let l:headers = [
-            \ 'Content-Type: application/json',
-            \ 'Authorization: Bearer ' . l:api_key
-            \ ]
-    elseif l:provider == 'gemini'
-        let l:endpoint = 'https://generativelanguage.googleapis.com/v1/models/embedding-001:embedText'
-        let l:payload = json_encode({
-            \ 'text': a:text
-            \ })
-        let l:headers = [
-            \ 'Content-Type: application/json',
-            \ 'x-goog-api-key: ' . l:api_key
-            \ ]
-    endif
-    
-    let l:cmd = ['curl', '-s', '-X', 'POST']
-    for l:header in l:headers
-        call add(l:cmd, '-H')
-        call add(l:cmd, l:header)
-    endfor
-    call extend(l:cmd, ['-d', l:payload, l:endpoint])
-    
-    call s:debug('Making API request to: ' . l:endpoint)
-    call s:debug('Provider: ' . l:provider)
-    call s:debug('Payload length: ' . len(l:payload))
-    
-    let l:response = system(join(l:cmd, ' '))
-    
-    call s:debug('API Response: ' . l:response)
-    
-    if v:shell_error
-        call s:debug('API request failed: ' . l:response)
-        throw 'API request failed: ' . l:response
-    endif
-    
-    return s:parse_embedding_response(l:response)
+    try
+        let l:api_key = s:get_provider_key(l:provider)
+        
+        if l:provider == 'openai'
+            let l:endpoint = 'https://api.openai.com/v1/embeddings'
+            let l:payload = json_encode({
+                \ 'model': 'text-embedding-3-small',
+                \ 'input': a:text
+                \ })
+            let l:headers = [
+                \ 'Content-Type: application/json',
+                \ 'Authorization: Bearer ' . l:api_key
+                \ ]
+        elseif l:provider == 'gemini'
+            let l:endpoint = 'https://generativelanguage.googleapis.com/v1/models/embedding-001:embedText'
+            let l:payload = json_encode({
+                \ 'text': a:text
+                \ })
+            let l:headers = [
+                \ 'Content-Type: application/json',
+                \ 'x-goog-api-key: ' . l:api_key
+                \ ]
+        endif
+        
+        let l:cmd = ['curl', '-s', '-X', 'POST']
+        for l:header in l:headers
+            call add(l:cmd, '-H')
+            call add(l:cmd, l:header)
+        endfor
+        call extend(l:cmd, ['-d', l:payload, l:endpoint])
+        
+        call s:debug('Making API request to: ' . l:endpoint)
+        call s:debug('Provider: ' . l:provider)
+        call s:debug('Payload length: ' . len(l:payload))
+        
+        let l:response = system(join(l:cmd, ' '))
+        
+        call s:debug('API Response: ' . l:response)
+        
+        if v:shell_error
+            call s:debug('API request failed: ' . l:response)
+            throw 'API request failed: ' . l:response
+        endif
+        
+        return s:parse_embedding_response(l:response)
+    catch /API key not set for provider:/
+        throw v:exception
+    catch
+        call s:debug('Error in get_embeddings: ' . v:exception)
+        throw v:exception
+    endtry
 endfunction
 
 " Parse embedding response based on provider

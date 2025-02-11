@@ -308,23 +308,40 @@ function! visidian#chat#send_message() abort
         echohl ErrorMsg
         echomsg v:exception
         echohl None
+        call s:debug('Unexpected error: ' . v:exception)
     endtry
 endfunction
 
 " Entry point for starting a chat with context
 function! visidian#chat#start_chat_with_context() abort
     call s:debug('Starting chat with context')
-    let l:context = visidian#chat#get_markdown_context()
-    call s:debug('Retrieved context: ' . len(l:context) . ' characters')
-    let l:query = input("Enter your query: ")
-    if !empty(l:query)
-        call s:debug('Processing query: ' . l:query)
-        echo "\nProcessing..."
-        let l:response = visidian#chat#send_to_llm(l:query, l:context)
-        call visidian#chat#display_response(l:response)
-    else
-        call s:debug('Empty query, aborting')
-    endif
+    try
+        let l:context = visidian#chat#get_markdown_context()
+        call s:debug('Retrieved context: ' . len(l:context) . ' characters')
+        let l:query = input("Enter your query: ")
+        if !empty(l:query)
+            call s:debug('Processing query: ' . l:query)
+            echo "\nProcessing..."
+            let l:response = visidian#chat#send_to_llm(l:query, l:context)
+            call visidian#chat#display_response(l:response)
+        else
+            call s:debug('Empty query, aborting')
+        endif
+    catch /API key not set for provider:/
+        let l:provider = g:visidian_chat_provider
+        let l:var_name = 'g:visidian_chat_' . l:provider . '_key'
+        let l:env_var = toupper(l:provider) . '_API_KEY'
+        echohl ErrorMsg
+        echom 'Error: API key not set for ' . l:provider
+        echom 'Please set either ' . l:var_name . ' in your vimrc or the ' . l:env_var . ' environment variable'
+        echohl None
+        call s:debug('API key missing for provider: ' . l:provider)
+    catch
+        echohl ErrorMsg
+        echom 'Error: ' . v:exception
+        echohl None
+        call s:debug('Unexpected error: ' . v:exception)
+    endtry
 endfunction
 
 " Map a key to open the chat window
