@@ -297,7 +297,7 @@ function! visidian#chat#send_to_llm(query, context) abort
                 \})
             let l:headers = s:get_headers()
         elseif l:provider == 'gemini'
-            let l:endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/' . g:visidian_chat_model[l:provider] . ':streamGenerateContent'
+            let l:endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/' . g:visidian_chat_model[l:provider] . ':streamGenerateContent?key=' . l:api_key
             let l:payload = json_encode({
                 \ 'contents': [
                 \   {
@@ -308,12 +308,15 @@ function! visidian#chat#send_to_llm(query, context) abort
                 \       }
                 \     ]
                 \   }
-                \ ]
+                \ ],
+                \ 'generationConfig': {
+                \   'temperature': 0.7,
+                \   'maxOutputTokens': 2048,
+                \   'topK': 40,
+                \   'topP': 0.95
+                \ }
                 \})
-            let l:headers = [
-                \ 'Content-Type: application/json',
-                \ 'x-goog-api-key: ' . l:api_key
-                \ ]
+            let l:headers = ['Content-Type: application/json']
         elseif l:provider == 'anthropic'
             let l:endpoint = 'https://api.anthropic.com/v1/messages'
             let l:payload = json_encode({
@@ -351,7 +354,7 @@ function! visidian#chat#send_to_llm(query, context) abort
         let l:escaped_payload = shellescape(l:payload)
         call add(l:cmd, '-d')
         call add(l:cmd, l:escaped_payload)
-        call add(l:cmd, l:endpoint)
+        call add(l:cmd, shellescape(l:endpoint))
         
         call s:debug('Making API request to: ' . l:endpoint)
         call s:debug('Provider: ' . l:provider)
