@@ -71,7 +71,7 @@ function! s:get_embeddings(text) abort
             let l:endpoint = 'https://generativelanguage.googleapis.com/v1beta/embeddings'
             let l:payload = json_encode({
                 \ 'model': 'embedding-001',
-                \ 'content': a:text
+                \ 'text': a:text
                 \ })
             let l:headers = [
                 \ 'Content-Type: application/json',
