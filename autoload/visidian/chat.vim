@@ -59,6 +59,9 @@ let s:api_endpoints = {
     \ 'deepseek': 'https://api.deepseek.com/v1/chat/completions'
     \ }
 
+" Initialize conversation history
+let s:conversation_history = []
+
 " Get API key based on provider
 function! s:get_api_key() abort
     let l:provider = g:visidian_chat_provider
@@ -284,6 +287,9 @@ function! visidian#chat#create_window() abort
     silent! %delete _
     call appendbufline(bufnr('%'), 0, ['Welcome to Visidian Chat!', '', 'Press Enter to ask a question, q to quit', ''])
     setlocal nomodifiable
+    
+    " Reset conversation history when creating new window
+    let s:conversation_history = []
 endfunction
 
 " Get context from current buffer and vector store
@@ -450,8 +456,15 @@ function! visidian#chat#send_message() abort
         endif
         call s:debug('Processing query: ' . l:query)
         
+        " Add query to conversation history
+        call add(s:conversation_history, {'role': 'user', 'content': l:query})
+        
         echo "\nProcessing..."
         let l:response = s:send_to_llm(l:query, l:context)
+        
+        " Add response to conversation history
+        call add(s:conversation_history, {'role': 'assistant', 'content': l:response})
+        
         call visidian#chat#display_response(l:response)
     catch
         call s:debug('Unexpected error: ' . v:exception)
@@ -470,7 +483,20 @@ function! s:send_to_llm(prompt, context) abort
     
     if l:provider == 'gemini'
         let l:endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/' . l:model . ':streamGenerateContent?key=' . l:api_key
-        let l:content = "Context:\n" . a:context . "\n\nQuery:\n" . a:prompt
+        
+        " Build conversation history string
+        let l:history = ''
+        for l:msg in s:conversation_history
+            let l:history .= l:msg.role . ': ' . l:msg.content . "\n"
+        endfor
+        
+        " Combine context, history, and current prompt
+        let l:content = empty(a:context) ? '' : "Context:\n" . a:context . "\n\n"
+        let l:content .= !empty(l:history) ? "Previous conversation:\n" . l:history . "\n" : ''
+        let l:content .= "Query:\n" . a:prompt
+        
+        call s:debug('Full content length: ' . len(l:content))
+        
         let l:payload = json_encode({
             \ 'contents': [
             \   {
