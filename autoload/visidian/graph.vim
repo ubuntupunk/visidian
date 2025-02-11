@@ -5,6 +5,7 @@
 "   - title (optional): Title for the graph buffer.
 " Usage: call visidian#graph#DrawLineGraph([1, 2, 3], 'My Line Graph')
 function! visidian#graph#DrawLineGraph(data, ...)
+  call visidian#debug#debug('GRAPH', 'Starting DrawLineGraph with data: ' . string(a:data))
   let max_y = max(a:data)
   let min_y = min(a:data)
   let height = 10 " Fixed height for simplicity
@@ -36,6 +37,7 @@ function! visidian#graph#DrawLineGraph(data, ...)
 
   " Adjust cursor position
   normal! G$
+  call visidian#debug#debug('GRAPH', 'Completed DrawLineGraph')
 endfunction
 
 " Function: visidian#graph#PlotData
@@ -45,6 +47,7 @@ endfunction
 "   - title (optional): Title for the graph buffer.
 " Usage: call visidian#graph#PlotData([[0, 1], [1, 2]], 'My Plot')
 function! visidian#graph#PlotData(data, ...)
+  call visidian#debug#debug('GRAPH', 'Starting PlotData with data: ' . string(a:data))
   " Check if gnuplot is available
   if executable('gnuplot')
     " Write data to a temporary file
@@ -53,7 +56,7 @@ function! visidian#graph#PlotData(data, ...)
 
     " Generate gnuplot command
     let plotcmd = 'plot "' . tempfile . '" with lines'
-    let gnuplotcmd = 'gnuplot -e "set terminal dumb; set output \'|cat\'; ' . plotcmd . '"'
+    let gnuplotcmd = 'gnuplot -e "set terminal dumb; set output "|cat"; ' . plotcmd . '"'
 
     " Run gnuplot and capture output
     let graph = system(gnuplotcmd)
@@ -75,6 +78,7 @@ function! visidian#graph#PlotData(data, ...)
     " Fallback to DrawLineGraph if gnuplot is not available
     call visidian#graph#DrawLineGraph(map(copy(a:data), 'v:val[1]'), a:0 > 0 ? a:1 : '')
   endif
+  call visidian#debug#debug('GRAPH', 'Completed PlotData')
 endfunction
 
 " Example data
