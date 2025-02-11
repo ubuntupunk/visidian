@@ -4,7 +4,7 @@
 
 " Configuration
 if !exists('g:visidian_vectorstore_provider')
-    let g:visidian_vectorstore_provider = 'openai'  " Options: 'openai', 'gemini'
+    let g:visidian_vectorstore_provider = 'gemini'  " Options: 'openai', 'gemini'
 endif
 
 if !exists('g:visidian_vectorstore_path')

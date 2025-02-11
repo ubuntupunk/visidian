@@ -11,7 +11,7 @@ endfunction
 
 " Configuration variables
 if !exists('g:visidian_chat_provider')
-    let g:visidian_chat_provider = 'openai'  " Options: 'openai', 'gemini', 'anthropic', 'deepseek'
+    let g:visidian_chat_provider = 'gemini'  " Options: 'openai', 'gemini', 'anthropic', 'deepseek'
 endif
 
 if !exists('g:visidian_chat_openai_key')
