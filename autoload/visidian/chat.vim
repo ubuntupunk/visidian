@@ -162,26 +162,61 @@ endfunction
 " Process streaming response chunk
 function! s:process_chunk(chunk) abort
     try
-        let l:json = json_decode(a:chunk)
+        " Clean up chunk data
+        let l:clean_chunk = substitute(a:chunk, '^\s*', '', '')  " Remove leading whitespace
+        let l:clean_chunk = substitute(l:clean_chunk, '\^@', '', 'g')  " Remove control chars
         
-        if has_key(l:json, 'candidates') && len(l:json.candidates) > 0
-            let l:candidate = l:json.candidates[0]
-            if has_key(l:candidate, 'content') && has_key(l:candidate.content, 'parts')
-                let l:parts = l:candidate.content.parts
-                if len(l:parts) > 0 && has_key(l:parts[0], 'text')
-                    return l:parts[0].text
-                endif
+        " Check for error response
+        if l:clean_chunk =~# '"error":'
+            let l:error = json_decode(l:clean_chunk)
+            if type(l:error) == v:t_dict && has_key(l:error, 'error')
+                throw 'API Error: ' . l:error.error.message
             endif
         endif
         
-        if has_key(l:json, 'error')
-            throw 'API Error: ' . l:json.error.message
+        " Try to parse as JSON
+        let l:json = json_decode(l:clean_chunk)
+        
+        if type(l:json) == v:t_dict
+            if has_key(l:json, 'candidates') && len(l:json.candidates) > 0
+                let l:candidate = l:json.candidates[0]
+                if has_key(l:candidate, 'content') && has_key(l:candidate.content, 'parts')
+                    let l:parts = l:candidate.content.parts
+                    if len(l:parts) > 0 && has_key(l:parts[0], 'text')
+                        return l:parts[0].text
+                    endif
+                endif
+            endif
         endif
     catch
         call s:debug('Error processing chunk: ' . v:exception)
+        if v:exception =~# 'PERMISSION_DENIED\|API key not valid'
+            throw 'Invalid or missing API key. Please set g:visidian_chat_gemini_key or GEMINI_API_KEY'
+        endif
         return ''
     endtry
     return ''
+endfunction
+
+" Verify API key is set and valid
+function! s:verify_api_key() abort
+    let l:provider = g:visidian_chat_provider
+    let l:api_key = s:get_api_key()
+    
+    if empty(l:api_key)
+        if l:provider == 'gemini'
+            throw 'Gemini API key not found. Please set g:visidian_chat_gemini_key or GEMINI_API_KEY'
+        else
+            throw 'API key not found for provider: ' . l:provider
+        endif
+    endif
+    
+    " Verify key format
+    if l:provider == 'gemini' && l:api_key !~# '^AI[a-zA-Z0-9_-]\{1,\}$'
+        throw 'Invalid Gemini API key format. Key should start with "AI"'
+    endif
+    
+    return l:api_key
 endfunction
 
 " Process streaming response
@@ -491,7 +526,7 @@ function! visidian#chat#display_response(response) abort
     " Format new response
     let l:timestamp = strftime('%H:%M')
     let l:formatted_response = ['', '**[' . l:timestamp . '] Assistant:**', '']
-    let l:formatted_response += split(a:response, '\n')
+    let l:formatted_response += split(a:response, "\n")
     
     " Add horizontal line if there's existing content
     if !empty(l:content) && l:content != ['']
