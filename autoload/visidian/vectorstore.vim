@@ -68,7 +68,7 @@ function! s:get_embeddings(text) abort
                 \ 'Authorization: Bearer ' . l:api_key
                 \ ]
         elseif l:provider == 'gemini'
-            let l:endpoint = 'https://generativelanguage.googleapis.com/v1/models/embedding-001:embedText'
+            let l:endpoint = 'https://generativelanguage.googleapis.com/v1/models/embedding-gecko-001:embedText'
             let l:payload = json_encode({
                 \ 'text': a:text
                 \ })
@@ -93,6 +93,14 @@ function! s:get_embeddings(text) abort
         call s:debug('Payload length: ' . len(l:payload))
         
         let l:response = system(join(l:cmd, ' '))
+        let l:json_response = json_decode(l:response)
+        
+        " Check for API errors
+        if type(l:json_response) == v:t_dict && has_key(l:json_response, 'error')
+            let l:error_msg = l:json_response.error.message
+            call s:debug('API error: ' . l:error_msg)
+            throw 'API error: ' . l:error_msg
+        endif
         
         call s:debug('API Response: ' . l:response)
         

@@ -1,6 +1,6 @@
 " Visidian Chat
 " Maintainer: ubuntupunk
-" License: GPL3
+" License: GPL3gg
 
 " Debug logging helper
 function! s:debug(msg) abort
@@ -244,37 +244,105 @@ augroup VisidianVectorStore
 augroup END
 
 function! visidian#chat#send_to_llm(query, context) abort
-    if empty(s:get_api_key())
-        throw 'Visidian Chat Error: API key not set for provider ' . g:visidian_chat_provider
-    endif
-    
-    let l:payload = s:format_request_payload(a:query, a:context)
-    let l:headers = s:get_api_headers()
-    let l:endpoint = s:api_endpoints[g:visidian_chat_provider]
-    
-    let l:cmd = ['curl', '-s', '-X', 'POST']
-    for l:header in l:headers
-        call add(l:cmd, '-H')
-        call add(l:cmd, l:header)
-    endfor
-    
-    " Escape payload for shell
-    let l:escaped_payload = shellescape(l:payload)
-    call extend(l:cmd, ['-d', l:escaped_payload, l:endpoint])
-    
-    call s:debug('Making API request to: ' . l:endpoint)
-    call s:debug('Provider: ' . g:visidian_chat_provider)
-    call s:debug('Payload length: ' . len(l:payload))
-    
-    let l:response = system(join(l:cmd, ' '))
-    
-    call s:debug('API Response: ' . l:response)
-    
-    if v:shell_error
-        throw 'API request failed: ' . l:response
-    endif
-    
-    return s:parse_response(l:response)
+    try
+        let l:provider = g:visidian_chat_provider
+        let l:api_key = s:get_api_key()
+        let l:content = "Context:\n" . a:context . "\n\nQuery:\n" . a:query
+        
+        if l:provider == 'openai'
+            let l:endpoint = 'https://api.openai.com/v1/chat/completions'
+            let l:payload = json_encode({
+                \ 'model': g:visidian_chat_model[l:provider],
+                \ 'messages': [
+                \   {'role': 'system', 'content': 'You are a helpful assistant analyzing markdown notes.'},
+                \   {'role': 'user', 'content': l:content}
+                \ ]
+                \})
+            let l:headers = [
+                \ 'Content-Type: application/json',
+                \ 'Authorization: Bearer ' . l:api_key
+                \ ]
+        elseif l:provider == 'gemini'
+            let l:endpoint = 'https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent'
+            let l:payload = json_encode({
+                \ 'contents': [{
+                \   'parts': [{'text': l:content}]
+                \ }],
+                \ 'generationConfig': {
+                \   'temperature': 0.7,
+                \   'topK': 40,
+                \   'topP': 0.95,
+                \   'maxOutputTokens': 2048,
+                \ }
+                \})
+            let l:headers = [
+                \ 'Content-Type: application/json',
+                \ 'x-goog-api-key: ' . l:api_key
+                \ ]
+        elseif l:provider == 'anthropic'
+            let l:endpoint = 'https://api.anthropic.com/v1/messages'
+            let l:payload = json_encode({
+                \ 'model': g:visidian_chat_model[l:provider],
+                \ 'messages': [{
+                \   'role': 'user',
+                \   'content': l:content
+                \ }],
+                \ 'max_tokens': 2048
+                \})
+            let l:headers = [
+                \ 'Content-Type: application/json',
+                \ 'x-api-key: ' . l:api_key,
+                \ 'anthropic-version: 2023-06-01'
+                \ ]
+        elseif l:provider == 'deepseek'
+            let l:endpoint = 'https://api.deepseek.com/v1/chat/completions'
+            let l:payload = json_encode({
+                \ 'model': g:visidian_chat_model[l:provider],
+                \ 'messages': [
+                \   {'role': 'system', 'content': 'You are a helpful assistant analyzing markdown notes.'},
+                \   {'role': 'user', 'content': l:content}
+                \ ]
+                \})
+            let l:headers = [
+                \ 'Content-Type: application/json',
+                \ 'Authorization: Bearer ' . l:api_key
+                \ ]
+        endif
+        
+        let l:cmd = ['curl', '-s', '-X', 'POST']
+        for l:header in l:headers
+            call add(l:cmd, '-H')
+            call add(l:cmd, l:header)
+        endfor
+        
+        " Escape payload for shell
+        let l:escaped_payload = shellescape(l:payload)
+        call extend(l:cmd, ['-d', l:escaped_payload, l:endpoint])
+        
+        call s:debug('Making API request to: ' . l:endpoint)
+        call s:debug('Provider: ' . l:provider)
+        call s:debug('Payload length: ' . len(l:payload))
+        
+        let l:response = system(join(l:cmd, ' '))
+        let l:json_response = json_decode(l:response)
+        
+        " Check for API errors
+        if type(l:json_response) == v:t_dict && has_key(l:json_response, 'error')
+            let l:error_msg = l:json_response.error.message
+            call s:debug('API error: ' . l:error_msg)
+            throw 'API error: ' . l:error_msg
+        endif
+        
+        call s:debug('API Response: ' . l:response)
+        
+        if v:shell_error
+            throw 'API request failed: ' . l:response
+        endif
+        
+        return s:parse_response(l:response)
+    catch
+        throw 'Visidian Chat Error: ' . v:exception
+    endtry
 endfunction
 
 function! visidian#chat#display_response(response) abort
