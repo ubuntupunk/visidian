@@ -260,6 +260,37 @@ Visidian includes an AI-powered chat feature that can help analyze and work with
 - Anthropic Claude
 - DeepSeek
 
+### Smart Context with Vector Search
+
+The chat feature uses a RAG-like approach to provide relevant context from your notes:
+
+1. **Vector Store**: Notes are automatically indexed into a vector store when saved
+2. **Semantic Search**: When you ask a question, the system finds the most relevant note chunks
+3. **Smart Context**: Only the most relevant context is included in the conversation
+
+#### Configuration
+
+```vim
+" Maximum number of relevant chunks to include (default: 5)
+let g:visidian_chat_max_context_chunks = 5
+
+" Minimum similarity threshold for including chunks (default: 0.7)
+let g:visidian_chat_similarity_threshold = 0.7
+
+" Vector store provider (default: 'openai')
+let g:visidian_vectorstore_provider = 'openai'  " or 'gemini'
+
+" Path to store vector embeddings (default: ~/.cache/visidian/vectorstore)
+let g:visidian_vectorstore_path = '~/.cache/visidian/vectorstore'
+```
+
+#### Commands
+
+- `:call visidian#chat#index_vault()` - Index all markdown files in your vault
+- `:call visidian#chat#index_current_note()` - Manually index current note
+
+Notes are automatically indexed when saved. The vector store enables semantic search across your entire vault, helping the AI provide more relevant responses based on your notes' content.
+
 ### Configuration
 Add the following to your vimrc to configure the chat feature:
 

@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- RAG-like functionality for intelligent note context
+  - Vector store for semantic note indexing
+  - Automatic note indexing on save
+  - Configurable similarity threshold and context size
+  - Support for OpenAI and Gemini embeddings
 - Multi-provider chat support with OpenAI, Google Gemini, Anthropic Claude, and DeepSeek
 - Configurable model selection for each provider
 - Improved error handling and response parsing for chat functionality

@@ -36,6 +36,14 @@ if !exists('g:visidian_chat_window_width')
     let g:visidian_chat_window_width = 80
 endif
 
+if !exists('g:visidian_chat_max_context_chunks')
+    let g:visidian_chat_max_context_chunks = 5
+endif
+
+if !exists('g:visidian_chat_similarity_threshold')
+    let g:visidian_chat_similarity_threshold = 0.7
+endif
+
 " Provider-specific API endpoints
 let s:api_endpoints = {
     \ 'openai': 'https://api.openai.com/v1/chat/completions',
@@ -180,36 +188,53 @@ endfunction
 function! visidian#chat#get_markdown_context() abort
     let l:current_content = join(getline(1, '$'), "\n")
     
-    " Get linked files from markdown links [[file]]
-    let l:linked_files = []
-    let l:pattern = '\[\[\([^\]]\+\)\]\]'
-    let l:start = 0
+    " Get context from vector store based on current content
+    let l:relevant_chunks = visidian#vectorstore#find_relevant_notes(l:current_content, g:visidian_chat_max_context_chunks)
     
-    while 1
-        let l:match = matchstr(l:current_content, l:pattern, l:start)
-        if empty(l:match)
-            break
-        endif
-        
-        let l:filename = substitute(l:match, '\[\[\([^\]]\+\)\]\]', '\1', '')
-        let l:filepath = expand('%:p:h') . '/' . l:filename . '.md'
-        
-        if filereadable(l:filepath)
-            call add(l:linked_files, l:filepath)
-        endif
-        
-        let l:start = l:start + len(l:match)
-    endwhile
+    " Filter chunks by similarity threshold
+    let l:filtered_chunks = filter(l:relevant_chunks, {_, v -> v.similarity >= g:visidian_chat_similarity_threshold})
     
-    " Combine content from linked files
-    let l:context = l:current_content
-    for l:file in l:linked_files
-        let l:context .= "\n\nLinked file " . l:file . ":\n"
-        let l:context .= join(readfile(l:file), "\n")
-    endfor
+    " Build context with current content and relevant chunks
+    let l:context = "Current note:\n" . l:current_content . "\n\n"
+    
+    if !empty(l:filtered_chunks)
+        let l:context .= "Relevant context from other notes:\n\n"
+        for l:chunk in l:filtered_chunks
+            let l:context .= "From " . fnamemodify(l:chunk.file_path, ':t') . ":\n"
+            let l:context .= l:chunk.chunk . "\n\n"
+        endfor
+    endif
     
     return l:context
 endfunction
+
+" Index current note in vector store
+function! visidian#chat#index_current_note() abort
+    let l:current_file = expand('%:p')
+    if !empty(l:current_file) && &filetype == 'markdown'
+        call visidian#vectorstore#store_note(l:current_file)
+        echo "Note indexed in vector store"
+    endif
+endfunction
+
+" Index entire vault
+function! visidian#chat#index_vault() abort
+    let l:vault_path = get(g:, 'visidian_vault_path', expand('%:p:h'))
+    echo "Indexing vault... This may take a while"
+    
+    for l:file in glob(l:vault_path . '/**/*.md', 0, 1)
+        echo "Indexing " . fnamemodify(l:file, ':t')
+        call visidian#vectorstore#store_note(l:file)
+    endfor
+    
+    echo "Vault indexing complete"
+endfunction
+
+" Add autocommands for automatic indexing
+augroup VisidianVectorStore
+    autocmd!
+    autocmd BufWritePost *.md call visidian#chat#index_current_note()
+augroup END
 
 function! visidian#chat#send_to_llm(query, context) abort
     if empty(s:get_api_key())
