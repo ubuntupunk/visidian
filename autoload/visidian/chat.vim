@@ -182,18 +182,29 @@ function! s:process_response(response) abort
         endif
         
         if l:provider == 'gemini'
-            if type(l:json) == v:t_dict && has_key(l:json, 'candidates') && len(l:json.candidates) > 0
-                let l:content = l:json.candidates[0].content
-                if type(l:content) == v:t_dict && has_key(l:content, 'parts') && len(l:content.parts) > 0
-                    return l:content.parts[0].text
-                endif
+            if type(l:json) != v:t_dict
+                throw 'Invalid response format from Gemini API: Not a dictionary'
             endif
-            throw 'Invalid response format from Gemini API'
+            if !has_key(l:json, 'candidates')
+                throw 'Invalid response format from Gemini API: No candidates field'
+            endif
+            if len(l:json.candidates) == 0
+                throw 'Invalid response format from Gemini API: Empty candidates'
+            endif
+            let l:content = l:json.candidates[0].content
+            if type(l:content) != v:t_dict
+                throw 'Invalid response format from Gemini API: Content not a dictionary'
+            endif
+            if !has_key(l:content, 'parts') || len(l:content.parts) == 0
+                throw 'Invalid response format from Gemini API: No parts in content'
+            endif
+            return l:content.parts[0].text
         endif
         
         return a:response
     catch
         call s:debug('Error processing response: ' . v:exception)
+        call s:debug('Raw response: ' . a:response)
         throw v:exception
     endtry
 endfunction
@@ -213,6 +224,16 @@ function! s:parse_response(response)
         return l:json_response.choices[0].message.content
     endif
     throw 'Invalid provider: ' . l:provider
+endfunction
+
+" Get model for provider
+function! s:get_model(provider) abort
+    if !has_key(g:visidian_chat_model, a:provider)
+        throw 'No model configured for provider: ' . a:provider
+    endif
+    let l:model = g:visidian_chat_model[a:provider]
+    " Remove 'models/' prefix if present
+    return substitute(l:model, '^models/', '', '')
 endfunction
 
 " Create a new vertical split window for the chat
@@ -385,14 +406,6 @@ function! visidian#chat#send_to_llm(query, context) abort
     catch
         throw 'Visidian Chat Error: ' . v:exception
     endtry
-endfunction
-
-" Get model for provider
-function! s:get_model(provider) abort
-    if !has_key(g:visidian_chat_model, a:provider)
-        throw 'No model configured for provider: ' . a:provider
-    endif
-    return g:visidian_chat_model[a:provider]
 endfunction
 
 " Send request to LLM
