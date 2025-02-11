@@ -68,16 +68,15 @@ function! s:get_embeddings(text) abort
                 \ 'Authorization: Bearer ' . l:api_key
                 \ ]
         elseif l:provider == 'gemini'
-            let l:model = exists('g:visidian_chat_gemini_model') ? g:visidian_chat_gemini_model : 'gemini-1.5-flash-latest'
-            let l:endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/' . l:model . ':streamGenerateContent?key=' . l:api_key
+            let l:model = exists('g:visidian_chat_gemini_model') ? g:visidian_chat_gemini_model : 'embedding-001'
+            let l:endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/' . l:model . ':embedContent?key=' . l:api_key
             let l:payload = json_encode({
-                \ 'contents': [
-                \   {
-                \     'parts': [
-                \       { 'text': a:text }
-                \     ]
-                \   }
-                \ ]
+                \ 'model': l:model,
+                \ 'content': {
+                \   'parts': [
+                \     { 'text': a:text }
+                \   ]
+                \ }
                 \ })
             let l:headers = [
                 \ 'Content-Type: application/json'
@@ -116,11 +115,18 @@ function! s:get_embeddings(text) abort
         endif
 
         if l:provider == 'gemini'
-            if has_key(l:json_response, 'embedding')
+            if type(l:json_response) == v:t_dict && has_key(l:json_response, 'embedding')
                 return l:json_response.embedding.values
             endif
             throw 'No embedding found in response'
+        elseif l:provider == 'openai'
+            if type(l:json_response) == v:t_dict && has_key(l:json_response, 'data') && len(l:json_response.data) > 0
+                return l:json_response.data[0].embedding
+            endif
+            throw 'No embedding found in response'
         endif
+        
+        throw 'Invalid provider: ' . l:provider
     catch /API key not set for provider:/
         throw v:exception
     catch
