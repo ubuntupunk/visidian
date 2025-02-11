@@ -56,7 +56,7 @@ function! visidian#graph#PlotData(data, ...)
 
     " Generate gnuplot command
     let plotcmd = 'plot "' . tempfile . '" with lines'
-    let gnuplotcmd = 'gnuplot -e "set terminal dumb; set output "|cat"; ' . plotcmd . '"'
+    let gnuplotcmd = 'gnuplot -e "set terminal dumb; set output \'|cat\'; ' . plotcmd . '"'
 
     " Run gnuplot and capture output
     let graph = system(gnuplotcmd)
