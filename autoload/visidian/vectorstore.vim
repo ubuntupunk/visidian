@@ -98,54 +98,68 @@ function! s:get_embeddings(text) abort
         call s:debug('Provider: ' . l:provider)
         call s:debug('Payload length: ' . len(l:payload))
         
-        let l:response = system(l:cmd)
+        let l:response = system(join(l:cmd, ' '))
         if v:shell_error
-            throw 'API error: ' . l:response
+            let l:error_msg = substitute(l:response, '\^@', '', 'g')
+            call s:debug('API error: ' . l:error_msg)
+            throw 'API error: ' . l:error_msg
         endif
 
         " Handle Gemini streaming response
         if l:provider == 'gemini'
-            let l:chunks = split(l:response, "\n")
+            let l:chunks = split(l:response, ",\r\n")
             let l:full_text = ''
+            call s:debug('Processing ' . len(l:chunks) . ' response chunks')
+            
             for l:chunk in l:chunks
                 if empty(l:chunk)
                     continue
                 endif
                 try
-                    let l:json = json_decode(l:chunk)
+                    let l:clean_chunk = substitute(l:chunk, '\^@', '', 'g')
+                    call s:debug('Processing chunk: ' . l:clean_chunk)
+                    let l:json = json_decode(l:clean_chunk)
+                    
                     if has_key(l:json, 'candidates') && len(l:json.candidates) > 0
                         let l:candidate = l:json.candidates[0]
                         if has_key(l:candidate, 'content') && has_key(l:candidate.content, 'parts')
                             let l:parts = l:candidate.content.parts
                             if len(l:parts) > 0 && has_key(l:parts[0], 'text')
-                                let l:full_text .= l:parts[0].text
+                                let l:text = l:parts[0].text
+                                call s:debug('Found text: ' . l:text)
+                                let l:full_text .= l:text
                             endif
                         endif
                     endif
                 catch
-                    " Skip invalid JSON chunks
+                    call s:debug('Failed to parse chunk: ' . v:exception)
                     continue
                 endtry
             endfor
+            
+            if empty(l:full_text)
+                throw 'No valid text found in response'
+            endif
+            
             return l:full_text
         endif
 
         " Handle other providers' responses
-        let l:json = json_decode(l:response)
+        try
+            let l:json = json_decode(l:response)
+        catch
+            let l:error_msg = substitute(v:exception, '\^@', '', 'g')
+            throw 'Failed to parse response: ' . l:error_msg
+        endtry
         
         " Check for API errors
         if type(l:json) == v:t_dict && has_key(l:json, 'error')
-            let l:error_msg = l:json.error.message
+            let l:error_msg = substitute(l:json.error.message, '\^@', '', 'g')
             call s:debug('API error: ' . l:error_msg)
             throw 'API error: ' . l:error_msg
         endif
         
         call s:debug('API Response received')
-        
-        if v:shell_error
-            call s:debug('API request failed')
-            throw 'API request failed'
-        endif
         
         return s:parse_embedding_response(l:response)
     catch /API key not set for provider:/
