@@ -59,17 +59,67 @@ let s:api_endpoints = {
     \ 'deepseek': 'https://api.deepseek.com/v1/chat/completions'
     \ }
 
+" Get API key for provider
+function! s:get_provider_key(provider)
+    if a:provider == 'openai'
+        let l:key = exists('g:visidian_chat_openai_key') ? g:visidian_chat_openai_key : $OPENAI_API_KEY
+        if empty(l:key)
+            throw 'API key not set for provider: openai'
+        endif
+        return l:key
+    elseif a:provider == 'gemini'
+        let l:key = exists('g:visidian_chat_gemini_key') ? g:visidian_chat_gemini_key : $GEMINI_API_KEY
+        if empty(l:key)
+            throw 'API key not set for provider: gemini'
+        endif
+        return l:key
+    elseif a:provider == 'anthropic'
+        let l:key = exists('g:visidian_chat_anthropic_key') ? g:visidian_chat_anthropic_key : $ANTHROPIC_API_KEY
+        if empty(l:key)
+            throw 'API key not set for provider: anthropic'
+        endif
+        return l:key
+    elseif a:provider == 'deepseek'
+        let l:key = exists('g:visidian_chat_deepseek_key') ? g:visidian_chat_deepseek_key : $DEEPSEEK_API_KEY
+        if empty(l:key)
+            throw 'API key not set for provider: deepseek'
+        endif
+        return l:key
+    endif
+    throw 'Invalid provider: ' . a:provider
+endfunction
+
 " Get API key based on provider
 function! s:get_api_key()
     let l:provider = g:visidian_chat_provider
+    return s:get_provider_key(l:provider)
+endfunction
+
+function! s:get_api_headers()
+    let l:provider = g:visidian_chat_provider
+    let l:api_key = s:get_api_key()
+    
     if l:provider == 'openai'
-        return g:visidian_chat_openai_key
+        return [
+            \ 'Content-Type: application/json',
+            \ 'Authorization: Bearer ' . l:api_key
+            \ ]
     elseif l:provider == 'gemini'
-        return g:visidian_chat_gemini_key
+        return [
+            \ 'Content-Type: application/json',
+            \ 'x-goog-api-key: ' . l:api_key
+            \ ]
     elseif l:provider == 'anthropic'
-        return g:visidian_chat_anthropic_key
+        return [
+            \ 'Content-Type: application/json',
+            \ 'x-api-key: ' . l:api_key,
+            \ 'anthropic-version: 2023-06-01'
+            \ ]
     elseif l:provider == 'deepseek'
-        return g:visidian_chat_deepseek_key
+        return [
+            \ 'Content-Type: application/json',
+            \ 'Authorization: Bearer ' . l:api_key
+            \ ]
     endif
     throw 'Invalid provider: ' . l:provider
 endfunction
@@ -118,36 +168,6 @@ function! s:format_request_payload(query, context)
             \   {'role': 'user', 'content': l:content}
             \ ]
             \})
-    endif
-    throw 'Invalid provider: ' . l:provider
-endfunction
-
-" Get API headers based on provider
-function! s:get_api_headers()
-    let l:provider = g:visidian_chat_provider
-    let l:api_key = s:get_api_key()
-    
-    if l:provider == 'openai'
-        return [
-            \ 'Content-Type: application/json',
-            \ 'Authorization: Bearer ' . l:api_key
-            \ ]
-    elseif l:provider == 'gemini'
-        return [
-            \ 'Content-Type: application/json',
-            \ 'x-goog-api-key: ' . l:api_key
-            \ ]
-    elseif l:provider == 'anthropic'
-        return [
-            \ 'Content-Type: application/json',
-            \ 'x-api-key: ' . l:api_key,
-            \ 'anthropic-version: 2023-06-01'
-            \ ]
-    elseif l:provider == 'deepseek'
-        return [
-            \ 'Content-Type: application/json',
-            \ 'Authorization: Bearer ' . l:api_key
-            \ ]
     endif
     throw 'Invalid provider: ' . l:provider
 endfunction
@@ -391,14 +411,14 @@ endfunction
 function! visidian#chat#list_models() abort
     try
         let l:provider = g:visidian_chat_provider
-        let l:api_key = s:get_api_key()
+        let l:api_key = s:get_provider_key(l:provider)
         
         if l:provider == 'gemini'
             let l:endpoint = 'https://generativelanguage.googleapis.com/v1beta/models'
             let l:cmd = ['curl', '-s', '-X', 'GET']
             call add(l:cmd, '-H')
             call add(l:cmd, 'x-goog-api-key: ' . l:api_key)
-            call add(l:cmd, l:endpoint)
+            call add(l:cmd, l:endpoint . '?key=' . l:api_key)
             
             let l:response = system(join(l:cmd, ' '))
             let l:json_response = json_decode(l:response)
