@@ -24,8 +24,9 @@ endfunction
 
 " Initialize vector store directory
 function! visidian#vectorstore#init() abort
-    if !isdirectory(g:visidian_vectorstore_path)
-        call mkdir(g:visidian_vectorstore_path, 'p')
+    let l:store_path = expand(g:visidian_vectorstore_path)
+    if !isdirectory(l:store_path)
+        call mkdir(l:store_path, 'p')
     endif
 endfunction
 
@@ -135,8 +136,21 @@ function! s:get_embeddings(text) abort
     endtry
 endfunction
 
+" Get safe filename for storing embeddings
+function! s:get_store_filename(file_path) abort
+    " Convert absolute path to safe filename
+    let l:safe_name = substitute(a:file_path, '[^A-Za-z0-9._-]', '_', 'g')
+    let l:safe_name = substitute(l:safe_name, '__\+', '_', 'g')  " Collapse multiple underscores
+    let l:safe_name = substitute(l:safe_name, '^_\|_$', '', 'g') " Remove leading/trailing underscores
+    return expand(g:visidian_vectorstore_path) . '/' . l:safe_name . '.json'
+endfunction
+
 " Store embeddings for a note
 function! visidian#vectorstore#store_note(file_path) abort
+    " Ensure store directory exists
+    call visidian#vectorstore#init()
+    
+    " Read file content
     let l:content = join(readfile(a:file_path), "\n")
     let l:chunks = s:chunk_text(l:content, 1000)  " Split into ~1000 token chunks
     let l:metadata = []
@@ -151,7 +165,7 @@ function! visidian#vectorstore#store_note(file_path) abort
     endfor
     
     " Store metadata as JSON
-    let l:store_file = g:visidian_vectorstore_path . '/' . substitute(a:file_path, '/', '_', 'g') . '.json'
+    let l:store_file = s:get_store_filename(a:file_path)
     call writefile([json_encode(l:metadata)], l:store_file)
 endfunction
 
@@ -159,18 +173,26 @@ endfunction
 function! visidian#vectorstore#find_relevant_notes(query, max_results) abort
     let l:query_embedding = s:get_embeddings(a:query)
     let l:results = []
+    let l:store_path = expand(g:visidian_vectorstore_path)
     
     " Search through all stored embeddings
-    for l:file in glob(g:visidian_vectorstore_path . '/*.json', 0, 1)
-        let l:metadata = json_decode(join(readfile(l:file), "\n"))
-        for l:chunk in l:metadata
-            let l:similarity = s:cosine_similarity(l:query_embedding, l:chunk.embedding)
-            call add(l:results, {
-                \ 'similarity': l:similarity,
-                \ 'chunk': l:chunk.chunk,
-                \ 'file_path': l:chunk.file_path
-                \ })
-        endfor
+    for l:file in glob(l:store_path . '/*.json', 0, 1)
+        if filereadable(l:file)
+            try
+                let l:metadata = json_decode(join(readfile(l:file), "\n"))
+                for l:chunk in l:metadata
+                    let l:similarity = s:cosine_similarity(l:query_embedding, l:chunk.embedding)
+                    call add(l:results, {
+                        \ 'similarity': l:similarity,
+                        \ 'chunk': l:chunk.chunk,
+                        \ 'file_path': l:chunk.file_path
+                        \ })
+                endfor
+            catch
+                call s:debug('Error reading file: ' . l:file . ' - ' . v:exception)
+                continue
+            endtry
+        endif
     endfor
     
     " Sort by similarity and return top results
