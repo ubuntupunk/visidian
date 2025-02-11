@@ -174,34 +174,55 @@ function! s:process_response(response) abort
     let l:provider = g:visidian_chat_provider
     
     try
-        let l:json = json_decode(a:response)
+        " Split response into lines for streaming
+        let l:lines = split(a:response, "\n")
+        let l:result = ''
         
-        " Check for API errors
-        if type(l:json) == v:t_dict && has_key(l:json, 'error')
-            throw 'API Error: ' . l:json.error.message
+        for l:line in l:lines
+            if empty(l:line)
+                continue
+            endif
+            
+            try
+                let l:json = json_decode(l:line)
+                
+                " Check for API errors
+                if type(l:json) == v:t_dict && has_key(l:json, 'error')
+                    throw 'API Error: ' . l:json.error.message
+                endif
+                
+                if l:provider == 'gemini'
+                    if type(l:json) != v:t_dict
+                        continue
+                    endif
+                    if !has_key(l:json, 'candidates')
+                        continue
+                    endif
+                    if len(l:json.candidates) == 0
+                        continue
+                    endif
+                    let l:content = l:json.candidates[0].content
+                    if type(l:content) != v:t_dict
+                        continue
+                    endif
+                    if !has_key(l:content, 'parts') || len(l:content.parts) == 0
+                        continue
+                    endif
+                    let l:text = l:content.parts[0].text
+                    let l:result .= l:text
+                    call s:append_to_chat_buffer(l:text)
+                endif
+            catch
+                call s:debug('Error processing chunk: ' . v:exception)
+                continue
+            endtry
+        endfor
+        
+        if empty(l:result)
+            throw 'No valid response received from API'
         endif
         
-        if l:provider == 'gemini'
-            if type(l:json) != v:t_dict
-                throw 'Invalid response format from Gemini API: Not a dictionary'
-            endif
-            if !has_key(l:json, 'candidates')
-                throw 'Invalid response format from Gemini API: No candidates field'
-            endif
-            if len(l:json.candidates) == 0
-                throw 'Invalid response format from Gemini API: Empty candidates'
-            endif
-            let l:content = l:json.candidates[0].content
-            if type(l:content) != v:t_dict
-                throw 'Invalid response format from Gemini API: Content not a dictionary'
-            endif
-            if !has_key(l:content, 'parts') || len(l:content.parts) == 0
-                throw 'Invalid response format from Gemini API: No parts in content'
-            endif
-            return l:content.parts[0].text
-        endif
-        
-        return a:response
+        return l:result
     catch
         call s:debug('Error processing response: ' . v:exception)
         call s:debug('Raw response: ' . a:response)
@@ -459,9 +480,7 @@ function! s:send_to_llm(prompt, context) abort
     call s:debug('Command: ' . string(l:cmd))
     
     let l:response = system(join(l:cmd, ' '))
-    let l:text = s:process_response(l:response)
-    call s:append_to_chat_buffer(l:text)
-    return l:text
+    return s:process_response(l:response)
 endfunction
 
 " Display a chunk of text in the chat buffer as it arrives
