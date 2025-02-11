@@ -69,14 +69,15 @@ function! s:get_embeddings(text) abort
                 \ ]
         elseif l:provider == 'gemini'
             let l:model = exists('g:visidian_chat_gemini_model') ? g:visidian_chat_gemini_model : 'gemini-1.5-flash-latest'
-            let l:endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/' . l:model . ':embedContent?key=' . l:api_key
+            let l:endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/' . l:model . ':streamGenerateContent?key=' . l:api_key
             let l:payload = json_encode({
-                \ 'model': 'projects/generative-language/models/' . l:model,
-                \ 'content': {
-                \   'parts': [
-                \     { 'text': a:text }
-                \   ]
-                \ }
+                \ 'contents': [
+                \   {
+                \     'parts': [
+                \       { 'text': a:text }
+                \     ]
+                \   }
+                \ ]
                 \ })
             let l:headers = [
                 \ 'Content-Type: application/json'
