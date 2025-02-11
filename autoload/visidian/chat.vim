@@ -60,31 +60,15 @@ let s:api_endpoints = {
     \ }
 
 " Get API key for provider
-function! s:get_provider_key(provider)
+function! s:get_api_key(provider) abort
     if a:provider == 'openai'
-        let l:key = exists('g:visidian_chat_openai_key') ? g:visidian_chat_openai_key : $OPENAI_API_KEY
-        if empty(l:key)
-            throw 'API key not set for provider: openai'
-        endif
-        return l:key
+        return exists('g:visidian_chat_openai_key') ? g:visidian_chat_openai_key : $OPENAI_API_KEY
     elseif a:provider == 'gemini'
-        let l:key = exists('g:visidian_chat_gemini_key') ? g:visidian_chat_gemini_key : $GEMINI_API_KEY
-        if empty(l:key)
-            throw 'API key not set for provider: gemini'
-        endif
-        return l:key
+        return exists('g:visidian_chat_gemini_key') ? g:visidian_chat_gemini_key : $GEMINI_API_KEY
     elseif a:provider == 'anthropic'
-        let l:key = exists('g:visidian_chat_anthropic_key') ? g:visidian_chat_anthropic_key : $ANTHROPIC_API_KEY
-        if empty(l:key)
-            throw 'API key not set for provider: anthropic'
-        endif
-        return l:key
+        return exists('g:visidian_chat_anthropic_key') ? g:visidian_chat_anthropic_key : $ANTHROPIC_API_KEY
     elseif a:provider == 'deepseek'
-        let l:key = exists('g:visidian_chat_deepseek_key') ? g:visidian_chat_deepseek_key : $DEEPSEEK_API_KEY
-        if empty(l:key)
-            throw 'API key not set for provider: deepseek'
-        endif
-        return l:key
+        return exists('g:visidian_chat_deepseek_key') ? g:visidian_chat_deepseek_key : $DEEPSEEK_API_KEY
     endif
     throw 'Invalid provider: ' . a:provider
 endfunction
@@ -92,36 +76,36 @@ endfunction
 " Get API key based on provider
 function! s:get_api_key()
     let l:provider = g:visidian_chat_provider
-    return s:get_provider_key(l:provider)
+    return s:get_api_key(l:provider)
 endfunction
 
-function! s:get_api_headers()
-    let l:provider = g:visidian_chat_provider
-    let l:api_key = s:get_api_key()
+" Get headers based on provider
+function! s:get_headers(provider) abort
+    let l:headers = ['Content-Type: application/json']
+    let l:api_key = s:get_api_key(a:provider)
     
-    if l:provider == 'openai'
-        return [
-            \ 'Content-Type: application/json',
-            \ 'Authorization: Bearer ' . l:api_key
-            \ ]
-    elseif l:provider == 'gemini'
-        return [
-            \ 'Content-Type: application/json',
-            \ 'x-goog-api-key: ' . l:api_key
-            \ ]
-    elseif l:provider == 'anthropic'
-        return [
-            \ 'Content-Type: application/json',
-            \ 'x-api-key: ' . l:api_key,
-            \ 'anthropic-version: 2023-06-01'
-            \ ]
-    elseif l:provider == 'deepseek'
-        return [
-            \ 'Content-Type: application/json',
-            \ 'Authorization: Bearer ' . l:api_key
-            \ ]
+    if empty(l:api_key)
+        throw 'No API key found for provider: ' . a:provider
     endif
-    throw 'Invalid provider: ' . l:provider
+    
+    if a:provider == 'openai'
+        call add(l:headers, 'Authorization: Bearer ' . l:api_key)
+    elseif a:provider == 'gemini'
+        call add(l:headers, 'x-goog-api-key: ' . l:api_key)
+    elseif a:provider == 'anthropic'
+        call add(l:headers, 'x-api-key: ' . l:api_key)
+        call add(l:headers, 'anthropic-version: 2023-06-01')
+    elseif a:provider == 'deepseek'
+        call add(l:headers, 'Authorization: Bearer ' . l:api_key)
+    endif
+    
+    return l:headers
+endfunction
+
+" Get headers
+function! s:get_headers()
+    let l:provider = g:visidian_chat_provider
+    return s:get_headers(l:provider)
 endfunction
 
 " Format request payload based on provider
@@ -323,10 +307,7 @@ function! visidian#chat#send_to_llm(query, context) abort
                 \   {'role': 'user', 'content': l:content}
                 \ ]
                 \})
-            let l:headers = [
-                \ 'Content-Type: application/json',
-                \ 'Authorization: Bearer ' . l:api_key
-                \ ]
+            let l:headers = s:get_headers()
         elseif l:provider == 'gemini'
             let l:endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/' . g:visidian_chat_model[l:provider] . ':streamGenerateContent'
             let l:payload = json_encode({
@@ -340,10 +321,7 @@ function! visidian#chat#send_to_llm(query, context) abort
                 \   'maxOutputTokens': 2048,
                 \ }
                 \})
-            let l:headers = [
-                \ 'Content-Type: application/json',
-                \ 'x-goog-api-key: ' . l:api_key
-                \ ]
+            let l:headers = s:get_headers()
         elseif l:provider == 'anthropic'
             let l:endpoint = 'https://api.anthropic.com/v1/messages'
             let l:payload = json_encode({
@@ -354,11 +332,7 @@ function! visidian#chat#send_to_llm(query, context) abort
                 \ }],
                 \ 'max_tokens': 2048
                 \})
-            let l:headers = [
-                \ 'Content-Type: application/json',
-                \ 'x-api-key: ' . l:api_key,
-                \ 'anthropic-version: 2023-06-01'
-                \ ]
+            let l:headers = s:get_headers()
         elseif l:provider == 'deepseek'
             let l:endpoint = 'https://api.deepseek.com/v1/chat/completions'
             let l:payload = json_encode({
@@ -368,10 +342,7 @@ function! visidian#chat#send_to_llm(query, context) abort
                 \   {'role': 'user', 'content': l:content}
                 \ ]
                 \})
-            let l:headers = [
-                \ 'Content-Type: application/json',
-                \ 'Authorization: Bearer ' . l:api_key
-                \ ]
+            let l:headers = s:get_headers()
         endif
         
         let l:cmd = ['curl', '-s', '-X', 'POST']
@@ -569,7 +540,7 @@ endfunction
 function! visidian#chat#list_models() abort
     try
         let l:provider = g:visidian_chat_provider
-        let l:api_key = s:get_provider_key(l:provider)
+        let l:api_key = s:get_api_key(l:provider)
         
         if l:provider == 'gemini'
             let l:endpoint = 'https://generativelanguage.googleapis.com/v1beta/models'
