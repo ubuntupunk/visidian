@@ -107,7 +107,12 @@ function! s:get_embeddings(text) abort
 
         " Handle Gemini streaming response
         if l:provider == 'gemini'
-            let l:chunks = split(l:response, ",\r\n")
+            " Clean up the response first
+            let l:clean_response = substitute(l:response, '\^@', '', 'g')
+            let l:clean_response = substitute(l:clean_response, '^\[', '', '') " Remove leading [
+            let l:clean_response = substitute(l:clean_response, '\]$', '', '') " Remove trailing ]
+            
+            let l:chunks = split(l:clean_response, ",\r\n")
             let l:full_text = ''
             call s:debug('Processing ' . len(l:chunks) . ' response chunks')
             
@@ -116,7 +121,7 @@ function! s:get_embeddings(text) abort
                     continue
                 endif
                 try
-                    let l:clean_chunk = substitute(l:chunk, '\^@', '', 'g')
+                    let l:clean_chunk = substitute(l:chunk, '^\s*', '', '')  " Remove leading whitespace
                     call s:debug('Processing chunk: ' . l:clean_chunk)
                     let l:json = json_decode(l:clean_chunk)
                     
