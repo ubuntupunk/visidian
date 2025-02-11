@@ -263,25 +263,22 @@ endfunction
 " Create a new vertical split window for the chat
 function! visidian#chat#create_window() abort
     execute 'vertical rightbelow new'
-    execute 'vertical resize ' . g:visidian_chat_window_width
     setlocal buftype=nofile
-    setlocal bufhidden=wipe
-    setlocal filetype=markdown
-    setlocal wrap
+    setlocal bufhidden=hide
+    setlocal noswapfile
+    setlocal nobuflisted
+    file Visidian Chat
+    
+    " Set buffer-local mappings and options
     setlocal nonumber
     setlocal norelativenumber
-    setlocal noswapfile
+    setlocal wrap
     setlocal nomodifiable
     
-    " Set buffer name
-    let l:bufname = 'Visidian Chat'
-    execute 'file ' . l:bufname
-    
-    " Buffer-local mappings
-    nnoremap <buffer> q :q<CR>
-    nnoremap <buffer> <CR> :call visidian#chat#send_message()<CR>
-    
-    return bufnr('%')
+    " Clear any existing content
+    setlocal modifiable
+    silent! %delete _
+    setlocal nomodifiable
 endfunction
 
 function! visidian#chat#get_markdown_context() abort
@@ -486,7 +483,22 @@ function! s:send_to_llm(prompt, context) abort
     return s:process_response(l:response)
 endfunction
 
-" Display a chunk of text in the chat buffer as it arrives
+" Append text to chat buffer
+function! s:append_to_chat_buffer(text) abort
+    let l:bufnr = bufnr('Visidian Chat')
+    if l:bufnr == -1
+        call visidian#chat#create_window()
+        let l:bufnr = bufnr('Visidian Chat')
+    endif
+    
+    call s:debug('Appending to chat buffer: ' . a:text)
+    let l:lines = split(a:text, '\n')
+    call setbufvar(l:bufnr, '&modifiable', 1)
+    call appendbufline(l:bufnr, line('$'), l:lines)
+    call setbufvar(l:bufnr, '&modifiable', 0)
+    redraw
+endfunction
+
 function! visidian#chat#display_chunk(text) abort
     let l:bufnr = bufnr('Visidian Chat')
     if l:bufnr == -1
@@ -515,40 +527,6 @@ function! visidian#chat#display_chunk(text) abort
     else
         call setline('$', l:last_line . a:text)
     endif
-    
-    " Make buffer unmodifiable
-    setlocal nomodifiable
-    
-    " Switch back to original window
-    execute l:cur_winnr . 'wincmd w'
-    
-    " Force screen update
-    redraw
-endfunction
-
-function! s:append_to_chat_buffer(text) abort
-    let l:bufnr = bufnr('Visidian Chat')
-    if l:bufnr == -1
-        return
-    endif
-    
-    " Get window number
-    let l:winnr = bufwinnr(l:bufnr)
-    if l:winnr == -1
-        return
-    endif
-    
-    " Save current window
-    let l:cur_winnr = winnr()
-    
-    " Switch to chat window
-    execute l:winnr . 'wincmd w'
-    
-    " Make buffer modifiable
-    setlocal modifiable
-    
-    " Append text to last line
-    call append(line('$'), a:text)
     
     " Make buffer unmodifiable
     setlocal nomodifiable
