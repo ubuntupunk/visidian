@@ -366,7 +366,29 @@ endfunction
 function! s:note_filter(winid, key) abort
     if a:key ==# 'y'
         call popup_close(a:winid)
-        call visidian#new_md_file()
+        " Prompt user to provide a path or browse to a directory
+        let path = input('Enter the directory path for the new note: ', expand('~'), 'dir')
+        if !empty(path)
+            let path = expand(path)
+            if !isdirectory(path)
+                echohl Question
+                echo 'Directory does not exist. Create it? (y/n)'
+                echohl None
+                let choice = nr2char(getchar())
+                redraw!
+                if choice ==? 'y'
+                    call mkdir(path, 'p')
+                else
+                    echo 'Note creation cancelled.'
+                    return 1
+                endif
+            endif
+            " Set the path for the new note
+            let g:visidian_note_path = path
+            call visidian#new_md_file()
+        else
+            echo 'Note creation cancelled.'
+        endif
         return 1
     elseif a:key ==# 'n'
         call popup_close(a:winid)
