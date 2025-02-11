@@ -2,6 +2,13 @@
 " Maintainer: ubuntupunk
 " License: GPL3
 
+" Debug logging helper
+function! s:debug(msg) abort
+    if exists('g:visidian_debug') && g:visidian_debug
+        echom '[CHAT] ' . a:msg
+    endif
+endfunction
+
 " Configuration variables
 if !exists('g:visidian_chat_provider')
     let g:visidian_chat_provider = 'openai'  " Options: 'openai', 'gemini', 'anthropic', 'deepseek'
@@ -306,12 +313,17 @@ endfunction
 
 " Entry point for starting a chat with context
 function! visidian#chat#start_chat_with_context() abort
+    call s:debug('Starting chat with context')
     let l:context = visidian#chat#get_markdown_context()
+    call s:debug('Retrieved context: ' . len(l:context) . ' characters')
     let l:query = input("Enter your query: ")
     if !empty(l:query)
+        call s:debug('Processing query: ' . l:query)
         echo "\nProcessing..."
         let l:response = visidian#chat#send_to_llm(l:query, l:context)
         call visidian#chat#display_response(l:response)
+    else
+        call s:debug('Empty query, aborting')
     endif
 endfunction
 

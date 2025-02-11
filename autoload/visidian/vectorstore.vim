@@ -15,6 +15,13 @@ if !exists('g:visidian_max_context_tokens')
     let g:visidian_max_context_tokens = 4000
 endif
 
+" Debug logging helper
+function! s:debug(msg) abort
+    if exists('g:visidian_debug') && g:visidian_debug
+        echom '[VECTORSTORE] ' . a:msg
+    endif
+endfunction
+
 " Initialize vector store directory
 function! visidian#vectorstore#init() abort
     if !isdirectory(g:visidian_vectorstore_path)
@@ -38,6 +45,7 @@ function! s:get_embeddings(text) abort
     let l:api_key = s:get_provider_key(l:provider)
     
     if empty(l:api_key)
+        call s:debug('API key not set for provider: ' . l:provider)
         throw 'API key not set for provider: ' . l:provider
     endif
     
@@ -69,21 +77,16 @@ function! s:get_embeddings(text) abort
     endfor
     call extend(l:cmd, ['-d', l:payload, l:endpoint])
     
-    " Debug logging
-    if exists('g:visidian_debug') && g:visidian_debug
-        echom 'Making API request to: ' . l:endpoint
-        echom 'Provider: ' . l:provider
-        echom 'Payload length: ' . len(l:payload)
-    endif
+    call s:debug('Making API request to: ' . l:endpoint)
+    call s:debug('Provider: ' . l:provider)
+    call s:debug('Payload length: ' . len(l:payload))
     
     let l:response = system(join(l:cmd, ' '))
     
-    " Debug logging
-    if exists('g:visidian_debug') && g:visidian_debug
-        echom 'API Response: ' . l:response
-    endif
+    call s:debug('API Response: ' . l:response)
     
     if v:shell_error
+        call s:debug('API request failed: ' . l:response)
         throw 'API request failed: ' . l:response
     endif
     
@@ -99,19 +102,25 @@ function! s:parse_embedding_response(response) abort
         
         if l:provider == 'openai'
             if has_key(l:json_response, 'data') && len(l:json_response.data) > 0
+                call s:debug('Successfully parsed OpenAI embedding response')
                 return l:json_response.data[0].embedding
             endif
+            call s:debug('Invalid OpenAI API response: ' . a:response)
             throw 'Invalid OpenAI API response: ' . a:response
         elseif l:provider == 'gemini'
             if has_key(l:json_response, 'embedding') && has_key(l:json_response.embedding, 'values')
+                call s:debug('Successfully parsed Gemini embedding response')
                 return l:json_response.embedding.values
             endif
+            call s:debug('Invalid Gemini API response: ' . a:response)
             throw 'Invalid Gemini API response: ' . a:response
         endif
         throw 'Invalid provider: ' . l:provider
     catch
+        let l:error_msg = 'Error parsing embedding response: ' . v:exception
+        call s:debug(l:error_msg)
         echohl ErrorMsg
-        echom 'Error parsing embedding response: ' . v:exception
+        echom l:error_msg
         echohl None
         return []
     endtry
