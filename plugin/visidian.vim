@@ -115,6 +115,13 @@ command! -nargs=0 VisidianBook call visidian#bookmarking#menu()
 command! -nargs=0 VisidianToggleSearch call visidian#search#toggle()
 command! -nargs=0 -bar VisidianFirstStart call visidian#start#first_start()
 
+" Generate & Browse Ctags
+command! -nargs=0 VisidianGenCtags call VisidianGenerateTags()
+command! -nargs=0 VisidianBrowseCtags call VisidianBrowseTags()
+
+"Toggle Spelling
+command! -nargs=0 VisidianToggleSpell call visidian#toggle_spell()
+
 " Chat commands
 if !exists(':VisidianChat')
     command! -nargs=0 VisidianChat call visidian#chat#start_chat_with_context()
