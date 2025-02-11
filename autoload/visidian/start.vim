@@ -272,9 +272,9 @@ function! s:sync_menu_filter(winid, key) abort
         return 1
     elseif a:key ==# '2'
         call popup_close(a:winid)
-        " Placeholder for configuring sync settings
-        echo 'Configuring Sync Settings...'
-        call visidian#start#setup_sync()
+        " Call sync configuration options from sync.vim
+        call visidian#sync#sync()
+        call s:continue_setup()
         return 1
     elseif a:key ==# '3'
         call popup_close(a:winid)
