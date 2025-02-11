@@ -71,7 +71,7 @@ function! s:get_embeddings(text) abort
             let l:model = exists('g:visidian_chat_gemini_model') ? g:visidian_chat_gemini_model : 'gemini-1.5-flash-latest'
             let l:endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/' . l:model . ':embedContent?key=' . l:api_key
             let l:payload = json_encode({
-                \ 'model': l:model,
+                \ 'model': 'models/' . l:model,
                 \ 'content': {
                 \   'parts': [
                 \     { 'text': a:text }
