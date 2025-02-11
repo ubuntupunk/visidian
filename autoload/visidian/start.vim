@@ -174,9 +174,9 @@ function! s:vault_filter(winid, key) abort
         call popup_close(a:winid)
         let path = s:select_vault_path()
         if !empty(path)
-            " Expand path to handle ~ and environment variables
+            " Expand path immediately to handle ~ and environment variables
             let path = expand(path)
-            " Ensure directory exists
+            " Ensure directory exists after expansion
             if !isdirectory(path)
                 echohl Question
                 echo 'Directory does not exist. Create it? (y/n)'
@@ -483,6 +483,7 @@ function! s:customize_filter(winid, key) abort
         call popup_close(a:winid)
         " Open settings in a new buffer
         new
+        file Visidian\ Settings
         setlocal buftype=nofile
         setlocal bufhidden=wipe
         setlocal noswapfile
