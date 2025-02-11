@@ -68,9 +68,10 @@ function! s:get_embeddings(text) abort
                 \ 'Authorization: Bearer ' . l:api_key
                 \ ]
         elseif l:provider == 'gemini'
-            let l:endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent'
+            let l:model = exists('g:visidian_chat_gemini_model') ? g:visidian_chat_gemini_model : 'gemini-1.0-pro'
+            let l:endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/' . l:model . ':embedContent'
             let l:payload = json_encode({
-                \ 'model': 'models/text-embedding-004',
+                \ 'model': 'models/' . l:model,
                 \ 'content': {
                 \   'parts': [
                 \     { 'text': a:text }
