@@ -180,7 +180,39 @@ function! s:parse_response(response)
     if l:provider == 'openai'
         return l:json_response.choices[0].message.content
     elseif l:provider == 'gemini'
-        return l:json_response.candidates[0].content.parts[0].text
+        " Handle streaming response format
+        let l:chunks = split(a:response, ",\r\n")
+        let l:full_text = ''
+        
+        for l:chunk in l:chunks
+            if empty(l:chunk)
+                continue
+            endif
+            try
+                let l:clean_chunk = substitute(l:chunk, '\^@', '', 'g')
+                let l:clean_chunk = substitute(l:clean_chunk, '^\s*', '', '')  " Remove leading whitespace
+                let l:json = json_decode(l:clean_chunk)
+                
+                if has_key(l:json, 'candidates') && len(l:json.candidates) > 0
+                    let l:candidate = l:json.candidates[0]
+                    if has_key(l:candidate, 'content') && has_key(l:candidate.content, 'parts')
+                        let l:parts = l:candidate.content.parts
+                        if len(l:parts) > 0 && has_key(l:parts[0], 'text')
+                            let l:text = l:parts[0].text
+                            let l:full_text .= l:text
+                        endif
+                    endif
+                endif
+            catch
+                continue
+            endtry
+        endfor
+        
+        if empty(l:full_text)
+            throw 'No valid text found in response'
+        endif
+        
+        return l:full_text
     elseif l:provider == 'anthropic'
         return l:json_response.content[0].text
     elseif l:provider == 'deepseek'
