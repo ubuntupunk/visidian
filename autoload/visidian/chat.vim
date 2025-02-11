@@ -299,15 +299,16 @@ function! visidian#chat#send_to_llm(query, context) abort
         elseif l:provider == 'gemini'
             let l:endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/' . g:visidian_chat_model[l:provider] . ':streamGenerateContent'
             let l:payload = json_encode({
-                \ 'contents': [{
-                \   'parts': [{'text': l:content}]
-                \ }],
-                \ 'generationConfig': {
-                \   'temperature': 0.7,
-                \   'topK': 40,
-                \   'topP': 0.95,
-                \   'maxOutputTokens': 2048,
-                \ }
+                \ 'contents': [
+                \   {
+                \     'role': 'user',
+                \     'parts': [
+                \       {
+                \         'text': l:content
+                \       }
+                \     ]
+                \   }
+                \ ]
                 \})
             let l:headers = [
                 \ 'Content-Type: application/json',
