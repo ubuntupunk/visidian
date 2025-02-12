@@ -9,9 +9,10 @@ CONTENTS                                                   *visidian-sync-conten
     2. Auto-Sync ..................... |visidian-auto-sync|
     3. SSH Key Management ............ |visidian-ssh-keys|
     4. Git Integration ............... |visidian-git-sync|
-    5. Commands ...................... |visidian-sync-commands|
-    6. Configuration ................. |visidian-sync-config|
-    7. Troubleshooting ............... |visidian-sync-troubleshooting|
+    5. Rsync Integration ............. |visidian-rsync-sync|
+    6. Commands ...................... |visidian-sync-commands|
+    7. Configuration ................. |visidian-sync-config|
+    8. Troubleshooting ............... |visidian-sync-troubleshooting|
 
 ==============================================================================
 1. Introduction                                           *visidian-sync-intro*
@@ -87,31 +88,74 @@ Security:~
     - OS-specific security measures
 
 ==============================================================================
-5. Commands                                           *visidian-sync-commands*
+5. Rsync Integration                                    *visidian-rsync-sync*
+
+Alternative synchronization method using rsync:
+
+Features:~
+    - Direct file synchronization
+    - Support for remote servers
+    - Incremental transfers
+    - Deletion handling
+
+Requirements:~
+    - rsync must be installed
+    - SSH access to remote server (for remote sync)
+    - Proper permissions on target directory
+
+Configuration:~
+>
+    " Enable rsync sync method
+    let g:visidian_sync_method = 2
+
+    " Set rsync target (local or remote)
+    let g:visidian_rsync_target = 'user@host:/path/to/dir'
+<
+
+==============================================================================
+6. Commands                                           *visidian-sync-commands*
 
                                                             *:VisidianSync*
 :VisidianSync              Manually trigger synchronization
 
-                                                            *:VisidianSetVault*
-:VisidianSetVault          Set up a new vault or select existing one
+                                                            *:VisidianToggleAutoSync*
+:VisidianToggleAutoSync    Toggle automatic synchronization on/off
+
+                                                            *:VisidianVault*
+:VisidianVault             Set up a new vault or select existing one
 
 ==============================================================================
-6. Configuration                                       *visidian-sync-config*
+7. Configuration                                       *visidian-sync-config*
 
 Options:~
 >
-    " Set sync method (1: Git, 2: Manual)
+    " Set sync method (1: Git, 2: Rsync)
     let g:visidian_sync_method = 1
 
-    " Set Git repository URL
+    " Git Configuration
     let g:visidian_git_repo_url = 'git@github.com:username/vault.git'
-
-    " Set deploy key path (optional)
     let g:visidian_deploy_key = '~/.ssh/visidian_deploy_key'
+
+    " Rsync Configuration
+    let g:visidian_rsync_target = 'user@host:/path/to/vault'
+    let g:visidian_rsync_options = '-avz --delete'  " Optional: custom rsync flags
 <
 
+Default Values:~
+    g:visidian_sync_method     Prompts if not set
+    g:visidian_git_repo_url    Prompts if Git sync selected
+    g:visidian_deploy_key      ~/.ssh/visidian_deploy_key
+    g:visidian_rsync_target    Prompts if Rsync sync selected
+    g:visidian_rsync_options   -avz --delete
+
+Notes:~
+    - Git sync requires either HTTPS or SSH repository URL
+    - Rsync target can be local path or remote (user@host:/path)
+    - Deploy key path is used only for Git SSH authentication
+    - Custom rsync options allow fine-tuning of sync behavior
+
 ==============================================================================
-7. Troubleshooting                               *visidian-sync-troubleshooting*
+8. Troubleshooting                               *visidian-sync-troubleshooting*
 
 Common Issues:~
 
