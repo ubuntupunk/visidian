@@ -7,9 +7,8 @@ CONTENTS                                                 *visidian-chat-contents
 
     1. Introduction .................... |visidian-chat-intro|
     2. Commands ....................... |visidian-chat-commands|
-    3. Interface ...................... |visidian-chat-interface|
+    3. Configuration .................. |visidian-chat-config|
     4. Providers ...................... |visidian-chat-providers|
-    5. Usage Examples ................. |visidian-chat-examples|
 
 See also:
     Vector Store ..................... |visidian-vectorstore|
@@ -27,65 +26,73 @@ and can help you manage, analyze, and explore your knowledge base.
 :VisidianChat                                                  *:VisidianChat*
     Open the chat window to interact with the AI assistant.
 
-:VisidianChatIndex                                             *:VisidianChatIndex*
+:VisidianChatIndex                                          *:VisidianChatIndex*
     Index the current note and its linked notes in the vector store.
 
-:VisidianChatIndexVault                                        *:VisidianChatIndexVault*
+:VisidianChatIndexVault                                 *:VisidianChatIndexVault*
     Index all notes in the vault in the vector store.
 
 ==============================================================================
-3. Chat Interface                                  *visidian-chat-interface*
+3. Configuration                                         *visidian-chat-config*
 
-The chat interface can be accessed using:
->
-    :VisidianChat
-<
+g:visidian_chat_provider                             *g:visidian_chat_provider*
+    AI provider to use for chat
+    Options: 'openai', 'gemini', 'anthropic', 'deepseek'
+    Default: 'gemini'
 
-This opens a split window with:
-- Chat history at the top
-- Input prompt at the bottom
-- Context preview on the right
+g:visidian_chat_model                                   *g:visidian_chat_model*
+    Model configuration for each provider:
+    'openai': 'gpt-3.5-turbo'
+    'gemini': 'gemini-pro'
+    'anthropic': 'claude-2'
+    'deepseek': 'deepseek-chat'
 
-See |visidian-vectorstore| for details on context retrieval.
+g:visidian_chat_window_width                     *g:visidian_chat_window_width*
+    Width of the chat window
+    Default: 80
 
+g:visidian_chat_max_context_chunks           *g:visidian_chat_max_context_chunks*
+    Maximum number of context chunks to include
+    Default: 5
+
+g:visidian_chat_similarity_threshold     *g:visidian_chat_similarity_threshold*
+    Threshold for including similar notes in context
+    Default: 0.7
 
 ==============================================================================
 4. Providers                                           *visidian-chat-providers*
 
-Supported Providers:~
-- OpenAI (default)
-- Anthropic
-- Custom provider (requires implementation)
+OpenAI:~
+    Requires g:visidian_chat_openai_key or $OPENAI_API_KEY
+    Uses gpt-3.5-turbo model by default
 
-Configuration:~
+Gemini:~
+    Requires g:visidian_chat_gemini_key or $GEMINI_API_KEY
+    Uses gemini-pro model (default provider)
+
+Anthropic:~
+    Requires g:visidian_chat_anthropic_key or $ANTHROPIC_API_KEY
+    Uses claude-2 model
+
+DeepSeek:~
+    Requires g:visidian_chat_deepseek_key or $DEEPSEEK_API_KEY
+    Uses deepseek-chat model
+
+Configuration Example:~
 >
     " Set API provider
-    let g:visidian_chat_provider = 'openai'
+    let g:visidian_chat_provider = 'gemini'
     
     " Set API key
-    let g:visidian_chat_api_key = 'your-api-key'
-<
-
-==============================================================================
-5. Usage Examples                                    *visidian-chat-examples*
-
-Start a chat session:~
->
-    :VisidianChat
-    > What notes do I have about project planning?
-<
-
-Save chat history:~
->
-    :VisidianChatSave
-    > Enter filename: project-planning-chat.md
-<
-
-Use with context toggle:~
->
-    :VisidianChat
-    :VisidianChatContext
-    > Summarize my notes about this topic
+    let g:visidian_chat_gemini_key = $GEMINI_API_KEY
+    
+    " Customize model (optional)
+    let g:visidian_chat_model = {
+        \ 'openai': 'gpt-3.5-turbo',
+        \ 'gemini': 'gemini-pro',
+        \ 'anthropic': 'claude-2',
+        \ 'deepseek': 'deepseek-chat'
+        \ }
 <
 
  vim:tw=78:ts=8:ft=help:norl:
