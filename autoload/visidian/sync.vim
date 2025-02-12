@@ -67,9 +67,9 @@ function! s:setup_git_deploy(owner, repo)
         throw 'Failed to generate SSH key: ' . output
     endif
 
-    " Set permissions
-    call setfperm(key_path, "600")
-    call setfperm(pub_key_path, "644")
+    " Set permissions (using octal format)
+    call setfperm(key_path, "0600")
+    call setfperm(pub_key_path, "0644")
 
     " Create SSH config entry
     let host_alias = 'github.com-visidian_' . a:repo
@@ -82,7 +82,7 @@ function! s:setup_git_deploy(owner, repo)
     " Update SSH config
     if !filereadable(ssh_config)
         call writefile([config_entry], ssh_config)
-        call setfperm(ssh_config, "600")
+        call setfperm(ssh_config, "0600")
     else
         " Check if host alias already exists
         let config_content = readfile(ssh_config)
@@ -182,7 +182,7 @@ function! s:init_git_repo(git_url)
             \ '.trash/'
         \ ]
         call writefile(gitignore_content, gitignore_path)
-        call setfperm(gitignore_path, "644")
+        call setfperm(gitignore_path, "0644")
     endif
 endfunction
 
