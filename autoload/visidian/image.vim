@@ -307,7 +307,6 @@ try:
     create_ascii_image(vim.eval('image_path'))
 except Exception as e:
     vim.command(f"call visidian#debug#error('IMAGE', 'Unexpected error: {str(e)}')")
-
 EOF
 endfunction
 
