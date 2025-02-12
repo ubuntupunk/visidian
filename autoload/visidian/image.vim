@@ -117,13 +117,34 @@ function! visidian#image#display_graph(data, ...)
     call visidian#debug#debug('IMAGE', 'Completed display_graph')
 endfunction
 
+" Function: visidian#image#check_dependencies
+" Description: Check if required Python dependencies are available
+" Returns: 1 if all dependencies are met, 0 otherwise
+function! visidian#image#check_dependencies()
+    if !has('python3')
+        call visidian#debug#error('IMAGE', 'Python3 support required for image preview')
+        return 0
+    endif
+
+python3 << EOF
+import vim
+try:
+    from PIL import Image
+    vim.command('let l:has_pillow = 1')
+except ImportError:
+    vim.command('let l:has_pillow = 0')
+    vim.command("call visidian#debug#error('IMAGE', 'Python Pillow library (PIL) is required for image preview. Install with: pip install Pillow')")
+EOF
+
+    return exists('l:has_pillow') && l:has_pillow
+endfunction
+
 " Function: visidian#image#display_image
 " Description: Display an image file in a buffer using ASCII art
 " Parameters:
 "   - image_path: Path to the image file
 function! visidian#image#display_image()
-    if !has('python3')
-        call visidian#debug#error('IMAGE', 'Python3 support required for image display')
+    if !visidian#image#check_dependencies()
         return
     endif
 
@@ -240,6 +261,12 @@ endfunction
 " Function: visidian#image#setup_autocmds
 " Description: Set up autocommands for image handling
 function! visidian#image#setup_autocmds()
+    " Only set up autocommands if dependencies are met
+    if !visidian#image#check_dependencies()
+        call visidian#debug#info('IMAGE', 'Image preview disabled: missing dependencies')
+        return
+    endif
+
     augroup VisidianImage
         autocmd!
         autocmd BufReadPre *.png,*.jpg,*.jpeg,*.gif,*.bmp if !exists('g:visidian_disable_image_preview') | 
@@ -249,6 +276,8 @@ function! visidian#image#setup_autocmds()
             \ call visidian#image#display_image() |
             \ endif
     augroup END
+
+    call visidian#debug#info('IMAGE', 'Image preview enabled')
 endfunction
 
 " Initialize autocommands
