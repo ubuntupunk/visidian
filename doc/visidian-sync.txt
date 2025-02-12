@@ -172,36 +172,36 @@ Commands:~
 
 Options:~
 >
-    " Set sync method (1: Git, 2: Rsync, 3: Git Annex)
+    " Set sync method (1: Git, 2: Git Annex, 3: Rsync)
     let g:visidian_sync_method = 1
 
     " Git Configuration
     let g:visidian_git_repo_url = 'git@github.com:username/vault.git'
     let g:visidian_deploy_key = '~/.ssh/visidian_deploy_key'
 
-    " Rsync Configuration
-    let g:visidian_rsync_target = 'user@host:/path/to/vault'
-    let g:visidian_rsync_options = '-avz --delete'  " Optional: custom rsync flags
-
     " Git Annex Configuration
     let g:visidian_annex_largefiles = 'largerthan=100kb'
     let g:visidian_annex_thin = 1
+
+    " Rsync Configuration
+    let g:visidian_rsync_target = 'user@host:/path/to/vault'
+    let g:visidian_rsync_options = '-avz --delete'  " Optional: custom rsync flags
 <
 
 Default Values:~
     g:visidian_sync_method     Prompts if not set
     g:visidian_git_repo_url    Prompts if Git sync selected
     g:visidian_deploy_key      ~/.ssh/visidian_deploy_key
-    g:visidian_rsync_target    Prompts if Rsync sync selected
-    g:visidian_rsync_options   -avz --delete
     g:visidian_annex_largefiles largerthan=100kb
     g:visidian_annex_thin      1
+    g:visidian_rsync_target    Prompts if Rsync sync selected
+    g:visidian_rsync_options   -avz --delete
 
 Notes:~
     - Git sync requires either HTTPS or SSH repository URL
+    - Git Annex requires git-annex to be installed
     - Rsync target can be local path or remote (user@host:/path)
-    - Deploy key path is used only for Git SSH authentication
-    - Custom rsync options allow fine-tuning of sync behavior
+    - Deploy key path is used for Git/Git Annex SSH authentication
 
 ==============================================================================
 9. Troubleshooting                               *visidian-sync-troubleshooting*

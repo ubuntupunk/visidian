@@ -345,62 +345,18 @@ function! visidian#sync#sync()
         call visidian#debug#info('SYNC', 'No sync method set, prompting user')
         let g:visidian_sync_method = inputlist(['Choose sync method:', 
             \ '1. Git', 
-            \ '2. Rsync', 
-            \ '3. Git Annex'])
+            \ '2. Git Annex', 
+            \ '3. Rsync'])
     endif
 
     " Handle sync based on method
     if g:visidian_sync_method == 1 " Git
-        " Ask user for Git setup preference
-        let setup_choice = inputlist([
-            \ 'Choose Git setup option:',
-            \ '1. Initialize empty repository only',
-            \ '2. Automatic setup with GitHub'
-        \ ])
-
-        if setup_choice == 1
-            " Initialize empty repository
-            try
-                call s:init_git_repo('')
-                echo "Empty Git repository initialized in vault. Add remote URL manually when ready."
-            catch
-                call visidian#debug#error('SYNC', v:exception)
-                echohl ErrorMsg | echo v:exception | echohl None
-            endtry
-        elseif setup_choice == 2
-            " Automatic GitHub setup
-            try
-                " Get GitHub details
-                let owner = input('Enter GitHub username: ')
-                if owner == '' | throw 'GitHub username required' | endif
-                
-                let repo = input('Enter repository name: ')
-                if repo == '' | throw 'Repository name required' | endif
-                
-                " Validate repository name
-                if repo =~ '[/\\]'
-                    throw 'Repository name cannot contain slashes'
-                endif
-
-                " Generate deploy key and get setup instructions
-                let setup = s:setup_git_deploy(owner, repo)
-                
-                " Initialize repository with the generated URL
-                call s:init_git_repo(setup.git_url)
-                
-                echo "Repository initialized successfully with deploy key configuration."
-            catch
-                call visidian#debug#error('SYNC', v:exception)
-                echohl ErrorMsg | echo v:exception | echohl None
-            endtry
+        if !exists('g:visidian_git_repo_url')
+            call visidian#debug#info('SYNC', 'No Git repository URL set, prompting user')
+            let g:visidian_git_repo_url = input('Enter Git repository URL: ')
         endif
-    elseif g:visidian_sync_method == 2 " Rsync
-        if !exists('g:visidian_rsync_target')
-            call visidian#debug#info('SYNC', 'No Rsync target set, prompting user')
-            let g:visidian_rsync_target = input('Enter Rsync target directory (e.g., user@host:/path/to/dir): ')
-        endif
-        call s:sync_rsync()
-    elseif g:visidian_sync_method == 3 " Git Annex
+        call s:setup_git_sync()
+    elseif g:visidian_sync_method == 2 " Git Annex
         if !exists('g:visidian_git_repo_url')
             call visidian#debug#info('SYNC', 'No Git repository URL set, prompting user')
             let g:visidian_git_repo_url = input('Enter Git repository URL: ')
@@ -415,6 +371,12 @@ function! visidian#sync#sync()
         
         " Perform sync
         call visidian#sync#annex#sync()
+    elseif g:visidian_sync_method == 3 " Rsync
+        if !exists('g:visidian_rsync_target')
+            call visidian#debug#info('SYNC', 'No Rsync target set, prompting user')
+            let g:visidian_rsync_target = input('Enter Rsync target directory (e.g., user@host:/path/to/dir): ')
+        endif
+        call s:sync_rsync()
     else
         call visidian#debug#error('SYNC', 'Invalid sync method: ' . g:visidian_sync_method)
         return 0
