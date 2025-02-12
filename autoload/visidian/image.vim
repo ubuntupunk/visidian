@@ -173,13 +173,31 @@ try:
     import vim
     from PIL import Image
     import os
+    import math
 
     def rgb_to_xterm(r, g, b):
-        # Convert RGB values to the closest xterm-256 color code
-        # Using a simplified conversion focusing on the basic 216 color cube
-        r = int((r * 5) / 255)
-        g = int((g * 5) / 255)
-        b = int((b * 5) / 255)
+        # Better xterm-256 color conversion
+        # Color cube starts at index 16
+        # 6x6x6 color cube from index 16 to 231
+        # Grayscale ramp from index 232 to 255
+        
+        # Check if the color is grayscale
+        if r == g == b:
+            if r < 3:
+                return 16  # black
+            if r > 252:
+                return 231  # white
+                
+            # Use grayscale ramp (232-255)
+            gray_idx = int((r - 3) / 10)
+            return 232 + min(gray_idx, 23)
+        
+        # Convert to 0-5 range for color cube
+        r = min(5, int(r / 51))
+        g = min(5, int(g / 51))
+        b = min(5, int(b / 51))
+        
+        # Calculate color cube index (16 + 36*r + 6*g + b)
         return 16 + (36 * r) + (6 * g) + b
 
     # Get the image path from vim
@@ -188,12 +206,6 @@ try:
     
     # Open image
     img = Image.open(image_path)
-    if use_color:
-        # Keep color for color mode
-        img_color = img.convert('RGB')
-        img = img.convert('L')  # Grayscale for ASCII mapping
-    else:
-        img = img.convert('L')
     
     # Get terminal size
     term_width = int(vim.eval('&columns')) - 4
@@ -212,19 +224,25 @@ try:
     
     # Resize
     try:
-        img = img.resize((new_width, new_height), Image.LANCZOS)
         if use_color:
+            img_color = img.convert('RGB')
             img_color = img_color.resize((new_width, new_height), Image.LANCZOS)
+        img = img.convert('L')
+        img = img.resize((new_width, new_height), Image.LANCZOS)
     except AttributeError:
-        img = img.resize((new_width, new_height), Image.ANTIALIAS)
         if use_color:
+            img_color = img.convert('RGB')
             img_color = img_color.resize((new_width, new_height), Image.ANTIALIAS)
+        img = img.convert('L')
+        img = img.resize((new_width, new_height), Image.ANTIALIAS)
     
-    # Convert to ASCII
+    # Get pixel data
     pixels = list(img.getdata())
     if use_color:
         pixels_color = list(img_color.getdata())
-    chars = ' .:-=+*#%@'
+    
+    # ASCII chars from darkest to lightest
+    chars = ' .:-=+*#%@'[::-1]  # Reversed for better visibility
     
     # Create ASCII art line by line
     lines = []
@@ -233,17 +251,20 @@ try:
         for x in range(new_width):
             pos = y * new_width + x
             pixel = pixels[pos]
-            idx = int((pixel / 255.0) * (len(chars) - 1))
-            char = chars[idx]
+            
+            # Map brightness to character
+            brightness = pixel / 255.0
+            char_idx = int(brightness * (len(chars) - 1))
+            char = chars[char_idx]
             
             if use_color:
                 r, g, b = pixels_color[pos]
                 color_code = rgb_to_xterm(r, g, b)
-                # Add color escape sequence
+                # Use bright colors for better visibility
                 line += '\033[38;5;{}m{}'.format(color_code, char)
             else:
                 line += char
-                
+        
         if use_color:
             line += '\033[0m'  # Reset color at end of line
         lines.append(line)
