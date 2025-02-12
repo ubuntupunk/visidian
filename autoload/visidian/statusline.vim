@@ -12,7 +12,9 @@ endfunction
 " Function: visidian#statusline#get_para_location
 " Description: Get PARA location of current file
 function! visidian#statusline#get_para_location()
-    let l:path = expand('%:p')
+    " First try original path if it exists
+    let l:path = exists('b:visidian_original_path') ? b:visidian_original_path : expand('%:p')
+    
     if l:path =~? '/Projects/'
         return 'Project'
     elseif l:path =~? '/Areas/'

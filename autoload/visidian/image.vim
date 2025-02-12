@@ -168,6 +168,9 @@ function! visidian#image#display_image()
     
     let image_path = expand('%:p')
     
+    " Store original path in a buffer variable
+    let b:visidian_original_path = image_path
+    
 python3 << EOF
 try:
     import vim
