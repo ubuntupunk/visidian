@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Graph visualization functionality
+  - Network graph of note connections
+  - Integration with bookmarking menu
+  - Visual representation of note relationships
+- ASCII art image preview support
+  - Automatic image preview in terminal
+  - Support for PNG, JPEG, GIF formats
+  - Color mode with xterm-256 colors
+  - Toggle between color and grayscale modes
+  - Proper PARA location tracking for images
+  - Kitty graphics protocol support
 - RAG-like functionality for intelligent note context
   - Vector store for semantic note indexing
   - Automatic note indexing on save
