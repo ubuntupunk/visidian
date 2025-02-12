@@ -190,12 +190,11 @@ import sys
 def create_ascii_image(image_path, max_width=None, max_height=None):
     try:
         vim.command("call visidian#debug#debug('IMAGE', 'Python: Starting ASCII conversion')")
-        vim.command(f"call visidian#debug#debug('IMAGE', 'Python path: {sys.executable}')")
         
         # Open the image with detailed error handling
         try:
             img = Image.open(image_path)
-            vim.command(f"call visidian#debug#debug('IMAGE', 'Successfully opened image - Format: {img.format}, Mode: {img.mode}, Size: {img.size}')")
+            vim.command(f"call visidian#debug#debug('IMAGE', 'Opened image: {img.format} {img.mode} {img.size}')")
         except FileNotFoundError:
             vim.command(f"call visidian#debug#error('IMAGE', 'File not found: {image_path}')")
             vim.command("echohl ErrorMsg")
@@ -215,10 +214,9 @@ def create_ascii_image(image_path, max_width=None, max_height=None):
             vim.command("echohl None")
             return
 
-        # Convert to RGB if necessary
-        if img.mode != 'RGB':
-            vim.command(f"call visidian#debug#debug('IMAGE', 'Converting from {img.mode} to RGB mode')")
-            img = img.convert('RGB')
+        # Convert to grayscale first for better quality
+        img = img.convert('L')
+        vim.command("call visidian#debug#debug('IMAGE', 'Converted to grayscale')")
 
         # Get terminal dimensions
         vim.command('let l:term_width = &columns')
@@ -233,22 +231,18 @@ def create_ascii_image(image_path, max_width=None, max_height=None):
         
         # Calculate new dimensions (terminal characters are roughly twice as tall as wide)
         new_width = min(term_width - 4, img_width)
-        new_height = int(new_width * aspect_ratio * 0.5)  # 0.5 to account for terminal character aspect ratio
+        new_height = int(new_width * aspect_ratio * 0.45)  # Adjusted for better aspect ratio
         
         # Ensure height fits in terminal
         if new_height > term_height - 4:
             new_height = term_height - 4
-            new_width = int(new_height / aspect_ratio * 2)
+            new_width = int(new_height / (aspect_ratio * 0.45))
 
         vim.command(f"call visidian#debug#debug('IMAGE', 'Resizing image from {img_width}x{img_height} to {new_width}x{new_height}')")
         
         # Resize image with antialiasing
         img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
         vim.command("call visidian#debug#debug('IMAGE', 'Image resized with LANCZOS resampling')")
-        
-        # Convert to grayscale first using PIL's convert
-        img = img.convert('L')
-        vim.command("call visidian#debug#debug('IMAGE', 'Converted to grayscale')")
         
         # Get pixel data directly as a list
         pixels = list(img.getdata())
@@ -257,17 +251,19 @@ def create_ascii_image(image_path, max_width=None, max_height=None):
         pixels = [pixels[i:i + new_width] for i in range(0, len(pixels), new_width)]
         vim.command("call visidian#debug#debug('IMAGE', 'Pixel data processed')")
         
-        # Convert to ASCII with a better character set and proper brightness mapping
-        # ASCII chars from darkest to lightest
-        ascii_chars = ' .:-=+*#%@'[::-1]  # Reversed to match brightness
+        # Better ASCII chars from darkest to lightest
+        ascii_chars = ' .,:;irsXA253H@#8G&%MW'  # More granular set of characters
         char_width = len(ascii_chars) - 1
         
         ascii_img = []
         for row in pixels:
             ascii_row = ''
             for pixel in row:
-                # Map pixel value (0-255) to ascii character
-                char_idx = int((pixel / 255.0) * char_width)
+                # Map pixel value (0-255) to ascii character with gamma correction
+                brightness = pixel / 255.0
+                gamma = 1.5  # Adjust for better contrast
+                corrected = brightness ** (1.0 / gamma)
+                char_idx = int(corrected * char_width)
                 ascii_row += ascii_chars[char_idx]
             ascii_img.append(ascii_row)
         
