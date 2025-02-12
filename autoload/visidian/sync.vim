@@ -10,10 +10,23 @@ endfunction
 
 "FUNCTION: Generate Deploy Key and Config
 function! s:setup_git_deploy(owner, repo)
-    let key_path = expand('~/.ssh/id_rsa.visidian_' . a:repo)
-    let pub_key_path = key_path . '.pub'
-    let ssh_config = expand('~/.ssh/config')
+    " Ensure we have a vault path
+    if !exists('g:visidian_vault_path') || g:visidian_vault_path == ''
+        throw 'Vault path not set'
+    endif
     
+    let vault_path = fnamemodify(g:visidian_vault_path, ':p')
+    let ssh_dir = expand('~/.ssh')
+    
+    " Check for .ssh directory
+    if !isdirectory(ssh_dir)
+        throw 'SSH directory not found. Please create ~/.ssh directory with proper permissions (700) first.'
+    endif
+
+    let key_path = ssh_dir . '/id_rsa.visidian_' . a:repo
+    let pub_key_path = key_path . '.pub'
+    let ssh_config = ssh_dir . '/config'
+
     " Generate SSH key
     call visidian#debug#info('SYNC', 'Generating SSH key at ' . key_path)
     let cmd = 'ssh-keygen -t ed25519 -N "" -f ' . shellescape(key_path)
@@ -77,16 +90,28 @@ endfunction
 
 "FUNCTION: Initialize Git Repository
 function! s:init_git_repo(git_url)
-    if !s:is_within_vault(getcwd())
-        throw 'Must initialize Git repo within vault'
+    " Ensure we're initializing in the vault directory
+    if !exists('g:visidian_vault_path') || g:visidian_vault_path == ''
+        throw 'Vault path not set'
+    endif
+
+    let vault_path = fnamemodify(g:visidian_vault_path, ':p')
+    
+    " Check if .git already exists in vault
+    if isdirectory(vault_path . '.git')
+        throw 'Git repository already exists in vault'
     endif
 
     let init_cmd = [
-        \ 'cd ' . shellescape(g:visidian_vault_path),
+        \ 'cd ' . shellescape(vault_path),
         \ 'git init',
-        \ 'git remote add origin ' . shellescape(a:git_url),
-        \ 'git branch -M main'
+        \ 'git config --local core.excludesfile ' . shellescape(vault_path . '.gitignore')
     \ ]
+
+    if a:git_url != ''
+        call add(init_cmd, 'git remote add origin ' . shellescape(a:git_url))
+        call add(init_cmd, 'git branch -M main')
+    endif
     
     for cmd in init_cmd
         let output = system(cmd)
@@ -94,6 +119,23 @@ function! s:init_git_repo(git_url)
             throw 'Failed to initialize repository: ' . output
         endif
     endfor
+
+    " Create default .gitignore if it doesn't exist
+    let gitignore_path = vault_path . '.gitignore'
+    if !filereadable(gitignore_path)
+        let gitignore_content = [
+            \ '# Visidian default gitignore',
+            \ '.DS_Store',
+            \ 'Thumbs.db',
+            \ '*.swp',
+            \ '*.swo',
+            \ '*~',
+            \ '.git/',
+            \ '.obsidian/',
+            \ '.trash/'
+        \ ]
+        call writefile(gitignore_content, gitignore_path)
+    endif
 endfunction
 
 "FUNCTION: Sync
@@ -102,6 +144,17 @@ function! visidian#sync#sync()
         call visidian#debug#error('SYNC', 'No vault path set')
         echohl ErrorMsg
         echo "No vault path set. Please set a vault first."
+        echohl None
+        return
+    endif
+
+    let vault_path = fnamemodify(g:visidian_vault_path, ':p')
+    
+    " Ensure vault directory exists
+    if !isdirectory(vault_path)
+        call visidian#debug#error('SYNC', 'Vault directory does not exist')
+        echohl ErrorMsg
+        echo "Vault directory does not exist: " . vault_path
         echohl None
         return
     endif
@@ -130,7 +183,7 @@ function! visidian#sync#sync()
             " Initialize empty repository
             try
                 call s:init_git_repo('')
-                echo "Empty Git repository initialized. Add remote URL manually when ready."
+                echo "Empty Git repository initialized in vault. Add remote URL manually when ready."
             catch
                 call visidian#debug#error('SYNC', v:exception)
                 echohl ErrorMsg | echo v:exception | echohl None
@@ -144,6 +197,11 @@ function! visidian#sync#sync()
                 
                 let repo = input('Enter repository name: ')
                 if repo == '' | throw 'Repository name required' | endif
+                
+                " Validate repository name
+                if repo =~ '[/\\]'
+                    throw 'Repository name cannot contain slashes'
+                endif
 
                 " Generate deploy key and get setup instructions
                 let setup = s:setup_git_deploy(owner, repo)
