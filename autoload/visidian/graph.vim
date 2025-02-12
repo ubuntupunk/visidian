@@ -189,33 +189,50 @@ endfunction
 " Function: visidian#graph#ShowNoteGraph
 " Description: Creates and displays a network graph of the current note and its connections
 " Usage: call visidian#graph#ShowNoteGraph()
-function! visidian#graph#ShowNoteGraph()
+function! visidian#graph#ShowNoteGraph() abort
+    call visidian#debug#debug('GRAPH', 'Starting graph visualization')
+    
     let current_file = expand('%:t')
     if empty(current_file) || current_file !~ '\.md$'
-        call visidian#debug#error('GRAPH', 'Not a markdown file')
+        call visidian#debug#error('GRAPH', 'Not a markdown file: ' . current_file)
         return
     endif
-
+    
+    call visidian#debug#debug('GRAPH', 'Getting links from current file: ' . current_file)
+    let links = visidian#links#get_links_in_file(current_file)
+    if empty(links)
+        call visidian#debug#info('GRAPH', 'No links found in current file')
+        echohl WarningMsg
+        echom '📝 This note has no links yet. Try adding some!'
+        echohl None
+        return
+    endif
+    
     " Get all markdown files in the vault
     let vault_path = g:visidian_vault_path
     let files = globpath(vault_path, '**/*.md', 0, 1)
     let files = map(files, 'fnamemodify(v:val, ":t")')
+    call visidian#debug#debug('GRAPH', 'Found ' . len(files) . ' markdown files in vault')
 
     " Get links from the current file
+    call visidian#debug#debug('GRAPH', 'Getting links from current file')
     let edges = []
     let links = visidian#links#get_links_in_file(expand('%:p'))
     for link in links
         let target = link.target . '.md'
         if index(files, target) >= 0
             call add(edges, [current_file, target])
+            call visidian#debug#debug('GRAPH', 'Added edge: ' . current_file . ' -> ' . target)
         endif
     endfor
 
     " Get backlinks to the current file
+    call visidian#debug#debug('GRAPH', 'Getting backlinks for current file')
     let backlinks = visidian#links#get_backlinks(current_file)
     for backlink in backlinks
         let source = fnamemodify(backlink.source, ':t')
         call add(edges, [source, current_file])
+        call visidian#debug#debug('GRAPH', 'Added backlink edge: ' . source . ' -> ' . current_file)
     endfor
 
     " Get connected nodes (files that are either linked to or from)
@@ -228,9 +245,12 @@ function! visidian#graph#ShowNoteGraph()
             call add(connected_nodes, edge[1])
         endif
     endfor
+    call visidian#debug#debug('GRAPH', 'Found ' . len(connected_nodes) . ' connected nodes')
 
     " Draw the network graph
+    call visidian#debug#debug('GRAPH', 'Drawing network graph')
     call visidian#graph#DrawNetworkGraph(connected_nodes, edges, 'Note Graph: ' . current_file)
+    call visidian#debug#info('GRAPH', 'Graph visualization complete')
 endfunction
 
 " Example data
