@@ -153,6 +153,12 @@ augroup VisidianYAMLLinks
     autocmd FileType markdown nnoremap <buffer> <CR> :call visidian#link_notes#click_yaml_link()<CR>
 augroup END
 
+" Initialize on startup
+augroup visidian_init
+    autocmd!
+    autocmd VimEnter * call visidian#init()
+augroup END
+
 " Set up autocommands for statusline
 augroup VisidianStatusLine
     autocmd!

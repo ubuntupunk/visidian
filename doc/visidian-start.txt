@@ -72,4 +72,9 @@ g:visidian_config_file                                *g:visidian_config_file*
     Path to configuration file
     Default: '~/.visidian.json'
 
+g:visidian_auto_setup                                  *g:visidian_auto_setup*
+    Run setup wizard automatically on first start. After the first run,
+    this setting is automatically disabled to prevent running setup again.
+    Default: 1 (enabled)
+
  vim:tw=78:ts=8:ft=help:norl:

@@ -14,6 +14,9 @@ endif
 if !exists('g:visidian_config_file')
     let g:visidian_config_file = expand('~/.visidian.json')
 endif
+if !exists('g:visidian_auto_setup')
+    let g:visidian_auto_setup = 1
+endif
 if !exists('g:visidian_last_note')
     let g:visidian_last_note = ''
 endif
@@ -1359,7 +1362,6 @@ autocmd FileType markdown,tex,text setlocal spell
 " Example mapping to toggle spell-checking and thesaurus
 " nnoremap <silent> <leader>s :call visidian#toggle_spell()<CR>
 
-
 " Removed VisidianGenerateTags() as it's now in autoload/visidian/tags.vim
 
 " FUNCTION: Help
@@ -1524,5 +1526,20 @@ function! visidian#menu_session() abort
         endif
     else
         echo "Operation cancelled."
+    endif
+endfunction
+
+function! visidian#init() abort
+    call visidian#debug#debug('CORE', 'Initializing Visidian')
+    
+    " Check if we should auto setup
+    if g:visidian_auto_setup && !filereadable(g:visidian_config_file)
+        call visidian#debug#info('CORE', 'First start detected, running auto setup')
+        call visidian#setup#start()
+        
+        " Disable auto setup after first run
+        let g:visidian_auto_setup = 0
+        call s:save_config()
+        return
     endif
 endfunction
