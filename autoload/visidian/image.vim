@@ -159,7 +159,10 @@ endfunction
 " Parameters:
 "   - image_path: Path to the image file
 function! visidian#image#display_image()
+    call visidian#debug#debug('IMAGE', 'Starting image display process')
+    
     if !visidian#image#check_dependencies()
+        call visidian#debug#error('IMAGE', 'Dependencies check failed')
         return
     endif
 
@@ -182,10 +185,13 @@ import sys
 
 def create_ascii_image(image_path, max_width=None, max_height=None):
     try:
-        vim.command(f"call visidian#debug#debug('IMAGE', 'Attempting to open image: {image_path}')")
+        vim.command("call visidian#debug#debug('IMAGE', 'Python: Starting ASCII conversion')")
+        vim.command(f"call visidian#debug#debug('IMAGE', 'Python path: {sys.executable}')")
+        
         # Open the image with detailed error handling
         try:
             img = Image.open(image_path)
+            vim.command(f"call visidian#debug#debug('IMAGE', 'Successfully opened image - Format: {img.format}, Mode: {img.mode}, Size: {img.size}')")
         except FileNotFoundError:
             vim.command(f"call visidian#debug#error('IMAGE', 'File not found: {image_path}')")
             vim.command("echohl ErrorMsg")
@@ -205,18 +211,9 @@ def create_ascii_image(image_path, max_width=None, max_height=None):
             vim.command("echohl None")
             return
 
-        # Log image details
-        vim.command(f"call visidian#debug#debug('IMAGE', 'Image format: {img.format}')")
-        vim.command(f"call visidian#debug#debug('IMAGE', 'Image mode: {img.mode}')")
-        vim.command(f"call visidian#debug#debug('IMAGE', 'Image size: {img.size}')")
-        
-        vim.command("echohl MoreMsg")
-        vim.command("echom '🎨 Converting image to ASCII art...'")
-        vim.command("echohl None")
-        
         # Convert to RGB if necessary
         if img.mode != 'RGB':
-            vim.command("call visidian#debug#debug('IMAGE', 'Converting image to RGB mode')")
+            vim.command(f"call visidian#debug#debug('IMAGE', 'Converting from {img.mode} to RGB mode')")
             img = img.convert('RGB')
 
         # Get terminal dimensions
@@ -224,6 +221,7 @@ def create_ascii_image(image_path, max_width=None, max_height=None):
         vim.command('let l:term_height = &lines')
         term_width = int(vim.eval('l:term_width'))
         term_height = int(vim.eval('l:term_height'))
+        vim.command(f"call visidian#debug#debug('IMAGE', 'Terminal dimensions: {term_width}x{term_height}')")
 
         # Calculate dimensions while maintaining aspect ratio
         img_width, img_height = img.size
@@ -238,19 +236,22 @@ def create_ascii_image(image_path, max_width=None, max_height=None):
             new_height = term_height - 4
             new_width = int(new_height / aspect_ratio * 2)
 
-        vim.command(f"call visidian#debug#debug('IMAGE', 'Resizing image to {new_width}x{new_height}')")
+        vim.command(f"call visidian#debug#debug('IMAGE', 'Resizing image from {img_width}x{img_height} to {new_width}x{new_height}')")
         
         # Resize image with antialiasing
         img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+        vim.command("call visidian#debug#debug('IMAGE', 'Image resized with LANCZOS resampling')")
         
         # Convert to grayscale first using PIL's convert
         img = img.convert('L')
+        vim.command("call visidian#debug#debug('IMAGE', 'Converted to grayscale')")
         
         # Get pixel data directly as a list
         pixels = list(img.getdata())
         
         # Reshape pixels into rows
         pixels = [pixels[i:i + new_width] for i in range(0, len(pixels), new_width)]
+        vim.command("call visidian#debug#debug('IMAGE', 'Pixel data processed')")
         
         # Convert to ASCII with a better character set and proper brightness mapping
         # ASCII chars from darkest to lightest
@@ -266,6 +267,8 @@ def create_ascii_image(image_path, max_width=None, max_height=None):
                 ascii_row += ascii_chars[char_idx]
             ascii_img.append(ascii_row)
         
+        vim.command("call visidian#debug#debug('IMAGE', 'ASCII conversion complete')")
+        
         # Add image information
         header = [
             f'Image: {os.path.basename(image_path)}',
@@ -274,8 +277,6 @@ def create_ascii_image(image_path, max_width=None, max_height=None):
             f'Format: {img.format}',
             ''
         ]
-
-        vim.command("call visidian#debug#debug('IMAGE', 'Generated ASCII art')")
         
         # Set buffer content
         vim.current.buffer[:] = []  # Clear buffer
@@ -291,6 +292,8 @@ def create_ascii_image(image_path, max_width=None, max_height=None):
         vim.command('setlocal nonumber')
         vim.command('setlocal norelativenumber')
         vim.command('setlocal signcolumn=no')
+        
+        vim.command("call visidian#debug#debug('IMAGE', 'Buffer setup complete')")
         
         # Add success message after drawing
         vim.command("echohl MoreMsg")

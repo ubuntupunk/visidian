@@ -21,6 +21,7 @@ let s:DEBUG_CATEGORIES = [
     \ 'BOOKMARKS',
     \ 'LINK',
     \ 'NOTES',
+    \ 'IMAGE',
     \ ]
 
 " Initialize debug level from global variable
