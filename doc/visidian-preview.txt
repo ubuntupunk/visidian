@@ -4,32 +4,55 @@
 CONTENTS                                            *visidian-preview-contents*
 
     1. Introduction .................... |visidian-preview-intro|
-    2. Features ....................... |visidian-preview-features|
+    2. Preview Types .................. |visidian-preview-types|
+        2.1 Markdown Preview .......... |visidian-preview-markdown|
+        2.2 Image Preview ............. |visidian-preview-image|
     3. Requirements ................... |visidian-preview-requirements|
     4. Configuration .................. |visidian-preview-config|
-
-See also:
-    Core Functions ................... |visidian|
-    Markdown Support ................ |visidian-markdown|
+    5. Commands ...................... |visidian-preview-commands|
 
 ==============================================================================
 1. Introduction                                        *visidian-preview-intro*
 
-Visidian provides preview features for both Markdown files and images, helping
-you visualize your content directly in Vim.
+Visidian provides two distinct preview mechanisms:
+1. External browser-based preview for Markdown files
+2. Internal ASCII-based preview for images
+
+This dual approach offers both rich rendering for Markdown content and 
+lightweight, terminal-friendly visualization for images.
 
 ==============================================================================
-2. Features                                           *visidian-preview-features*
+2. Preview Types                                      *visidian-preview-types*
 
 2.1 Markdown Preview                                  *visidian-preview-markdown*
 
-Visidian Preview provides real-time preview functionality for markdown files,
-supporting multiple preview backends for maximum compatibility.
+The Markdown preview feature opens your notes in a web browser for rich
+rendering with full HTML/CSS support.
+
+Features:~
+    - Live preview in external browser
+    - Full HTML/CSS rendering
+    - Support for all Markdown extensions
+    - Multiple preview backends:
+        1. mdcat (preferred)
+        2. grip
+        3. bracey.vim (fallback)
+
+Usage:~
+    Use |:VisidianPreviewToggle| to open/close the preview in your browser.
+    Changes are automatically reflected as you type.
 
 2.2 Image Preview                                     *visidian-preview-image*
 
-Visidian can display images directly in Vim using ASCII art. When you open an
-image file, it will automatically be converted to an ASCII representation.
+The image preview feature renders images directly in Vim using ASCII art,
+allowing you to view images without leaving your terminal.
+
+Features:~
+    - Internal preview (no external viewer needed)
+    - Automatic conversion to ASCII art
+    - Aspect ratio preservation
+    - Window size adaptation
+    - Image information display
 
 Supported formats:~
     - PNG (.png)
@@ -37,98 +60,51 @@ Supported formats:~
     - GIF (.gif)
     - BMP (.bmp)
 
-Features:~
-    - Automatic image detection and conversion
-    - Aspect ratio preservation
-    - Window size adaptation
-    - Image information display
-    - Grayscale conversion with perceived luminance
-    - High-quality character mapping
+Usage:~
+    Simply open an image file and it will be automatically previewed:
+>
+        :edit image.png
+<
+==============================================================================
+3. Requirements                                   *visidian-preview-requirements*
 
-Requirements:~
+Markdown Preview Requirements:~
+    - One of the following:
+        - mdcat (recommended)
+        - grip
+        - bracey.vim
+    - A modern web browser
+
+Image Preview Requirements:~
     - Python3 support in Vim
     - Python Pillow library (PIL)
 
-Configuration:~
+==============================================================================
+4. Configuration                                      *visidian-preview-config*
+
+Markdown Preview Configuration:~
+>
+    " Choose preview backend (1: mdcat, 2: grip, 3: bracey)
+    let g:visidian_preview_backend = 1
+
+    " Set browser command (optional)
+    let g:visidian_browser_command = 'firefox'
+<
+
+Image Preview Configuration:~
 >
     " Disable automatic image preview
     let g:visidian_disable_image_preview = 1
 <
 
-Usage:~
-    1. Simply open an image file in Vim:
->
-        :edit image.png
-<
-    2. The image will be automatically converted to ASCII art
-    3. Image information will be displayed at the top:
-        - Filename
-        - Original dimensions
-        - Color mode
-        - File format
-
-ASCII Characters:~
-    The following characters are used to represent different brightness levels,
-    from darkest to lightest:
->
-    @%#*+=-:. 
-<
-
-Tips:~
-    - Use a monospace font for best results
-    - Larger terminal windows provide better detail
-    - Set 'nowrap' for proper image display (done automatically)
-    - Adjust terminal window size to change image scale
-
-Example Output:~
->
-    Image: example.png
-    Size: 800x600
-    Mode: RGB
-    Format: PNG
-
-    @@@@%%%%####****++++====----::::....    
-    @@@@%%%%####****++++====----::::....    
-    @@@@%%%%####****++++====----::::....    
-<
-
-==============================================================================
-3. Requirements                                   *visidian-preview-requirements*
-
-The preview functionality requires one of the following backends:
-- markdown-preview.nvim (recommended for Neovim users)
-- grip (GitHub-flavored markdown preview)
-- bracey.vim (HTML preview fallback)
-
-Additionally:
-- A modern web browser (Chrome, Firefox, or other system default)
-- Vim 8.1+ or Neovim
-
-==============================================================================
-4. Configuration                                      *visidian-preview-config*
-
-g:visidian_preview_port                            *g:visidian_preview_port*
-    Port for the preview server
-    Default: 8888
-
-g:visidian_preview_browser                      *g:visidian_preview_browser*
-    Preferred browser for preview
-    Default: System default (xdg-open on Linux)
-
-g:visidian_preview_backend                      *g:visidian_preview_backend*
-    Preferred preview backend
-    Options: 'markdown-preview.nvim', 'grip', 'bracey'
-    Default: Auto-detect based on availability
-
-Preview backends are tried in the following order:
-1. markdown-preview.nvim (if using Neovim)
-2. grip (if installed)
-3. bracey.vim (fallback)
-
 ==============================================================================
 5. Commands                                          *visidian-preview-commands*
 
 :VisidianPreviewToggle                                *:VisidianPreviewToggle*
-    Toggle the markdown preview window
+    Toggle the external browser-based Markdown preview window.
+    Only applies to Markdown files.
 
+Note: Image preview is automatic and does not require commands.
+
+==============================================================================
  vim:tw=78:ts=8:ft=help:norl:
