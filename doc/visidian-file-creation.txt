@@ -1,0 +1,69 @@
+*visidian-file-creation.txt*  Note creation functionality
+
+                                                     *visidian-file-creation*
+
+==============================================================================
+CONTENTS                                       *visidian-file-creation-contents*
+
+    1. Introduction .................... |visidian-file-creation-intro|
+    2. Commands ....................... |visidian-file-creation-commands|
+    3. YAML Frontmatter ............... |visidian-file-creation-yaml|
+    4. Templates ...................... |visidian-file-creation-templates|
+
+See also:
+    PARA Method ...................... |visidian-para|
+    Link Notes ....................... |visidian-link-notes|
+
+==============================================================================
+1. Introduction                                   *visidian-file-creation-intro*
+
+Visidian provides functionality to create new notes with proper YAML frontmatter
+and organize them within your vault's PARA structure.
+
+==============================================================================
+2. Commands                                     *visidian-file-creation-commands*
+
+:VisidianNote                                          *:VisidianNewNote*
+    Create a new note in the vault. You will be prompted for:
+    1. Note name
+    2. PARA directory (Projects, Areas, Resources, Archives)
+    3. Tags (optional)
+    4. Links to other notes (optional)
+
+==============================================================================
+3. YAML Frontmatter                               *visidian-file-creation-yaml*
+
+Each new note is created with YAML frontmatter containing:
+
+>
+    ---
+    title: Note Title
+    date: YYYY-MM-DD HH:MM:SS
+    tags: []
+    links: []
+    ---
+<
+
+The frontmatter can be customized through templates.
+
+==============================================================================
+4. Templates                                   *visidian-file-creation-templates*
+
+Default templates are provided for each PARA category:
+
+Projects/~
+    Template for task-based notes with clear objectives
+
+Areas/~
+    Template for ongoing responsibility notes
+
+Resources/~
+    Template for reference materials and topic notes
+
+Archives/~
+    Template for completed or inactive notes
+
+Each template includes appropriate YAML frontmatter and initial content
+structure.
+
+ vim:tw=78:ts=8:ft=help:norl:

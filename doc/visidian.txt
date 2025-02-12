@@ -1,93 +1,186 @@
-*visidian.txt*  A Vim plugin for Obsidian-like Personal Knowledge Management
+*visidian.txt*  Obsidian-like Personal Knowledge Management for Vim
 
-                                                    *visidian*
-
-==============================================================================
-CONTENTS                                            *visidian-contents*
-
-    1. Introduction ................ |visidian-introduction|
-    2. Commands ................... |visidian-commands|
-    3. PARA Method ................ |visidian-para|
-    4. Bookmarks .................. |visidian-bookmarks|
-    5. Debugging .................. |visidian-debugging|
+                                                                    *visidian*
 
 ==============================================================================
-DEBUGGING                                           *visidian-debugging*
+CONTENTS                                                     *visidian-contents*
 
-Visidian provides two main commands for debugging purposes:
+    1. Introduction .................... |visidian-introduction|
+    2. Getting Started ................ |visidian-getting-started|
+    3. Core Features .................. |visidian-features|
+    4. PARA Method .................... |visidian-para|
+    5. Commands Reference ............. |visidian-commands|
+    6. Configuration .................. |visidian-configuration|
+    7. Tips and Best Practices ........ |visidian-tips|
+    8. Troubleshooting ................ |visidian-troubleshooting|
 
-                                                    *:VisidianDebug*
-:VisidianDebug {level}     Set the debug level
-                        Supports tab completion for available levels:
-                        - ERROR  : Only show errors
-                        - WARN   : Show warnings and errors
-                        - INFO   : Show general information
-                        - DEBUG  : Show detailed debug information
-                        - TRACE  : Show very detailed trace information
+See also:
+    Tag Navigation ................... |visidian-tags|
 
-                                                    *:VisidianDebugCat*
-:VisidianDebugCat {categories}
-                        Set which categories to debug
-                        Supports tab completion for available categories:
-                        - ALL      : Enable all categories
-                        - CORE     : Core functionality
-                        - SESSION  : Session management
-                        - PREVIEW  : Markdown preview
-                        - SEARCH   : Search functionality
-                        - CACHE    : Cache operations
-                        - PARA     : PARA system
-                        - UI       : User interface
-                        - SYNC     : Sync operations
-                        - BOOKMARKS: Bookmarking system
+For detailed documentation on specific features:
+    :help visidian-bookmarking ........ Note bookmarking system
+    :help visidian-chat ............... AI chat integration
+    :help visidian-debug .............. Debug system
+    :help visidian-file-creation ...... File creation and templates
+    :help visidian-link-notes ......... Link management
+    :help visidian-para ............... PARA method implementation
+    :help visidian-preview ............ Note preview
+    :help visidian-search ............. Search functionality
+    :help visidian-sort ............... Note sorting
+    :help visidian-start .............. Startup and initialization
+    :help visidian-sync ............... Synchronization
+    :help visidian-vectorstore ........ Vector-based search
+    :help visidian-tags ............... Tag navigation
 
-Example Usage:~
+==============================================================================
+1. Introduction                                         *visidian-introduction*
 
-Enable debug logging for bookmarks: >
-    :VisidianDebug DEBUG
-    :VisidianDebugCat BOOKMARKS
+Visidian is a powerful Vim plugin that brings Obsidian-like Personal Knowledge
+Management (PKM) functionality to Vim. It enables you to create, manage, and
+interconnect your notes while staying within your favorite editor.
+
+Key Features:~
+- PARA method implementation for note organization
+- Markdown-based note taking
+- Bidirectional linking
+- Full-text and semantic search
+- Note preview and rendering
+- Customizable templates
+- Git-based synchronization
+- Tag navigation
+
+==============================================================================
+2. Getting Started                                   *visidian-getting-started*
+
+Installation:~
+Add to your plugin manager (example using vim-plug):
+>
+    Plug 'ubuntupunk/visidian.vim'
 <
-Enable all debug output: >
+
+Initial Setup:~
+1. Initialize a new vault:
+>
+    :VisidianInit
+<
+2. Set up PARA folders:
+>
+    :VisidianPARA
+<
+3. Create your first note:
+>
+    :VisidianNew
+<
+
+==============================================================================
+3. Core Features                                         *visidian-features*
+
+Detailed documentation for each feature is available in separate help files:
+
+    Bookmarking ............... |visidian-bookmarking|
+    Chat/AI Integration ....... |visidian-chat|
+    Debug System .............. |visidian-debug|
+    File Creation ............. |visidian-file-creation|
+    Link Management ........... |visidian-link-notes|
+    PARA Method ............... |visidian-para|
+    Preview ................... |visidian-preview|
+    Search .................... |visidian-search|
+    Sorting ................... |visidian-sort|
+    Startup/Init .............. |visidian-start|
+    Sync ...................... |visidian-sync|
+    Vector Store .............. |visidian-vectorstore|
+    Tag Navigation ............ |visidian-tags|
+
+Each feature's documentation can be accessed directly using :help followed by
+the feature name (e.g., :help visidian-chat).
+
+==============================================================================
+4. PARA Method                                              *visidian-para*
+
+The PARA method organizes information into four categories:
+
+Projects:~
+    Active projects with clear goals and deadlines
+    Example: "Q1 2025 Product Launch"
+
+Areas:~
+    Ongoing responsibilities without deadlines
+    Example: "Health", "Finance"
+
+Resources:~
+    Topic-based reference materials
+    Example: "Programming", "Recipes"
+
+Archives:~
+    Completed or inactive items
+    Example: "Completed Projects", "Old Notes"
+
+==============================================================================
+5. Commands Reference                                     *visidian-commands*
+
+Core Commands:~
+    :VisidianInit ........... Initialize new vault
+    :VisidianNote ............ Create new note
+    :VisidianSearch ......... Search notes
+    :VisidianPreview ........ Preview current note
+    :VisidianSync ........... Sync vault with git
+
+See individual feature documentation for complete command lists.
+
+==============================================================================
+6. Configuration                                     *visidian-configuration*
+
+Basic Settings:~
+>
+    " Set vault directory
+    let g:visidian_vault_dir = '~/notes'
+
+    " Enable debug mode
+    let g:visidian_debug = 1
+
+<
+
+See individual feature documentation for detailed configuration options.
+
+==============================================================================
+7. Tips and Best Practices                                  *visidian-tips*
+
+1. Consistent Note Naming:
+   - Use descriptive titles
+   - Include dates for temporal notes
+   - Use prefixes for categorization
+
+2. Effective Linking:
+   - Create bidirectional links
+   - Use consistent link formats
+   - Review unlinked references
+
+3. Regular Maintenance:
+   - Review and update PARA categories
+   - Archive completed projects
+   - Maintain consistent templates
+
+==============================================================================
+8. Troubleshooting                                  *visidian-troubleshooting*
+
+Common Issues:~
+
+1. Vault Not Found:
+   - Check g:visidian_vault_dir setting
+   - Ensure directory exists and is writable
+
+2. Preview Not Working:
+   - Check if required dependencies are installed
+   - Verify preview port is not in use
+
+3. Search Issues:
+   - Rebuild vector store: :VisidianVectorInit
+   - Check file permissions
+
+For detailed debugging:
+>
     :VisidianDebug DEBUG
     :VisidianDebugCat ALL
 <
-Only show errors for sync operations: >
-    :VisidianDebug ERROR
-    :VisidianDebugCat SYNC
-<
-View debug messages using the Vim |:messages| command.
 
-==============================================================================
-VARIABLES                                            *visidian-variables*
-
-                                                    *g:visidian_debug*
-    Enable or disable debug mode. Set to 0 to disable all debug output.
-    Default: 1
-
-                                                    *g:visidian_debug_level*
-    Set the debug level for messages. Available levels are:
-    - ERROR: Only show errors
-    - WARN:  Show warnings and errors
-    - INFO:  Show general information
-    - DEBUG: Show detailed debug information
-    - TRACE: Show very detailed trace information
-    Default: 'WARN'
-
-                                                    *g:visidian_debug_categories*
-    List of debug categories to enable. Set to ['ALL'] to enable all categories.
-    Available categories:
-    - ALL:       Enable all categories
-    - CORE:      Core functionality
-    - SESSION:   Session management
-    - PREVIEW:   Markdown preview
-    - SEARCH:    Search functionality
-    - CACHE:     Cache operations
-    - PARA:      PARA system
-    - UI:        User interface
-    - SYNC:      Sync operations
-    - BOOKMARKS: Bookmarking system
-    - LINK:      Link management
-    - NOTES:     Note operations
-    Default: ['ALL']
-
-==============================================================================
  vim:tw=78:ts=8:ft=help:norl:

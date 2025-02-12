@@ -1,0 +1,98 @@
+*visidian-debug.txt*  Debug functionality for Visidian
+
+                                                              *visidian-debug*
+
+==============================================================================
+CONTENTS                                              *visidian-debug-contents*
+
+    1. Introduction .................... |visidian-debug-intro|
+    2. Commands ....................... |visidian-debug-commands|
+    3. Configuration .................. |visidian-debug-config|
+    4. Debug Categories ............... |visidian-debug-categories|
+
+See also:
+    Core Functions ................... |visidian|
+    PARA Method ...................... |visidian-para|
+
+==============================================================================
+1. Introduction                                          *visidian-debug-intro*
+
+Visidian Debug provides comprehensive logging and debugging capabilities to help
+troubleshoot issues and monitor plugin behavior.
+
+==============================================================================
+2. Commands                                            *visidian-debug-commands*
+
+:VisidianDebug {level}                                      *:VisidianDebug*
+    Set the debug level. Valid levels are:
+    - ERROR  : Only show errors (0)
+    - WARN   : Show warnings and errors (1)
+    - INFO   : Show info, warnings, and errors (2)
+    - DEBUG  : Show debug and above (3)
+    - TRACE  : Show all messages (4)
+
+:VisidianDebugCat {category}                            *:VisidianDebugCat*
+    Set debug categories to monitor. Use 'ALL' for all categories.
+
+:VisidianDebugInfo                                      *:VisidianDebugInfo*
+    Display current debug settings
+
+==============================================================================
+3. Configuration                                        *visidian-debug-config*
+
+g:visidian_debug                                          *g:visidian_debug*
+    Enable or disable debug logging
+    Default: 1 (enabled)
+
+g:visidian_debug_level                              *g:visidian_debug_level*
+    Set the default debug level
+    Default: 'WARN'
+
+g:visidian_debug_categories                    *g:visidian_debug_categories*
+    Set the debug categories to monitor
+    Default: ['ALL']
+
+==============================================================================
+4. Debug Categories                                *visidian-debug-categories*
+
+Available debug categories:
+    ALL ............ All categories
+    CORE ........... Core plugin functions
+    SESSION ........ Session management
+    PREVIEW ........ Markdown preview
+    SEARCH ......... Search functionality
+    CACHE .......... Cache operations
+    PARA ........... PARA method functions
+    UI ............. User interface
+    SYNC ........... Sync operations
+    BOOKMARKS ...... Bookmark management
+    LINK ........... Link management
+    NOTES .......... Note operations
+
+==============================================================================
+5. Usage Examples                                     *visidian-debug-examples*
+
+Enable debug logging for bookmarks:~
+>
+    :VisidianDebug DEBUG
+    :VisidianDebugCat BOOKMARKS
+<
+
+Enable all debug output:~
+>
+    :VisidianDebug DEBUG
+    :VisidianDebugCat ALL
+<
+
+Only show errors for sync operations:~
+>
+    :VisidianDebug ERROR
+    :VisidianDebugCat SYNC
+<
+
+View current debug status:~
+>
+    :VisidianDebugInfo
+<
+
+ vim:tw=78:ts=8:ft=help:norl:

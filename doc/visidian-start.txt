@@ -1,0 +1,80 @@
+*visidian-start.txt*  Getting started with Visidian
+
+                                                             *visidian-start*
+
+==============================================================================
+CONTENTS                                                *visidian-start-contents*
+
+    1. Introduction .................... |visidian-start-intro|
+    2. Setup Flow ..................... |visidian-start-flow|
+    3. Commands ....................... |visidian-start-commands|
+    4. Configuration .................. |visidian-start-config|
+
+See also:
+    PARA Method ...................... |visidian-para|
+    File Creation .................... |visidian-file-creation|
+    Sync Options ..................... |visidian-sync|
+
+==============================================================================
+1. Introduction                                          *visidian-start-intro*
+
+Visidian's setup process guides you through creating and configuring your
+knowledge management system. The process follows a structured flow to ensure
+all components are properly initialized.
+
+==============================================================================
+2. Setup Flow                                            *visidian-start-flow*
+
+The setup process follows this sequence:
+
+1. Vault Setup:~
+   - Select or create a vault directory
+   - Initialize Visidian configuration
+
+2. PARA Setup:~
+   - Create PARA directory structure
+   - Configure category templates
+
+3. File Setup:~
+   - Configure file naming conventions
+   - Set up templates
+
+4. Folder Setup:~
+   - Configure folder structure
+   - Set up category-specific settings
+
+5. Sync Setup:~
+   - Choose sync method (Git/Rsync/Syncthing)
+   - Configure sync settings
+
+6. Settings Setup:~
+   - Configure editor preferences
+   - Set up key mappings
+
+7. Completion:~
+   - Verify setup
+   - Display quick start guide
+
+==============================================================================
+3. Commands                                            **visidian-start-commands*
+
+:VisidianInit                                                  *:VisidianInit*
+    Start the initial setup process
+
+==============================================================================
+4. Configuration                                        *visidian-start-config*
+
+g:visidian_vault_dir                                    *g:visidian_vault_dir*
+    Path to your vault directory
+    Default: '~/visidian'
+
+g:visidian_config_file                                *g:visidian_config_file*
+    Path to configuration file
+    Default: '~/.visidian.json'
+
+g:visidian_auto_setup                                  *g:visidian_auto_setup*
+    Run setup wizard automatically on first start. After the first run,
+    this setting is automatically disabled to prevent running setup again.
+    Default: 1 (enabled)
+
+ vim:tw=78:ts=8:ft=help:norl:

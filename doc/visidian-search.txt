@@ -1,0 +1,61 @@
+*visidian-search.txt*  Search functionality for notes
+
+                                                              *visidian-search*
+
+==============================================================================
+CONTENTS                                               *visidian-search-contents*
+
+    1. Introduction .................... |visidian-search-intro|
+    2. Commands ....................... |visidian-search-commands|
+    3. Search Syntax .................. |visidian-search-syntax|
+    4. Configuration .................. |visidian-search-config|
+    5. Usage Examples ................. |visidian-search-examples|
+
+See also:
+    Vector Store ...................... |visidian-vectorstore|
+    Chat Integration .................. |visidian-chat|
+    Bookmarking ...................... |visidian-bookmarking|
+
+==============================================================================
+1. Introduction                                         *visidian-search-intro*
+
+Visidian Search provides powerful search capabilities across your notes,
+including fuzzy finding and full-text search functionality.
+
+==============================================================================
+2. Commands                                           *visidian-search-commands*
+
+:VisidianSearch                                              *:VisidianSearch*
+    Open fuzzy finder for searching notes
+
+==============================================================================
+3. Configuration                                      *visidian-search-config*
+
+g:visidian_vault_path                                 *g:visidian_vault_path*
+    Path to the Visidian vault directory
+    Default: ''
+
+Future Development:~
+The following features are planned for future releases:
+- Tag-based search
+- Link-based search
+- Case-sensitive search options
+- Search result preview
+- Search exclusion patterns
+
+==============================================================================
+4. Usage Examples                                    *visidian-search-examples*
+
+Search for notes:~
+>
+    :VisidianSearch
+    > Type your search query
+<
+
+Search with fuzzy matching:~
+>
+    :VisidianSearch
+    > Type partial words to match
+<
+
+ vim:tw=78:ts=8:ft=help:norl:

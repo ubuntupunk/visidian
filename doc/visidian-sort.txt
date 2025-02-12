@@ -1,0 +1,57 @@
+*visidian-sort.txt*  Note sorting functionality
+
+                                                             *visidian-sort*
+
+==============================================================================
+CONTENTS                                               *visidian-sort-contents*
+
+    1. Introduction .................... |visidian-sort-intro|
+    2. Commands ....................... |visidian-sort-commands|
+    3. PARA Method .................... |visidian-sort-para|
+
+See also:
+    PARA Method ...................... |visidian-para|
+    File Creation .................... |visidian-file-creation|
+
+==============================================================================
+1. Introduction                                           *visidian-sort-intro*
+
+Visidian Sort provides automatic note organization using the PARA method
+(Projects, Areas, Resources, Archives). Notes are sorted into appropriate
+directories based on their content, tags, and metadata.
+
+==============================================================================
+2. Commands                                             *visidian-sort-commands*
+
+:VisidianSort                                                  *:VisidianSort*
+    Sort notes into PARA directories based on their content and metadata.
+    This command will:
+    1. Create PARA directories if they don't exist
+    2. Analyze each note's content and metadata
+    3. Move notes to appropriate directories
+    4. Update file paths in YAML frontmatter if needed
+
+==============================================================================
+3. PARA Method                                             *visidian-sort-para*
+
+Notes are sorted into these directories:
+
+Projects/~
+    Active projects with clear objectives and deadlines
+
+Areas/~
+    Long-term responsibilities and roles that require ongoing attention
+
+Resources/~
+    Reference materials and topic-based notes
+
+Archives/~
+    Completed projects and inactive reference materials
+
+The sorting process considers:
+- File content
+- YAML frontmatter metadata
+- Tags and links
+- Project status
+
+ vim:tw=78:ts=8:ft=help:norl:

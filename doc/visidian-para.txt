@@ -1,58 +1,73 @@
-*visidian-para.txt*  PARA Method Color System for Visidian
+*visidian-para.txt*  PARA method organization
 
-                                                        *visidian-para*
-
-The PARA Color System helps you visually navigate your Visidian vault by color-coding
-different types of notes based on their PARA classification:
-
-    Projects (Pink)     - Active, time-bound projects
-    Areas (Green)      - Ongoing areas of responsibility
-    Resources (Blue)   - Reference materials and knowledge
-    Archives (Gray)    - Inactive or completed items
+                                                             *visidian-para*
 
 ==============================================================================
-CUSTOMIZATION                                          *visidian-para-colors*
+CONTENTS                                                 *visidian-para-contents*
 
-You can customize the colors by setting g:visidian_para_colors in your vimrc:
->
-    let g:visidian_para_colors = {
-        \ 'projects': {'ctermfg': '168', 'guifg': '#d75f87'},
-        \ 'areas': {'ctermfg': '107', 'guifg': '#87af5f'},
-        \ 'resources': {'ctermfg': '110', 'guifg': '#87afd7'},
-        \ 'archives': {'ctermfg': '242', 'guifg': '#6c6c6c'},
-        \ }
-<
-==============================================================================
-STATUSLINE INTEGRATION                                 *visidian-para-status*
+    1. Introduction .................... |visidian-para-intro|
+    2. Commands ....................... |visidian-para-commands|
+    3. Configuration .................. |visidian-para-config|
+    4. Directory Structure ............ |visidian-para-structure|
+    5. Status Line Integration ........ |visidian-para-statusline|
 
-Add PARA context to your statusline by including %{VisidianParaContext()}:
->
-    set statusline+=%{VisidianParaContext()}
-<
-This will show P/A/R/Ar indicators in your status line based on the current
-file's location in your vault.
+See also:
+    Sort System ...................... |visidian-sort|
+    File Creation .................... |visidian-file-creation|
 
 ==============================================================================
-COLOR MEANINGS                                         *visidian-para-meanings*
+1. Introduction                                             *visidian-para-intro*
 
-Pink (Projects)
-    - Active projects with clear outcomes and deadlines
-    - Time-bound initiatives
-    - Current focus areas
+The PARA method (Projects, Areas, Resources, Archives) is a systematic way to
+organize your notes. Visidian implements PARA as a core organizational system,
+helping you maintain clarity and focus in your note-taking.
 
-Green (Areas)
-    - Long-term responsibilities
-    - Ongoing commitments
-    - Standards to maintain
+==============================================================================
+2. Commands                                               *visidian-para-commands*
 
-Blue (Resources)
-    - Reference materials
-    - Knowledge base
-    - Topic-based information
+:VisidianPARA                                                  *:VisidianPARA*
+    Set up PARA method folders in your vault.
 
-Gray (Archives)
-    - Completed projects
-    - Inactive areas
-    - Historical reference
+:VisidianSort                                                  *:VisidianSort*
+    Sort notes into appropriate PARA directories based on content and metadata.
+
+==============================================================================
+3. Configuration                                           *visidian-para-config*
+
+g:visidian_para_enabled                               *g:visidian_para_enabled*
+    Enable PARA method organization
+    Default: 1
+
+==============================================================================
+4. Directory Structure                                   *visidian-para-structure*
+
+Projects/~
+    Active projects with clear objectives and deadlines
+    Example: "Writing a Book", "Learning Vim"
+
+Areas/~
+    Long-term responsibilities and roles
+    Example: "Health", "Career", "Finances"
+
+Resources/~
+    Reference materials and topic-based notes
+    Example: "Programming", "Recipes", "Book Notes"
+
+Archives/~
+    Completed projects and inactive reference materials
+    Example: "Completed Projects", "Old Notes"
+
+==============================================================================
+5. Status Line Integration                             *visidian-para-statusline*
+
+Visidian provides status line integration to show which PARA category the
+current note belongs to:
+
+    P - Projects
+    A - Areas
+    R - Resources
+    Ar - Archives
+
+Add %{VisidianParaContext()} to your statusline to display the PARA context.
 
  vim:tw=78:ts=8:ft=help:norl:

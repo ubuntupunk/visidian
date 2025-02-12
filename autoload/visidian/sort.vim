@@ -14,7 +14,20 @@ function! visidian#sort#sort()
     let para_dirs = ['projects', 'areas', 'resources', 'archives']
     for dir in para_dirs
         let full_dir = g:visidian_vault_path . dir
-        if !isdirectory(full_dir)
+        " Check for case-insensitive directory existence
+        let existing_dirs = glob(g:visidian_vault_path . '[Pp][Rr][Oo][Jj][Ee][Cc][Tt][Ss]', 1, 1)
+        \                 + glob(g:visidian_vault_path . '[Aa][Rr][Ee][Aa][Ss]', 1, 1)
+        \                 + glob(g:visidian_vault_path . '[Rr][Ee][Ss][Oo][Uu][Rr][Cc][Ee][Ss]', 1, 1)
+        \                 + glob(g:visidian_vault_path . '[Aa][Rr][Cc][Hh][Ii][Vv][Ee][Ss]', 1, 1)
+        let dir_exists = 0
+        for existing in existing_dirs
+            if tolower(fnamemodify(existing, ':t')) == dir
+                let dir_exists = 1
+                let full_dir = existing
+                break
+            endif
+        endfor
+        if !dir_exists && !isdirectory(full_dir)
             call visidian#debug#info('PARA', 'Creating directory: ' . full_dir)
             call mkdir(full_dir, 'p')
         endif

@@ -1,0 +1,96 @@
+*visidian-tags.txt*  Tag generation and browsing
+
+                                                             *visidian-tags*
+
+==============================================================================
+CONTENTS                                                 *visidian-tags-contents*
+
+    1. Introduction .................... |visidian-tags-intro|
+    2. Commands ....................... |visidian-tags-commands|
+    3. Configuration .................. |visidian-tags-config|
+    4. Types .......................... |visidian-tags-types|
+    5. Browser ........................ |visidian-tags-browser|
+
+See also:
+    Search System .................... |visidian-search|
+
+==============================================================================
+1. Introduction                                           *visidian-tags-intro*
+
+Visidian provides ctags integration for efficient navigation of your notes.
+Tags are generated for various elements like headers, links, tasks, and YAML
+fields.
+
+==============================================================================
+2. Commands                                             *visidian-tags-commands*
+
+:VisidianTags [type]                                          *:VisidianTags*
+    Generate tags for your vault. Optional [type] parameter can be:
+    - all (default): Generate all types of tags
+    - headers: Only generate tags for headers
+    - links: Only generate tags for links
+    - tasks: Only generate tasks
+    - yaml: Only generate YAML fields
+
+:VisidianBrowseTags                                      *:VisidianBrowseTags*
+    Open a window to browse and filter tags. In the browser:
+    - <CR>: Jump to tag under cursor
+    - /: Filter tags
+    - q: Close browser
+    - <C-n>/<C-p>: Navigate up/down
+
+==============================================================================
+3. Configuration                                         *visidian-tags-config*
+
+Tags are stored in the 'tags' file in your vault directory.
+Use standard Vim commands like |CTRL-]| to jump to tags and |:tag| to list them.
+
+==============================================================================
+4. Types                                                  *visidian-tags-types*
+
+Headers:~
+    All markdown headers (#, ##, etc.)
+    Kind: h (heading)
+
+Links:~
+    - Wiki-style links: [[Note Name]]
+    - Markdown links: [Text](url)
+    Kind: l (link)
+
+Tasks:~
+    - Unchecked tasks: - [ ] Task
+    - Checked tasks: - [x] Task
+    Kind: t (task), d (done)
+
+YAML:~
+    - Tags field: tags: [tag1, tag2]
+    - Multi-line tags:
+      tags:
+        - tag1
+        - tag2
+    - YAML frontmatter blocks
+    Kind: y (tags), m (metadata)
+
+==============================================================================
+5. Browser                                             *visidian-tags-browser*
+
+The tag browser provides a convenient interface to view and filter tags:
+
+Layout:~
+    - Tag name on the left
+    - File path in the middle
+    - Line number and type on the right
+
+Colors:~
+    - Tag names in title color
+    - File paths in dark gray
+    - Line numbers in yellow
+    - Tag types in light blue
+
+Navigation:~
+    - Use <CR> to jump to tag under cursor
+    - Use / to filter tags by pattern
+    - Use q to close the browser
+    - Use <C-n>/<C-p> to move up/down
+
+ vim:tw=78:ts=8:ft=help:norl:

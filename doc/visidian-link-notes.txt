@@ -1,0 +1,63 @@
+*visidian-link-notes.txt*  Note linking functionality
+
+                                                         *visidian-link-notes*
+
+==============================================================================
+CONTENTS                                         *visidian-link-notes-contents*
+
+    1. Introduction .................... |visidian-link-notes-intro|
+    2. Commands ....................... |visidian-link-notes-commands|
+    3. YAML Frontmatter ............... |visidian-link-notes-yaml|
+    4. Best Practices ................. |visidian-link-notes-practices|
+
+See also:
+    File Creation .................... |visidian-file-creation|
+    Debug System ..................... |visidian-debug|
+
+==============================================================================
+1. Introduction                                   *visidian-link-notes-intro*
+
+Visidian's link notes functionality allows you to create and manage connections
+between your notes using YAML frontmatter. Links can be created between any
+markdown files within your vault.
+
+==============================================================================
+2. Commands                                     *visidian-link-notes-commands*
+
+:VisidianLinkNotes                                      *:VisidianLinkNotes*
+    Open a fuzzy finder to search and link to other notes in your vault.
+    Links are stored in the YAML frontmatter of your notes.
+
+==============================================================================
+3. YAML Frontmatter                                *visidian-link-notes-yaml*
+
+Links are stored in the YAML frontmatter of your notes. Here's an example:
+>
+    ---
+    title: Example Note
+    tags: [project, notes]
+    links: [another-note.md, reference.md]
+    ---
+<
+
+The links array contains relative paths to other markdown files in your vault.
+The plugin will automatically maintain these links when you use the
+|:VisidianLinkNotes| command.
+
+==============================================================================
+4. Best Practices                              *visidian-link-notes-practices*
+
+1. File names in links should be relative paths to markdown files within the
+   vault.
+
+2. Always use standard YAML frontmatter format with '---' markers.
+
+3. Keep YAML frontmatter at the top of your files.
+
+4. Use consistent formatting for tags and links.
+
+5. Install a YAML parser (optional but recommended) for optimal performance.
+   Without it, the plugin will use a simple fallback parser that may not
+   handle all YAML edge cases.
+
+ vim:tw=78:ts=8:ft=help:norl:

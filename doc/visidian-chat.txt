@@ -1,126 +1,98 @@
-*visidian-chat.txt*  Chat with your notes using AI
+*visidian-chat.txt*  AI chat functionality
 
-                                                                *visidian-chat*
-
-==============================================================================
-CONTENTS                                                     *visidian-contents*
-
-    1. Introduction .................... |visidian-introduction|
-    2. Configuration ................... |visidian-configuration|
-    3. Chat Interface .................. |visidian-chat-interface|
-    4. Vector Store .................... |visidian-vectorstore|
-    5. Commands ....................... |visidian-commands|
-    6. API Providers .................. |visidian-providers|
+                                                             *visidian-chat*
 
 ==============================================================================
-1. Introduction                                          *visidian-introduction*
+CONTENTS                                                 *visidian-chat-contents*
 
-Visidian Chat enables interactive conversations with your notes using AI. It 
-uses semantic search to find relevant context from your notes and provides
-intelligent responses through various AI providers.
+    1. Introduction .................... |visidian-chat-intro|
+    2. Commands ....................... |visidian-chat-commands|
+    3. Configuration .................. |visidian-chat-config|
+    4. Providers ...................... |visidian-chat-providers|
+
+See also:
+    Vector Store ..................... |visidian-vectorstore|
+    Search System .................... |visidian-search|
 
 ==============================================================================
-2. Configuration                                        *visidian-configuration*
+1. Introduction                                           *visidian-chat-intro*
 
-Required configuration:
+Visidian Chat provides an AI-powered chat interface that understands your notes
+and can help you manage, analyze, and explore your knowledge base.
+
+==============================================================================
+2. Commands                                             *visidian-chat-commands*
+
+:VisidianChat                                                  *:VisidianChat*
+    Open the chat window to interact with the AI assistant.
+
+:VisidianChatIndex                                          *:VisidianChatIndex*
+    Index the current note and its linked notes in the vector store.
+
+:VisidianChatIndexVault                                 *:VisidianChatIndexVault*
+    Index all notes in the vault in the vector store.
+
+==============================================================================
+3. Configuration                                         *visidian-chat-config*
+
+g:visidian_chat_provider                             *g:visidian_chat_provider*
+    AI provider to use for chat
+    Options: 'openai', 'gemini', 'anthropic', 'deepseek'
+    Default: 'gemini'
+
+g:visidian_chat_model                                   *g:visidian_chat_model*
+    Model configuration for each provider:
+    'openai': 'gpt-3.5-turbo'
+    'gemini': 'gemini-pro'
+    'anthropic': 'claude-2'
+    'deepseek': 'deepseek-chat'
+
+g:visidian_chat_window_width                     *g:visidian_chat_window_width*
+    Width of the chat window
+    Default: 80
+
+g:visidian_chat_max_context_chunks           *g:visidian_chat_max_context_chunks*
+    Maximum number of context chunks to include
+    Default: 5
+
+g:visidian_chat_similarity_threshold     *g:visidian_chat_similarity_threshold*
+    Threshold for including similar notes in context
+    Default: 0.7
+
+==============================================================================
+4. Providers                                           *visidian-chat-providers*
+
+OpenAI:~
+    Requires g:visidian_chat_openai_key or $OPENAI_API_KEY
+    Uses gpt-3.5-turbo model by default
+
+Gemini:~
+    Requires g:visidian_chat_gemini_key or $GEMINI_API_KEY
+    Uses gemini-pro model (default provider)
+
+Anthropic:~
+    Requires g:visidian_chat_anthropic_key or $ANTHROPIC_API_KEY
+    Uses claude-2 model
+
+DeepSeek:~
+    Requires g:visidian_chat_deepseek_key or $DEEPSEEK_API_KEY
+    Uses deepseek-chat model
+
+Configuration Example:~
 >
-    " Choose your AI provider (default: 'gemini')
-    let g:visidian_chat_provider = 'gemini'  " Options: 'openai', 'gemini'
+    " Set API provider
+    let g:visidian_chat_provider = 'gemini'
     
-    " Set your API key (recommended to set via environment variable)
+    " Set API key
     let g:visidian_chat_gemini_key = $GEMINI_API_KEY
-    let g:visidian_chat_openai_key = $OPENAI_API_KEY
     
-    " Configure model (optional, defaults shown)
+    " Customize model (optional)
     let g:visidian_chat_model = {
         \ 'openai': 'gpt-3.5-turbo',
-        \ 'gemini': 'gemini-1.5-flash-latest'
+        \ 'gemini': 'gemini-pro',
+        \ 'anthropic': 'claude-2',
+        \ 'deepseek': 'deepseek-chat'
         \ }
-    
-    " Vector store settings
-    let g:visidian_vectorstore_path = '~/.cache/visidian/vectorstore'
-    let g:visidian_max_context_tokens = 4000
-    
-    " Debug mode (optional)
-    let g:visidian_debug = 0  " Set to 1 for debug output
 <
 
-==============================================================================
-3. Chat Interface                                    *visidian-chat-interface*
-
-The chat interface provides an interactive way to discuss your notes with AI.
-Features:
-
-- Real-time streaming responses
-- Markdown formatting
-- Message history with timestamps
-- Context-aware responses using your notes
-- Multi-provider support
-
-Usage:
->
-    :VisidianChat           " Open chat window
-    :VisidianChatClear     " Clear chat history
-<
-
-The chat window will open in a vertical split. Type your question and press
-Enter. The AI will respond using relevant context from your notes.
-
-==============================================================================
-4. Vector Store                                        *visidian-vectorstore*
-
-The vector store manages semantic embeddings of your notes for context retrieval.
-Features:
-
-- Automatic note indexing
-- Semantic similarity search
-- Multiple embedding providers
-- Efficient chunking and storage
-
-Usage:
->
-    :VisidianIndex         " Index current note
-    :VisidianIndexAll      " Index all notes in vault
-<
-
-Notes are automatically indexed on save. Embeddings are stored in
-|g:visidian_vectorstore_path| for fast retrieval.
-
-==============================================================================
-5. Commands                                              *visidian-commands*
-
-*:VisidianChat*
-    Open the chat interface in a vertical split
-
-*:VisidianChatClear*
-    Clear the chat history
-
-*:VisidianIndex*
-    Index the current note in the vector store
-
-*:VisidianIndexAll*
-    Index all notes in the current vault
-
-*:VisidianListModels*
-    List available models for current provider
-
-==============================================================================
-6. API Providers                                        *visidian-providers*
-
-Supported AI Providers:
-
-Gemini (Default)~
-- Streaming responses
-- Fast embedding generation
-- Requires GEMINI_API_KEY
-
-OpenAI~
-- High quality responses
-- Robust embeddings
-- Requires OPENAI_API_KEY
-
-Each provider requires an API key, which can be set via environment variable
-or in your vimrc. See |visidian-configuration|.
-
-==============================================================================
-vim:ft=help:tw=78:ts=8:noet:
+ vim:tw=78:ts=8:ft=help:norl:

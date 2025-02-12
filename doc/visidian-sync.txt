@@ -1,0 +1,226 @@
+*visidian-sync.txt*  Synchronization features for Visidian
+
+                                                                    *visidian-sync*
+
+==============================================================================
+CONTENTS                                                   *visidian-sync-contents*
+
+    1. Introduction ................... |visidian-sync-intro|
+    2. Auto-Sync ..................... |visidian-auto-sync|
+    3. SSH Key Management ............ |visidian-ssh-keys|
+    4. Git Integration ............... |visidian-git-sync|
+    5. Rsync Integration ............. |visidian-rsync-sync|
+    6. Git Annex Integration ........ |visidian-annex-sync|
+    7. Commands ...................... |visidian-sync-commands|
+    8. Configuration ................. |visidian-sync-config|
+    9. Troubleshooting ............... |visidian-sync-troubleshooting|
+
+==============================================================================
+1. Introduction                                           *visidian-sync-intro*
+
+Visidian provides robust synchronization capabilities to keep your vault backed up
+and synchronized across multiple devices. The sync system supports both Git and
+manual synchronization methods.
+
+==============================================================================
+2. Auto-Sync                                             *visidian-auto-sync*
+
+Visidian provides built-in auto-sync functionality that can be controlled using
+the :VisidianToggleAutoSync command.
+
+Commands:~
+                                                        *:VisidianToggleAutoSync*
+:VisidianToggleAutoSync     Toggle automatic synchronization on/off
+
+Behavior:~
+    - For Vim 8.0+: Syncs every hour using native timers
+    - For older Vim: Syncs during cursor idle periods
+
+Requirements:~
+    - Vault must be set up (:VisidianSetVault)
+    - Git repository must be initialized (:VisidianSync)
+
+Status Messages:~
+    - "Auto-sync enabled. Syncing every hour."
+    - "Auto-sync disabled."
+    - Debug logs show sync times and status
+
+==============================================================================
+3. SSH Key Management                                     *visidian-ssh-keys*
+
+Visidian handles SSH key generation and permissions automatically based on your
+operating system:
+
+Windows:~
+    - Uses icacls to set secure permissions
+    - Restricts access to current user only
+    - Handles both private and public keys
+    - No manual permission setting required
+
+Unix/Linux:~
+    - Sets standard 600 permissions for private key (rw-------)
+    - Sets 644 permissions for public key (rw-r--r--)
+    - Creates .ssh directory with 700 permissions (rwx------)
+
+Requirements:~
+    Windows:
+    - OpenSSH for Windows (comes with Windows 10 1809 and later)
+    - Git for Windows
+    
+    Unix/Linux:
+    - OpenSSH
+    - Git
+
+==============================================================================
+4. Git Integration                                        *visidian-git-sync*
+
+Visidian uses Git for version control and synchronization:
+
+Features:~
+    - Automatic repository initialization
+    - SSH key generation and management
+    - Deploy key setup for GitHub/GitLab
+    - Periodic auto-sync
+    - Manual sync via commands
+
+Security:~
+    - Automated SSH key permission management
+    - Secure credential storage
+    - OS-specific security measures
+
+==============================================================================
+5. Rsync Integration                                    *visidian-rsync-sync*
+
+Alternative synchronization method using rsync:
+
+Features:~
+    - Direct file synchronization
+    - Support for remote servers
+    - Incremental transfers
+    - Deletion handling
+
+Requirements:~
+    - rsync must be installed
+    - SSH access to remote server (for remote sync)
+    - Proper permissions on target directory
+
+Configuration:~
+>
+    " Enable rsync sync method
+    let g:visidian_sync_method = 2
+
+    " Set rsync target (local or remote)
+    let g:visidian_rsync_target = 'user@host:/path/to/dir'
+<
+
+==============================================================================
+6. Git Annex Integration                              *visidian-annex-sync*
+
+Advanced synchronization method using git-annex, ideal for vaults with large
+files or binary content:
+
+Features:~
+    - Efficient handling of large files
+    - Partial content checkout support
+    - Multiple remote repository support
+    - File presence tracking
+    - Bandwidth-efficient syncing
+
+Requirements:~
+    - git-annex must be installed
+    - Git repository for metadata
+    - Storage location for annexed content
+
+Configuration:~
+>
+    " Enable git-annex sync method
+    let g:visidian_sync_method = 3
+
+    " Set repository URL (same as Git)
+    let g:visidian_git_repo_url = 'git@github.com:username/vault.git'
+
+    " Optional: Configure annex behavior
+    let g:visidian_annex_largefiles = 'largerthan=100kb'
+    let g:visidian_annex_thin = 1
+<
+
+Default Behavior:~
+    - Files larger than 100KB are automatically annexed
+    - Smaller files are tracked directly in Git
+    - Files are added in unlocked mode
+    - Thin mode enabled to save disk space
+
+Commands:~
+    :VisidianSync         Sync both Git metadata and annexed content
+    :VisidianAnnexStatus  Show status of annexed files
+    :VisidianAnnexAdd     Add a new remote storage location
+
+==============================================================================
+7. Commands                                           *visidian-sync-commands*
+
+                                                            *:VisidianSync*
+:VisidianSync              Manually trigger synchronization
+
+                                                            *:VisidianToggleAutoSync*
+:VisidianToggleAutoSync    Toggle automatic synchronization on/off
+
+                                                            *:VisidianVault*
+:VisidianVault             Set up a new vault or select existing one
+
+==============================================================================
+8. Configuration                                       *visidian-sync-config*
+
+Options:~
+>
+    " Set sync method (1: Git, 2: Git Annex, 3: Rsync)
+    let g:visidian_sync_method = 1
+
+    " Git Configuration
+    let g:visidian_git_repo_url = 'git@github.com:username/vault.git'
+    let g:visidian_deploy_key = '~/.ssh/visidian_deploy_key'
+
+    " Git Annex Configuration
+    let g:visidian_annex_largefiles = 'largerthan=100kb'
+    let g:visidian_annex_thin = 1
+
+    " Rsync Configuration
+    let g:visidian_rsync_target = 'user@host:/path/to/vault'
+    let g:visidian_rsync_options = '-avz --delete'  " Optional: custom rsync flags
+<
+
+Default Values:~
+    g:visidian_sync_method     Prompts if not set
+    g:visidian_git_repo_url    Prompts if Git sync selected
+    g:visidian_deploy_key      ~/.ssh/visidian_deploy_key
+    g:visidian_annex_largefiles largerthan=100kb
+    g:visidian_annex_thin      1
+    g:visidian_rsync_target    Prompts if Rsync sync selected
+    g:visidian_rsync_options   -avz --delete
+
+Notes:~
+    - Git sync requires either HTTPS or SSH repository URL
+    - Git Annex requires git-annex to be installed
+    - Rsync target can be local path or remote (user@host:/path)
+    - Deploy key path is used for Git/Git Annex SSH authentication
+
+==============================================================================
+9. Troubleshooting                               *visidian-sync-troubleshooting*
+
+Common Issues:~
+
+Permission Errors:
+    - Windows: Ensure OpenSSH is installed and you have admin rights
+    - Unix: Check file permissions (600 for private keys, 644 for public)
+
+Git Issues:
+    - Verify repository URL is correct
+    - Ensure SSH key is added to GitHub/GitLab
+    - Check network connectivity
+
+Auto-Sync:
+    - Verify Vim version (8.0+ for timer-based sync)
+    - Check vault path is set
+    - Ensure Git repository is initialized
+
+==============================================================================
+vim:ft=help:norl:tw=78:ts=8:sw=4

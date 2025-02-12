@@ -104,7 +104,7 @@ command! -nargs=0 VisidianClick call visidian#link_notes#click_yaml_link()
 command! -nargs=0 VisidianParaGen call visidian#create_para_folders()
 command! -nargs=0 VisidianHelp call visidian#help()
 command! -nargs=0 VisidianSync call visidian#sync()
-command! -nargs=0 VisidianToggleAutoSync call visidian#toggle_auto_sync()
+command! -nargs=0 VisidianToggleAutoSync call visidian#sync#toggle_auto_sync()
 command! -nargs=0 VisidianTogglePreview call visidian#toggle_preview()
 command! -nargs=0 VisidianToggleSidebar call visidian#toggle_sidebar()
 command! -nargs=0 VisidianSearch call visidian#search()
@@ -113,11 +113,11 @@ command! -nargs=0 VisidianMenu call visidian#menu()
 command! -nargs=0 VisidianImport call visidian#import()
 command! -nargs=0 VisidianBook call visidian#bookmarking#menu()
 command! -nargs=0 VisidianToggleSearch call visidian#search#toggle()
-command! -nargs=0 -bar VisidianFirstStart call visidian#start#first_start()
+command! -nargs=0 -bar VisidianInit call visidian#start#first_start()
 
 " Generate & Browse Ctags
-command! -nargs=0 VisidianGenCtags call VisidianGenerateTags()
-command! -nargs=0 VisidianBrowseCtags call VisidianBrowseTags()
+command! -nargs=? -complete=customlist,visidian#tags#complete VisidianTags call visidian#tags#generate(<f-args>)
+command! -nargs=0 VisidianBrowseTags call visidian#tags#browse()
 
 "Toggle Spelling
 command! -nargs=0 VisidianToggleSpell call visidian#toggle_spell()
@@ -151,6 +151,12 @@ command! -nargs=0 VisidianToggleSpell call visidian#toggle_spell()
 augroup VisidianYAMLLinks
     autocmd!
     autocmd FileType markdown nnoremap <buffer> <CR> :call visidian#link_notes#click_yaml_link()<CR>
+augroup END
+
+" Initialize on startup
+augroup visidian_init
+    autocmd!
+    autocmd VimEnter * call visidian#init()
 augroup END
 
 " Set up autocommands for statusline
@@ -247,3 +253,6 @@ function! s:UpdateVisidianStatusLine()
         " endif
     endif
 endfunction
+
+command! -nargs=0 VisidianAnnexStatus call visidian#sync#annex#status()
+command! -nargs=+ -complete=file VisidianAnnexAdd call visidian#sync#annex#add_remote(<f-args>)
