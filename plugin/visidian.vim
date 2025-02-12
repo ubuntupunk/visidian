@@ -15,7 +15,7 @@ let g:loaded_visidian_vim = 1
 
 " Initialize global variables
 if !exists('g:visidian_version')
-    let g:visidian_version = '0.1.1'
+    let g:visidian_version = '0.1.3'
 endif
 if !exists('g:visidian_debug')
     let g:visidian_debug = 1

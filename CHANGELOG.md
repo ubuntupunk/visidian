@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v0.1.3] - 2025-02-12
+
 ### Added
 - Graph visualization functionality
   - Network graph of note connections
@@ -130,6 +132,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Basic preview functionality
 - Initial search implementation
 
+[v0.1.3]: https://github.com/ubuntupunk/visidian.vim/compare/v0.1.2...v0.1.3
 [v0.1.2]: https://github.com/ubuntupunk/visidian.vim/compare/v0.1.1...v0.1.2
 [v0.1.1]: https://github.com/ubuntupunk/visidian.vim/compare/v0.1.0...v0.1.1
 [v0.1.0]: https://github.com/ubuntupunk/visidian.vim/releases/tag/v0.1.0
