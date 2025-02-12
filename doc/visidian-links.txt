@@ -1,0 +1,131 @@
+*visidian-links.txt*  Link Management for Visidian
+
+==============================================================================
+CONTENTS                                              *visidian-links-contents*
+
+    1. Introduction .................... |visidian-links-intro|
+    2. Link Types ..................... |visidian-links-types|
+    3. YAML Frontmatter ............... |visidian-links-yaml|
+    4. Functions ...................... |visidian-links-functions|
+    5. Examples ...................... |visidian-links-examples|
+
+==============================================================================
+1. Introduction                                          *visidian-links-intro*
+
+Visidian provides comprehensive link management for your notes, supporting
+multiple link formats and YAML frontmatter relationships. Links can be used to
+create connections between notes, which can then be visualized using the graph
+feature (see |visidian-graph|).
+
+==============================================================================
+2. Link Types                                           *visidian-links-types*
+
+Visidian supports several types of links:
+
+Wiki-style Links~
+    [[note-name]]           Simple link
+    [[note-name|alias]]     Link with display text
+
+Markdown Links~
+    [display text](note.md)   Standard markdown link
+    <https://example.com>     URL link
+
+YAML Frontmatter Links~
+    ---
+    links:
+      - note1
+      - note2
+    related: [note3, note4]
+    references:
+      - note5
+    ---
+
+==============================================================================
+3. YAML Frontmatter                                      *visidian-links-yaml*
+
+YAML frontmatter provides a structured way to define relationships between notes.
+Three fields are recognized for links:
+
+links:~
+    Primary connections to other notes
+
+related:~
+    Notes that are related but not directly linked
+
+references:~
+    Source material or reference notes
+
+Format Options:~
+>
+    # Multi-line list format
+    links:
+      - note1
+      - note2
+
+    # Inline array format
+    links: [note1, note2]
+<
+
+==============================================================================
+4. Functions                                         *visidian-links-functions*
+
+get_links_in_file({file})                     *visidian#links#get_links_in_file*
+    Get all links from a file, including YAML frontmatter links.
+    Returns a list of dictionaries with:
+        - type: 'wiki', 'markdown', 'url', or 'yaml'
+        - target: Link target
+        - line: Source line (empty for YAML links)
+
+get_backlinks({target})                         *visidian#links#get_backlinks*
+    Find all files that link to the given target file.
+    Returns a list of dictionaries with:
+        - source: Path to the linking file
+        - type: Link type
+        - line: Source line
+
+update_yaml_links({file}, {links})             *visidian#links#update_yaml_links*
+    Update or create YAML frontmatter links in a file.
+    Parameters:
+        - file: Path to the file to update
+        - links: List of link targets to add
+    Returns 1 if successful, 0 if failed
+
+create_link({target}, {type})                   *visidian#links#create_link*
+    Create a link of the specified type.
+    Parameters:
+        - target: Link target (filename)
+        - type: 'wiki', 'markdown', or 'yaml'
+    Returns the formatted link text
+
+==============================================================================
+5. Examples                                           *visidian-links-examples*
+
+Creating Links~
+>
+    " Create a wiki-style link
+    let wiki_link = visidian#links#create_link('note.md', 'wiki')
+    " Returns: [[note]]
+
+    " Create a markdown link
+    let md_link = visidian#links#create_link('note.md', 'markdown')
+    " Returns: [note](note.md)
+<
+
+Finding Links~
+>
+    " Get all links in current file
+    let links = visidian#links#get_links_in_file(expand('%:p'))
+    
+    " Find all backlinks to current file
+    let backlinks = visidian#links#get_backlinks(expand('%:t'))
+<
+
+Updating YAML Links~
+>
+    " Add links to YAML frontmatter
+    let new_links = ['note1', 'note2']
+    call visidian#links#update_yaml_links(expand('%:p'), new_links)
+<
+
+==============================================================================
+ vim:tw=78:ts=8:ft=help:norl:
