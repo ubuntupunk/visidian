@@ -190,8 +190,13 @@ try:
         new_height = term_height
         new_width = int(new_height / (aspect * 0.45))
     
-    # Resize
-    img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+    # Resize using ANTIALIAS (older PIL versions) or LANCZOS (newer versions)
+    try:
+        # Try newer PIL version constant
+        img = img.resize((new_width, new_height), Image.LANCZOS)
+    except AttributeError:
+        # Fall back to older PIL version constant
+        img = img.resize((new_width, new_height), Image.ANTIALIAS)
     
     # Convert to ASCII
     pixels = list(img.getdata())
