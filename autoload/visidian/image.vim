@@ -123,6 +123,9 @@ endfunction
 function! visidian#image#check_dependencies()
     if !has('python3')
         call visidian#debug#error('IMAGE', 'Python3 support required for image preview')
+        echohl ErrorMsg
+        echom '🔧 Visidian Image Preview needs Python3! Please compile Vim with Python3 support.'
+        echohl None
         return 0
     endif
 
@@ -133,7 +136,11 @@ try:
     vim.command('let l:has_pillow = 1')
 except ImportError:
     vim.command('let l:has_pillow = 0')
-    vim.command("call visidian#debug#error('IMAGE', 'Python Pillow library (PIL) is required for image preview. Install with: pip install Pillow')")
+    vim.command("call visidian#debug#error('IMAGE', 'Python Pillow library (PIL) is required for image preview')")
+    vim.command("echohl WarningMsg")
+    vim.command("echom '📦 Visidian Image Preview needs the Pillow library! Install it with:'")
+    vim.command("echohl None")
+    vim.command("echom '   pip install Pillow'")
 EOF
 
     return exists('l:has_pillow') && l:has_pillow
@@ -151,6 +158,9 @@ function! visidian#image#display_image()
     let image_path = expand('%:p')
     if !filereadable(image_path)
         call visidian#debug#error('IMAGE', 'Cannot read image file: ' . image_path)
+        echohl ErrorMsg
+        echom '❌ Oops! Cannot read image: ' . fnamemodify(image_path, ':t')
+        echohl None
         return
     endif
 
@@ -163,8 +173,14 @@ def create_ascii_image(image_path, max_width=None, max_height=None):
     try:
         # Open the image
         img = Image.open(image_path)
+        vim.command("echohl MoreMsg")
+        vim.command("echom '🎨 Converting image to ASCII art...'")
+        vim.command("echohl None")
     except Exception as e:
         vim.command(f"call visidian#debug#error('IMAGE', 'Failed to open image: {str(e)}')")
+        vim.command("echohl ErrorMsg")
+        vim.command("echom '😕 Sorry! Could not open the image.'")
+        vim.command("echohl None")
         return []
 
     # Convert to RGB if necessary
@@ -252,8 +268,16 @@ try:
         ]
         vim.current.buffer[0:0] = header
 
+        # Add success message after drawing
+        vim.command("echohl MoreMsg")
+        vim.command(f"echom '✨ Voilà! {os.path.basename(image_path)} is now ASCII art!'")
+        vim.command("echohl None")
+
 except Exception as e:
     vim.command(f"call visidian#debug#error('IMAGE', 'Error creating ASCII art: {str(e)}')")
+    vim.command("echohl ErrorMsg")
+    vim.command("echom '😢 Something went wrong while creating ASCII art'")
+    vim.command("echohl None")
 
 EOF
 endfunction
@@ -278,6 +302,9 @@ function! visidian#image#setup_autocmds()
     augroup END
 
     call visidian#debug#info('IMAGE', 'Image preview enabled')
+    echohl MoreMsg
+    echom '🖼️  Visidian Image Preview is ready! Open any image to see the magic ✨'
+    echohl None
 endfunction
 
 " Initialize autocommands
