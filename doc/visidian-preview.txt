@@ -1,0 +1,62 @@
+*visidian-preview.txt*  Markdown preview functionality
+
+                                                           *visidian-preview*
+
+==============================================================================
+CONTENTS                                            *visidian-preview-contents*
+
+    1. Introduction .................... |visidian-preview-intro|
+    2. Commands ....................... |visidian-preview-commands|
+    3. Requirements ................... |visidian-preview-requirements|
+    4. Configuration .................. |visidian-preview-config|
+
+See also:
+    Core Functions ................... |visidian|
+    Markdown Support ................ |visidian-markdown|
+
+==============================================================================
+1. Introduction                                        *visidian-preview-intro*
+
+Visidian Preview provides real-time preview functionality for markdown files,
+supporting multiple preview backends for maximum compatibility.
+
+==============================================================================
+2. Commands                                          *visidian-preview-commands*
+
+:VisidianPreviewToggle                                *:VisidianPreviewToggle*
+    Toggle the markdown preview window
+
+==============================================================================
+3. Requirements                                   *visidian-preview-requirements*
+
+The preview functionality requires one of the following backends:
+- markdown-preview.nvim (recommended for Neovim users)
+- grip (GitHub-flavored markdown preview)
+- bracey.vim (HTML preview fallback)
+
+Additionally:
+- A modern web browser (Chrome, Firefox, or other system default)
+- Vim 8.1+ or Neovim
+
+==============================================================================
+4. Configuration                                      *visidian-preview-config*
+
+g:visidian_preview_port                            *g:visidian_preview_port*
+    Port for the preview server
+    Default: 8888
+
+g:visidian_preview_browser                      *g:visidian_preview_browser*
+    Preferred browser for preview
+    Default: System default (xdg-open on Linux)
+
+g:visidian_preview_backend                      *g:visidian_preview_backend*
+    Preferred preview backend
+    Options: 'markdown-preview.nvim', 'grip', 'bracey'
+    Default: Auto-detect based on availability
+
+Preview backends are tried in the following order:
+1. markdown-preview.nvim (if using Neovim)
+2. grip (if installed)
+3. bracey.vim (fallback)
+
+ vim:tw=78:ts=8:ft=help:norl:

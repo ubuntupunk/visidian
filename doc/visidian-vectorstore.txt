@@ -1,0 +1,64 @@
+*visidian-vectorstore.txt*  Vector search functionality
+
+                                                         *visidian-vectorstore*
+
+==============================================================================
+CONTENTS                                           *visidian-vectorstore-contents*
+
+    1. Introduction .................... |visidian-vectorstore-intro|
+    2. Configuration .................. |visidian-vectorstore-config|
+    3. Providers ...................... |visidian-vectorstore-providers|
+    4. Usage ......................... |visidian-vectorstore-usage|
+
+See also:
+    Search System .................... |visidian-search|
+    Link Notes ....................... |visidian-link-notes|
+
+==============================================================================
+1. Introduction                                       *visidian-vectorstore-intro*
+
+Visidian's vector store provides semantic search capabilities using AI embeddings
+to find relevant notes based on meaning rather than just keywords.
+
+==============================================================================
+2. Configuration                                     *visidian-vectorstore-config*
+
+g:visidian_vectorstore_provider                 *g:visidian_vectorstore_provider*
+    AI provider for generating embeddings
+    Options: 'openai', 'gemini'
+    Default: 'gemini'
+
+g:visidian_vectorstore_path                       *g:visidian_vectorstore_path*
+    Directory for storing vector embeddings
+    Default: '~/.cache/visidian/vectorstore'
+
+g:visidian_max_context_tokens                   *g:visidian_max_context_tokens*
+    Maximum number of tokens for context window
+    Default: 4000
+
+==============================================================================
+3. Providers                                       *visidian-vectorstore-providers*
+
+OpenAI:~
+    Requires g:visidian_chat_openai_key to be set
+    Uses OpenAI's text-embedding-ada-002 model
+
+Gemini:~
+    Requires g:visidian_chat_gemini_key to be set
+    Uses Google's Gemini embedding model
+
+==============================================================================
+4. Usage                                             *visidian-vectorstore-usage*
+
+The vector store is used automatically by:
+
+1. Chat invokes current note as context.
+2. Index adds note to vector store
+3. IndexVault adds vault to vector store
+4. Link suggestions when creating new notes *to be implemented*
+5. Semantic search when using :VisidianSearch *to be implemented*
+6. Finding related notes based on content *to be implemented*
+
+The embeddings are cached in g:visidian_vectorstore_path for performance.
+
+ vim:tw=78:ts=8:ft=help:norl:

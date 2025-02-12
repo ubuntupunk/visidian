@@ -1,0 +1,124 @@
+*visidian-bookmarking.txt*  Bookmark and organize your notes
+
+                                                           *visidian-bookmarking*
+
+==============================================================================
+CONTENTS                                           *visidian-bookmarking-contents*
+
+    1. Introduction .................... |visidian-bookmarking-intro|
+    2. Commands ....................... |visidian-bookmarking-commands|
+    3. Categories ..................... |visidian-bookmarking-categories|
+    4. Configuration .................. |visidian-bookmarking-config|
+    5. Usage Examples ................. |visidian-bookmarking-examples|
+
+See also:
+    PARA Method ...................... |visidian-para|
+    File Creation .................... |visidian-file-creation|
+    Search ........................... |visidian-search|
+
+==============================================================================
+1. Introduction                                    *visidian-bookmarking-intro*
+
+Visidian Bookmarking provides a powerful system for organizing and managing your
+notes using GTD (Getting Things Done) and PARA (Projects, Areas, Resources,
+Archives) methodologies.
+
+==============================================================================
+2. Commands                                    *visidian-bookmarking-commands*
+
+:VisidianBookmark                                           *:VisidianBookmark*
+    Opens the bookmark menu with the following options:
+    - Add to GTD category
+    - Add to PARA category
+    - Add to Books category
+    - Add to custom category
+    - Create new category
+    - Manage categories
+    - Remove a bookmark
+    - View/jump to bookmark
+    - Toggle statistics view
+
+:VisidianBookmarkAdd                                     *:VisidianBookmarkAdd*
+    Add current note to a category
+
+:VisidianBookmarkRemove                               *:VisidianBookmarkRemove*
+    Remove a bookmark
+
+:VisidianBookmarkList                                   *:VisidianBookmarkList*
+    List all bookmarks
+
+:VisidianBookmarkStats                                 *:VisidianBookmarkStats*
+    Show bookmark statistics
+
+==============================================================================
+3. Categories                                *visidian-bookmarking-categories*
+
+Built-in Categories:~
+    GTD Categories:
+    - Inbox: Capture new ideas and notes
+    - Next: Items to be worked on next
+    - Waiting: Items waiting on external input
+    - Someday: Future possibilities
+    - Reference: Reference materials
+    - Done: Completed items
+
+    PARA Categories:
+    - Projects: Active projects with clear goals
+    - Areas: Ongoing responsibilities
+    - Resources: Topic-based reference materials
+    - Archives: Completed or inactive items
+
+    Books Categories:
+    - Reading: Currently reading
+    - To-Read: Reading list
+    - Finished: Completed books
+    - Reference: Reference books and materials
+
+Custom Categories:~
+    Users can create and manage their own categories with:
+    - Custom category names
+    - Subcategories
+    - Persistent storage across sessions
+
+See |visidian-para| for more details about PARA method implementation.
+
+==============================================================================
+4. Configuration                               *visidian-bookmarking-config*
+
+g:visidian_bookmark_file                           *g:visidian_bookmark_file*
+    Path to the bookmark storage file
+    Default: '.visidian_bookmarks.json'
+
+g:visidian_categories_file                       *g:visidian_categories_file*
+    Path to the categories storage file
+    Default: '.visidian_categories.json'
+
+g:visidian_bookmark_auto_save                 *g:visidian_bookmark_auto_save*
+    Automatically save bookmarks on changes
+    Default: 1
+
+==============================================================================
+5. Usage Examples                              *visidian-bookmarking-examples*
+
+Adding a new bookmark:~
+>
+    :VisidianBookmark
+    > Select "add:gtd"
+    > Select "inbox"
+    > Enter bookmark name
+<
+
+Moving to active project:~
+>
+    :VisidianBookmark
+    > Select "add:para"
+    > Select "projects"
+    > Enter bookmark name
+<
+
+Viewing statistics:~
+>
+    :VisidianBookmarkStats
+<
+
+ vim:tw=78:ts=8:ft=help:norl:
