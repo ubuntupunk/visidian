@@ -8,7 +8,8 @@ CONTENTS                                         *visidian-link-notes-contents*
     1. Introduction .................... |visidian-link-notes-intro|
     2. Commands ....................... |visidian-link-notes-commands|
     3. YAML Frontmatter ............... |visidian-link-notes-yaml|
-    4. Best Practices ................. |visidian-link-notes-practices|
+    4. Graph Visualization ............ |visidian-link-notes-graph|
+    5. Best Practices ................. |visidian-link-notes-practices|
 
 See also:
     File Creation .................... |visidian-file-creation|
@@ -28,6 +29,10 @@ markdown files within your vault.
     Open a fuzzy finder to search and link to other notes in your vault.
     Links are stored in the YAML frontmatter of your notes.
 
+:VisidianShowGraph        Display a network graph of the current note's
+                         connections, showing both outgoing links and backlinks
+                         in an ASCII visualization.
+
 ==============================================================================
 3. YAML Frontmatter                                *visidian-link-notes-yaml*
 
@@ -45,7 +50,54 @@ The plugin will automatically maintain these links when you use the
 |:VisidianLinkNotes| command.
 
 ==============================================================================
-4. Best Practices                              *visidian-link-notes-practices*
+4. Graph Visualization                                *visidian-link-notes-graph*
+
+The graph visualization feature creates an ASCII art representation of your note's
+connections, helping you understand the relationships between different notes in
+your vault.
+
+Features:~
+    - Shows current note and its immediate connections
+    - Displays both outgoing links and backlinks
+    - Uses ASCII characters for a terminal-friendly visualization
+    - Positions nodes in a circular layout for clarity
+    - Shows truncated note names next to node markers
+
+Requirements:~
+    - Python3 support in Vim
+    - Current file must be a markdown note
+
+Usage:~
+    1. Open a markdown note in your vault
+    2. Run :VisidianShowGraph
+    3. A new split will open showing the network graph
+
+The graph uses the following symbols:~
+    @    Node marker (represents a note)
+    -    Horizontal connection
+    |    Vertical connection
+    
+Navigation:~
+    - The graph opens in a new vertical split
+    - Use standard Vim navigation commands to move around
+    - Buffer is read-only to preserve the graph layout
+
+Example Graph:~
+>
+    @note1.md ----@note2.md
+         |         |
+         |         |
+    @note3.md ----@note4.md
+<
+
+Tips:~
+    - Use the graph to discover indirect connections between notes
+    - Identify hub notes that connect many other notes
+    - Find isolated notes that need more connections
+    - Visualize the structure of your knowledge base
+
+==============================================================================
+5. Best Practices                              *visidian-link-notes-practices*
 
 1. File names in links should be relative paths to markdown files within the
    vault.

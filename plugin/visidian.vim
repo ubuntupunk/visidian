@@ -256,3 +256,6 @@ endfunction
 
 command! -nargs=0 VisidianAnnexStatus call visidian#sync#annex#status()
 command! -nargs=+ -complete=file VisidianAnnexAdd call visidian#sync#annex#add_remote(<f-args>)
+
+" Network graph visualization
+command! -nargs=0 VisidianShowGraph call visidian#graph#ShowNoteGraph()
