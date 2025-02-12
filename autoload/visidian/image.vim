@@ -155,11 +155,31 @@ if !exists('g:visidian_image_color')
     let g:visidian_image_color = 0
 endif
 
+" Initialize color highlight groups
+function! visidian#image#init_colors()
+    " Create highlight groups for different color ranges
+    hi VisidianRed ctermfg=196
+    hi VisidianGreen ctermfg=46
+    hi VisidianBlue ctermfg=21
+    hi VisidianYellow ctermfg=226
+    hi VisidianMagenta ctermfg=201
+    hi VisidianCyan ctermfg=51
+    hi VisidianWhite ctermfg=255
+    hi VisidianGray ctermfg=245
+    hi VisidianDarkGray ctermfg=238
+    hi VisidianBlack ctermfg=16
+endfunction
+
 " Function: visidian#image#display_image
 " Description: Display an image file in a buffer using ASCII art
 " Parameters:
 "   - image_path: Path to the image file
 function! visidian#image#display_image()
+    " Initialize color groups if needed
+    if g:visidian_image_color
+        call visidian#image#init_colors()
+    endif
+    
     " Test debug message
     echom "DIRECT TEST: Image display function called"
     echohl ErrorMsg
@@ -174,31 +194,35 @@ try:
     from PIL import Image
     import os
 
-    def rgb_to_ansi(r, g, b):
-        # Convert to bright ANSI colors for better visibility
-        # Using 8 basic colors (30-37) and their bright variants (90-97)
-        threshold = 128
-        bright = (r + g + b) / 3 > threshold
+    def get_color_group(r, g, b):
+        # More sophisticated color mapping using dominant color
+        max_val = max(r, g, b)
+        min_val = min(r, g, b)
         
-        # Find the closest basic color
-        if r > threshold and g > threshold and b > threshold:
-            return 97  # bright white
-        elif r < threshold//2 and g < threshold//2 and b < threshold//2:
-            return 30  # black
-        elif r > g and r > b:
-            return 91 if bright else 31  # red
-        elif g > r and g > b:
-            return 92 if bright else 32  # green
-        elif b > r and b > g:
-            return 94 if bright else 34  # blue
-        elif r > threshold and g > threshold:
-            return 93 if bright else 33  # yellow
-        elif r > threshold and b > threshold:
-            return 95 if bright else 35  # magenta
-        elif g > threshold and b > threshold:
-            return 96 if bright else 36  # cyan
+        if max_val < 32:
+            return 'VisidianBlack'
+        elif max_val < 96:
+            return 'VisidianDarkGray'
+        elif max_val < 160:
+            return 'VisidianGray'
+        elif max_val - min_val < 32:  # Low saturation = grayscale
+            return 'VisidianWhite'
+            
+        # Find dominant color
+        if r > g and r > b and r > 128:
+            return 'VisidianRed'
+        elif g > r and g > b and g > 128:
+            return 'VisidianGreen'
+        elif b > r and b > g and b > 128:
+            return 'VisidianBlue'
+        elif r > 128 and g > 128 and r - b > 32 and g - b > 32:
+            return 'VisidianYellow'
+        elif r > 128 and b > 128 and r - g > 32 and b - g > 32:
+            return 'VisidianMagenta'
+        elif g > 128 and b > 128 and g - r > 32 and b - r > 32:
+            return 'VisidianCyan'
         else:
-            return 37  # white
+            return 'VisidianGray'
 
     # Get the image path from vim
     image_path = vim.eval('image_path')
@@ -247,7 +271,7 @@ try:
     # Create ASCII art line by line
     lines = []
     for y in range(new_height):
-        line = ''
+        line = []  # Store characters and their colors
         for x in range(new_width):
             pos = y * new_width + x
             pixel = pixels[pos]
@@ -258,13 +282,10 @@ try:
             
             if use_color:
                 r, g, b = pixels_color[pos]
-                color_code = rgb_to_ansi(r, g, b)
-                line += '\033[{}m{}'.format(color_code, char)
+                color_group = get_color_group(r, g, b)
+                line.append((char, color_group))
             else:
-                line += char
-        
-        if use_color:
-            line += '\033[0m'  # Reset color at end of line
+                line.append(char)
         lines.append(line)
     
     # Create header
@@ -279,7 +300,27 @@ try:
     # Set buffer content
     buffer = vim.current.buffer
     buffer.options['modifiable'] = True
-    buffer[:] = header + lines
+    
+    if use_color:
+        # Convert lines to Vim syntax highlighting commands
+        vim_lines = []
+        for line in lines:
+            current_group = None
+            vim_line = ''
+            for char, group in line:
+                if group != current_group:
+                    if current_group is not None:
+                        vim_line += '|'
+                    vim_line += '%#' + group + '#'
+                    current_group = group
+                vim_line += char
+            if current_group is not None:
+                vim_line += '|%#Normal#'
+            vim_lines.append(vim_line)
+        buffer[:] = header + vim_lines
+    else:
+        buffer[:] = header + [''.join(line) for line in lines]
+    
     buffer.options['modifiable'] = False
     
     # Set buffer options
@@ -289,6 +330,8 @@ try:
     vim.command('setlocal norelativenumber')
     vim.command('setlocal signcolumn=no')
     vim.command('setlocal nowrap')
+    vim.command('setlocal conceallevel=3')
+    vim.command('setlocal concealcursor=n')
     
     # Success message
     vim.command('echohl MoreMsg')
