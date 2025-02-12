@@ -61,12 +61,6 @@ The setup process follows this sequence:
 :VisidianInit                                                  *:VisidianInit*
     Start the initial setup process
 
-:VisidianSetup                                                *:VisidianSetup*
-    Re-run setup wizard
-
-:VisidianConfig                                              *:VisidianConfig*
-    Open configuration file
-
 ==============================================================================
 4. Configuration                                        *visidian-start-config*
 
@@ -76,14 +70,6 @@ g:visidian_vault_dir                                    *g:visidian_vault_dir*
 
 g:visidian_config_file                                *g:visidian_config_file*
     Path to configuration file
-    Default: '~/.config/visidian/config.vim'
-
-g:visidian_auto_setup                                  *g:visidian_auto_setup*
-    Run setup wizard on first start
-    Default: 1 (enabled)
-
-g:visidian_welcome_screen                          *g:visidian_welcome_screen*
-    Show welcome screen on startup
-    Default: 1 (enabled)
+    Default: '~/.visidian.json'
 
  vim:tw=78:ts=8:ft=help:norl:
