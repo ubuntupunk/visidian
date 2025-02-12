@@ -1,5 +1,97 @@
 " visidian/autoload/links.vim - Link management functions
 
+" Function: visidian#links#yaml_parser_available
+" Description: Check if yaml parser is available
+function! visidian#links#yaml_parser_available()
+    return exists('*yaml#decode')
+endfunction
+
+" Function: visidian#links#parse_simple_yaml
+" Description: Simple YAML parser fallback
+function! visidian#links#parse_simple_yaml(text)
+    let yaml = {'tags': [], 'links': []}
+    let lines = split(a:text, "\n")
+    
+    for line in lines
+        " Skip empty lines and comments
+        if line =~ '^\s*$' || line =~ '^\s*#'
+            continue
+        endif
+        
+        " Match key: value or key: [value1, value2]
+        let matches = matchlist(line, '^\s*\(\w\+\):\s*\(\[.\{-}\]\|\S.\{-}\)\s*$')
+        if !empty(matches)
+            let key = matches[1]
+            let value = matches[2]
+            
+            " Handle arrays
+            if value =~ '^\['
+                let value = split(substitute(value[1:-2], '\s', '', 'g'), ',')
+            endif
+            
+            let yaml[key] = value
+        endif
+    endfor
+    
+    return yaml
+endfunction
+
+" Function: visidian#links#get_yaml_front_matter
+" Description: Get YAML front matter with fallback parser
+function! visidian#links#get_yaml_front_matter(file)
+    call visidian#debug#debug('LINKS', 'Reading YAML from: ' . a:file)
+
+    try
+        let lines = readfile(a:file)
+        let yaml_text = []
+        let in_yaml = 0
+        let yaml_end = 0
+        
+        " Check if file starts with YAML frontmatter
+        if len(lines) > 0 && lines[0] =~ '^---\s*$'
+            let in_yaml = 1
+            for line in lines[1:]
+                if line =~ '^---\s*$'
+                    let yaml_end = 1
+                    break
+                endif
+                call add(yaml_text, line)
+            endfor
+        endif
+        
+        " Return empty YAML if no frontmatter found
+        if !yaml_end
+            return {'tags': [], 'links': []}
+        endif
+        
+        let yaml_str = join(yaml_text, "\n")
+        let yaml = {}
+        
+        " Try using yaml#decode if available
+        if visidian#links#yaml_parser_available()
+            try
+                let yaml = yaml#decode(yaml_str)
+            catch
+                " Silently fall back to simple parser
+                let yaml = {}
+            endtry
+        endif
+        
+        " If yaml#decode failed or wasn't available, use simple parser
+        if empty(yaml)
+            let yaml = visidian#links#parse_simple_yaml(yaml_str)
+        endif
+        
+        " Ensure required fields exist
+        let yaml.tags = get(yaml, 'tags', [])
+        let yaml.links = get(yaml, 'links', [])
+        
+        return yaml
+    catch
+        return {'tags': [], 'links': []}
+    endtry
+endfunction
+
 " Function: visidian#links#parse_yaml_links
 " Description: Extract links from YAML frontmatter
 " Parameters:
@@ -81,8 +173,8 @@ function! visidian#links#get_links_in_file(file_path) abort
     call visidian#debug#debug('LINKS', 'Read ' . len(content) . ' lines from file')
     
     " Get YAML frontmatter links
-    let yaml_links = visidian#links#parse_yaml_links(content)
-    for link in yaml_links
+    let yaml = visidian#links#get_yaml_front_matter(a:file_path)
+    for link in yaml.links
         call add(links, {'type': 'yaml', 'target': link, 'line': ''})
         call visidian#debug#debug('LINKS', 'Added YAML link: ' . link)
     endfor
@@ -153,160 +245,62 @@ function! visidian#links#get_links_in_file(file_path) abort
     endfor
 
     call visidian#debug#info('LINKS', printf('Found %d links (%d wiki, %d markdown, %d URL, %d YAML)',
-        \ len(links), wiki_count, md_count, url_count, len(yaml_links)))
+        \ len(links), wiki_count, md_count, url_count, len(yaml.links)))
     return links
 endfunction
 
-" Function: visidian#links#update_yaml_links
-" Description: Update or create YAML frontmatter links
-" Parameters:
-"   - file_path: Path to the file to update
-"   - new_links: List of links to add/update
-" Returns: 1 if successful, 0 if failed
-function! visidian#links#update_yaml_links(file_path, new_links) abort
-    call visidian#debug#debug('LINKS', 'Updating YAML links in: ' . a:file_path)
-    
-    if !filereadable(a:file_path)
-        call visidian#debug#error('LINKS', 'Cannot read file: ' . a:file_path)
-        return 0
-    endif
-    
-    let content = readfile(a:file_path)
-    let has_yaml = 0
-    let yaml_start = -1
-    let yaml_end = -1
-    let links_line = -1
-    
-    " Find existing YAML frontmatter
-    for i in range(len(content))
-        if i == 0 && content[i] =~# '^---\s*$'
-            call visidian#debug#debug('LINKS', 'Found existing YAML frontmatter')
-            let has_yaml = 1
-            let yaml_start = i
-        elseif has_yaml && content[i] =~# '^---\s*$'
-            let yaml_end = i
-            break
-        elseif has_yaml && content[i] =~# '^\s*links:'
-            call visidian#debug#debug('LINKS', 'Found existing links section at line ' . i)
-            let links_line = i
-        endif
-    endfor
-    
-    " Create new YAML content
-    if empty(a:new_links)
-        call visidian#debug#debug('LINKS', 'No new links to add')
-        return 1
-    endif
-    
-    let links_content = ['links:']
-    for link in a:new_links
-        call add(links_content, '  - ' . link)
-        call visidian#debug#debug('LINKS', 'Adding link: ' . link)
-    endfor
-    
-    " Update or create YAML section
-    if has_yaml
-        if links_line != -1
-            " Replace existing links section
-            let delete_end = links_line + 1
-            while delete_end < yaml_end && content[delete_end] =~# '^\s\+-\s'
-                let delete_end += 1
-            endwhile
-            call visidian#debug#debug('LINKS', 'Replacing existing links section')
-            let content = content[:links_line-1] + links_content + content[delete_end:]
-        else
-            " Add links section before YAML end
-            call visidian#debug#debug('LINKS', 'Adding new links section to existing YAML')
-            let content = content[:yaml_end-1] + links_content + content[yaml_end:]
-        endif
-    else
-        " Create new YAML frontmatter
-        call visidian#debug#debug('LINKS', 'Creating new YAML frontmatter')
-        let content = ['---'] + links_content + ['---'] + content
-    endif
-    
-    " Write back to file
-    try
-        call writefile(content, a:file_path)
-        call visidian#debug#info('LINKS', 'Successfully updated YAML links')
-        return 1
-    catch
-        call visidian#debug#error('LINKS', 'Failed to update YAML links: ' . v:exception)
-        return 0
-    endtry
-endfunction
-
-" Function: visidian#links#get_backlinks
-" Description: Find all files that link to the given file
-" Parameters:
-"   - target_file: Filename to find backlinks for
-" Returns: List of dictionaries with backlink information
-function! visidian#links#get_backlinks(target_file) abort
-    call visidian#debug#debug('LINKS', 'Finding backlinks for: ' . a:target_file)
-    let backlinks = []
-    
-    if !exists('g:visidian_vault_path')
-        call visidian#debug#error('LINKS', 'g:visidian_vault_path not set')
-        return []
-    endif
-    
-    let vault_path = g:visidian_vault_path
-    
-    " Get all markdown files in the vault
-    let files = globpath(vault_path, '**/*.md', 0, 1)
-    call visidian#debug#debug('LINKS', 'Found ' . len(files) . ' markdown files in vault')
-    
-    " Remove .md extension from target for matching
-    let target_base = fnamemodify(a:target_file, ':r')
-    
-    for file in files
-        " Skip the target file itself
-        if fnamemodify(file, ':t') ==# a:target_file
-            continue
-        endif
-        
-        " Get links from the current file
-        let links = visidian#links#get_links_in_file(file)
-        
-        " Check if any links point to our target
-        for link in links
-            let link_target = fnamemodify(link.target, ':r')
-            if link_target ==# target_base
-                call add(backlinks, {
-                    \ 'source': file,
-                    \ 'type': link.type,
-                    \ 'line': link.line
-                    \ })
-                call visidian#debug#debug('LINKS', 'Found backlink in: ' . file)
-            endif
-        endfor
-    endfor
-    
-    call visidian#debug#info('LINKS', 'Found ' . len(backlinks) . ' backlinks for ' . a:target_file)
-    return backlinks
-endfunction
-
 " Function: visidian#links#create_link
-" Description: Create a link to another note
+" Description: Create a link of specified type
 " Parameters:
-"   - target: Target file to link to
-"   - type: Type of link to create ('wiki', 'markdown', or 'yaml')
-" Returns: The created link text
+"   - target: Link target (file path or URL)
+"   - type: Link type (wiki, markdown, url)
+" Returns: Formatted link string
 function! visidian#links#create_link(target, type) abort
     call visidian#debug#debug('LINKS', 'Creating ' . a:type . ' link to: ' . a:target)
-    let filename = fnamemodify(a:target, ':t:r')
     
     if a:type ==# 'wiki'
-        let link = '[[' . filename . ']]'
+        return '[[' . a:target . ']]'
     elseif a:type ==# 'markdown'
-        let link = '[' . filename . '](' . filename . '.md)'
-    elseif a:type ==# 'yaml'
-        let link = filename
-    else
-        call visidian#debug#error('LINKS', 'Invalid link type: ' . a:type)
-        throw 'Invalid link type: ' . a:type
+        let title = fnamemodify(a:target, ':t:r')
+        return '[' . title . '](' . a:target . ')'
+    elseif a:type ==# 'url'
+        return '<' . a:target . '>'
     endif
     
-    call visidian#debug#debug('LINKS', 'Created link: ' . link)
-    return link
+    return a:target
+endfunction
+
+" Function: visidian#links#parse_link
+" Description: Parse and normalize a link
+" Parameters:
+"   - link: Link string to parse
+" Returns: Dictionary with link information
+function! visidian#links#parse_link(link)
+    let link = a:link
+    let type = 'internal'
+    
+    " Handle quoted links
+    if link =~ '^".*"$' || link =~ "^'.*'$"
+        let link = link[1:-2]
+    endif
+    
+    " Handle external links
+    if link =~ '^https\?://'
+        let type = 'external'
+        return {'type': type, 'path': link, 'display': link}
+    endif
+    
+    " Handle expanded vault paths
+    if link =~ '^\$VAULT_PATH:'
+        let expanded = substitute(link, '^\$VAULT_PATH:', g:visidian_vault_path, '')
+        return {'type': 'internal', 'path': expanded, 'display': link}
+    endif
+    
+    " Handle relative paths
+    if link =~ '^\.\./' || link =~ '^\./'
+        return {'type': 'internal', 'path': link, 'display': fnamemodify(link, ':t:r')}
+    endif
+    
+    " Default to internal
+    return {'type': 'internal', 'path': link, 'display': link}
 endfunction
