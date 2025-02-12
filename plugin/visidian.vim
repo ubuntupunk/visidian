@@ -40,7 +40,7 @@ function! s:debug_level_complete(ArgLead, CmdLine, CursorPos)
 endfunction
 
 function! s:debug_category_complete(ArgLead, CmdLine, CursorPos)
-    return filter(['ALL', 'CORE', 'SESSION', 'PREVIEW', 'SEARCH', 'CACHE', 'PARA', 'UI', 'SYNC', 'BOOKMARKS', 'LINK', 'NOTES'], 'v:val =~? "^" . a:ArgLead')
+    return filter(['ALL', 'CORE', 'SESSION', 'PREVIEW', 'SEARCH', 'CACHE', 'PARA', 'UI', 'SYNC', 'BOOKMARKS', 'LINK', 'NOTES', 'IMAGE', 'ASCII'], 'v:val =~? "^" . a:ArgLead')
 endfunction
 
 " Initialize essential commands
