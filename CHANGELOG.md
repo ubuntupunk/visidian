@@ -19,6 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Environment variable support for API keys
 - Documentation for chat configuration and usage
 
+### Fixed
+- Fixed PARA folder duplication issue where lowercase folders were being created even when uppercase versions existed
+
 ## [v0.1.2] - 2025-02-12
 
 ### Added
