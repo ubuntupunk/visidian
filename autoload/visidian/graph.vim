@@ -192,9 +192,12 @@ endfunction
 function! visidian#graph#ShowNoteGraph() abort
     call visidian#debug#debug('GRAPH', 'Starting graph visualization')
     
-    let current_file = expand('%:t')
-    if empty(current_file) || current_file !~ '\.md$'
-        call visidian#debug#error('GRAPH', 'Not a markdown file: ' . current_file)
+    let current_file = expand('%:p')
+    if empty(current_file)
+        call visidian#debug#error('GRAPH', 'No file open in current buffer')
+        echohl ErrorMsg
+        echom '❌ Please open a note file first!'
+        echohl None
         return
     endif
     
