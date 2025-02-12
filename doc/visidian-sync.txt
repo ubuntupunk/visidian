@@ -105,3 +105,65 @@ Rsync:~
 Syncthing:~
     Uses Syncthing for continuous synchronization. Requires Syncthing to be
     installed and configured as a system service.
+
+==============================================================================
+*visidian-sync.txt*  Sync functionality for Visidian
+
+SYNC FUNCTIONALITY                                              *visidian-sync*
+
+Visidian provides multiple methods to sync your vault:
+
+1. Git Sync                                                    *visidian-git-sync*
+   - Supports both HTTPS and SSH authentication
+   - Deploy key support for secure SSH authentication
+   - Ensures repository is only initialized within vault directory
+   - Automatic detection of repository URL type
+
+   Configuration:
+   - `g:visidian_sync_method = 1`           " Use Git sync
+   - `g:visidian_git_repo_url = 'url'`      " Git repository URL (HTTPS or SSH)
+   - `g:visidian_deploy_key = 'path'`       " Optional: Path to SSH deploy key
+
+   SSH Example:
+   >
+       let g:visidian_sync_method = 1
+       let g:visidian_git_repo_url = 'git@github.com:username/repo.git'
+       let g:visidian_deploy_key = '~/.ssh/visidian_deploy_key'
+   <
+
+   HTTPS Example:
+   >
+       let g:visidian_sync_method = 1
+       let g:visidian_git_repo_url = 'https://github.com/username/repo.git'
+   <
+
+2. Rsync Sync                                                *visidian-rsync-sync*
+   - Direct synchronization with remote server
+   - Supports SSH authentication
+
+   Configuration:
+   - `g:visidian_sync_method = 2`           " Use Rsync sync
+   - `g:visidian_rsync_target = 'target'`   " Rsync target path
+
+3. Syncthing Sync                                        *visidian-syncthing-sync*
+   - Continuous synchronization via Syncthing
+   - Requires Syncthing to be installed and configured
+
+   Configuration:
+   - `g:visidian_sync_method = 3`           " Use Syncthing sync
+
+COMMANDS                                                    *visidian-sync-commands*
+
+:VisidianSync                                                     *:VisidianSync*
+    Start synchronization using the configured method.
+
+SECURITY NOTES                                            *visidian-sync-security*
+
+When using SSH authentication:
+1. Deploy keys should have restricted permissions (600)
+2. Keys should be stored outside the vault directory
+3. Each deploy key should be dedicated to a single repository
+
+For HTTPS authentication:
+1. Credentials are managed by git-credential-store
+2. Consider using SSH for more secure authentication

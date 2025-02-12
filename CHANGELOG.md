@@ -18,9 +18,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved error handling and response parsing for chat functionality
 - Environment variable support for API keys
 - Documentation for chat configuration and usage
+- Added SSH deploy key support for Git sync
+- Added automatic repository URL type detection (HTTPS/SSH)
 
 ### Fixed
 - Fixed PARA folder duplication issue where lowercase folders were being created even when uppercase versions existed
+- Fixed Git repository initialization to ensure it only happens within the vault directory
 
 ## [v0.1.2] - 2025-02-12
 
