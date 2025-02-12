@@ -1,0 +1,53 @@
+*visidian-tags.txt*  Tag generation and browsing
+
+                                                             *visidian-tags*
+
+==============================================================================
+CONTENTS                                                 *visidian-tags-contents*
+
+    1. Introduction .................... |visidian-tags-intro|
+    2. Commands ....................... |visidian-tags-commands|
+    3. Configuration .................. |visidian-tags-config|
+    4. Types .......................... |visidian-tags-types|
+
+See also:
+    Search System .................... |visidian-search|
+
+==============================================================================
+1. Introduction                                           *visidian-tags-intro*
+
+Visidian provides ctags integration for efficient navigation of your notes.
+Tags are generated for various elements like headers, links, and tasks.
+
+==============================================================================
+2. Commands                                             *visidian-tags-commands*
+
+:VisidianTags [type]                                          *:VisidianTags*
+    Generate tags for your vault. Optional [type] parameter can be:
+    - all (default): Generate all types of tags
+    - headers: Only generate tags for headers
+    - links: Only generate tags for links and tags
+    - tasks: Only generate tags for tasks
+
+==============================================================================
+3. Configuration                                         *visidian-tags-config*
+
+Tags are stored in the 'tags' file in your vault directory.
+Use standard Vim commands like |CTRL-]| to jump to tags and |:tag| to list them.
+
+==============================================================================
+4. Types                                                  *visidian-tags-types*
+
+Headers:~
+    All markdown headers (#, ##, etc.)
+
+Links:~
+    - Wiki-style links: [[Note Name]]
+    - Markdown links: [Text](url)
+    - YAML frontmatter tags
+
+Tasks:~
+    - Unchecked tasks: - [ ] Task
+    - Checked tasks: - [x] Task
+
+ vim:tw=78:ts=8:ft=help:norl:

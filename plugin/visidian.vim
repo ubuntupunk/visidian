@@ -113,11 +113,10 @@ command! -nargs=0 VisidianMenu call visidian#menu()
 command! -nargs=0 VisidianImport call visidian#import()
 command! -nargs=0 VisidianBook call visidian#bookmarking#menu()
 command! -nargs=0 VisidianToggleSearch call visidian#search#toggle()
-command! -nargs=0 -bar VisidianFirstStart call visidian#start#first_start()
+command! -nargs=0 -bar VisidianInit call visidian#start#first_start()
 
 " Generate & Browse Ctags
-command! -nargs=0 VisidianGenCtags call VisidianGenerateTags()
-command! -nargs=0 VisidianBrowseCtags call VisidianBrowseTags()
+command! -nargs=? -complete=customlist,visidian#tags#complete VisidianTags call visidian#tags#generate(<f-args>)
 
 "Toggle Spelling
 command! -nargs=0 VisidianToggleSpell call visidian#toggle_spell()
