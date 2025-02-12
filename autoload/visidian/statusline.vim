@@ -13,7 +13,8 @@ endfunction
 " Description: Get image indicator if current buffer is an image
 function! visidian#statusline#image_indicator()
     if visidian#statusline#is_image()
-        return '%#VisidianImageConcern#[I]%* '
+        " Add [I] on left, [Visidian] on right if there's space
+        return '%#VisidianImageConcern#[I]%* %<%f %{&modified?"[+]":""} %= %{winwidth(0)>70?"[Visidian] ":""}'
     endif
     return ''
 endfunction
