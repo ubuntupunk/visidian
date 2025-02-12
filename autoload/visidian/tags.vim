@@ -210,3 +210,151 @@ function! visidian#tags#filter() abort
     endif
     setlocal nomodifiable
 endfunction
+
+" Function: visidian#tags#extract_tags
+" Description: Extract tags from a file's content
+" Parameters:
+"   - content: List of lines to extract tags from
+" Returns: List of tags found in the content
+function! visidian#tags#extract_tags(content) abort
+    call visidian#debug#debug('TAGS', 'Extracting tags from content')
+    let tags = []
+    let in_yaml = 0
+    let yaml_end = 0
+    
+    " First check YAML frontmatter for tags
+    for i in range(len(a:content))
+        let line = a:content[i]
+        
+        " Check for YAML start/end markers
+        if i == 0 && line =~# '^---\s*$'
+            call visidian#debug#debug('TAGS', 'Found YAML start marker')
+            let in_yaml = 1
+            continue
+        elseif in_yaml && line =~# '^---\s*$'
+            call visidian#debug#debug('TAGS', 'Found YAML end marker')
+            let yaml_end = i
+            break
+        endif
+        
+        if in_yaml && line =~# '^\s*tags:'
+            call visidian#debug#debug('TAGS', 'Found tags field in YAML')
+            " Handle array format: tags: [tag1, tag2]
+            if line =~# '\[.*\]'
+                let tag_list = matchstr(line, '^\s*tags:\s*\[\zs.*\ze\]')
+                let yaml_tags = split(tag_list, ',\s*')
+                call extend(tags, yaml_tags)
+                call visidian#debug#debug('TAGS', 'Added ' . len(yaml_tags) . ' tags from YAML array')
+            else
+                " Handle multi-line format:
+                " tags:
+                "   - tag1
+                "   - tag2
+                let j = i + 1
+                while j < len(a:content) && a:content[j] =~# '^\s*-\s'
+                    let tag = matchstr(a:content[j], '^\s*-\s*\zs.*\ze\s*$')
+                    call add(tags, tag)
+                    call visidian#debug#debug('TAGS', 'Added tag from YAML list: ' . tag)
+                    let j += 1
+                endwhile
+            endif
+        endif
+    endfor
+    
+    " Then look for inline tags (#tag)
+    let tag_pattern = '#[A-Za-z][A-Za-z0-9_-]*'
+    for line in a:content
+        let start = 0
+        while 1
+            let match = matchstrpos(line, tag_pattern, start)
+            if match[1] == -1
+                break
+            endif
+            let tag = match[0][1:] " Remove the # prefix
+            if index(tags, tag) == -1
+                call add(tags, tag)
+                call visidian#debug#debug('TAGS', 'Found inline tag: ' . tag)
+            endif
+            let start = match[2]
+        endwhile
+    endfor
+    
+    call visidian#debug#info('TAGS', 'Found ' . len(tags) . ' unique tags')
+    return tags
+endfunction
+
+" Function: visidian#tags#get_tags
+" Description: Get all tags from a file
+" Parameters:
+"   - file_path: Path to the file to get tags from
+" Returns: List of tags found in the file
+function! visidian#tags#get_tags(file_path) abort
+    call visidian#debug#debug('TAGS', 'Getting tags from file: ' . a:file_path)
+    
+    if !filereadable(a:file_path)
+        call visidian#debug#error('TAGS', 'Cannot read file: ' . a:file_path)
+        return []
+    endif
+    
+    let content = readfile(a:file_path)
+    call visidian#debug#debug('TAGS', 'Read ' . len(content) . ' lines from file')
+    
+    return visidian#tags#extract_tags(content)
+endfunction
+
+" Function: visidian#tags#find_files_with_tag
+" Description: Find all files that contain a specific tag
+" Parameters:
+"   - tag: Tag to search for
+" Returns: List of file paths that contain the tag
+function! visidian#tags#find_files_with_tag(tag) abort
+    call visidian#debug#debug('TAGS', 'Searching for files with tag: ' . a:tag)
+    
+    if !exists('g:visidian_vault_path')
+        call visidian#debug#error('TAGS', 'g:visidian_vault_path not set')
+        return []
+    endif
+    
+    let files = []
+    let markdown_files = globpath(g:visidian_vault_path, '**/*.md', 0, 1)
+    call visidian#debug#debug('TAGS', 'Found ' . len(markdown_files) . ' markdown files to search')
+    
+    for file in markdown_files
+        let tags = visidian#tags#get_tags(file)
+        if index(tags, a:tag) >= 0
+            call add(files, file)
+            call visidian#debug#debug('TAGS', 'Found tag in file: ' . file)
+        endif
+    endfor
+    
+    call visidian#debug#info('TAGS', 'Found ' . len(files) . ' files with tag: ' . a:tag)
+    return files
+endfunction
+
+" Function: visidian#tags#get_all_tags
+" Description: Get all unique tags used in the vault
+" Returns: List of all unique tags
+function! visidian#tags#get_all_tags() abort
+    call visidian#debug#debug('TAGS', 'Getting all tags from vault')
+    
+    if !exists('g:visidian_vault_path')
+        call visidian#debug#error('TAGS', 'g:visidian_vault_path not set')
+        return []
+    endif
+    
+    let all_tags = {}
+    let markdown_files = globpath(g:visidian_vault_path, '**/*.md', 0, 1)
+    call visidian#debug#debug('TAGS', 'Found ' . len(markdown_files) . ' markdown files to process')
+    
+    for file in markdown_files
+        let tags = visidian#tags#get_tags(file)
+        for tag in tags
+            let all_tags[tag] = get(all_tags, tag, 0) + 1
+            call visidian#debug#debug('TAGS', 'Found tag occurrence: ' . tag)
+        endfor
+    endfor
+    
+    let tag_list = keys(all_tags)
+    call visidian#debug#info('TAGS', 'Found ' . len(tag_list) . ' unique tags across vault')
+    return tag_list
+endfunction
