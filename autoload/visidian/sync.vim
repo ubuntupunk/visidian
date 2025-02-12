@@ -66,7 +66,7 @@ function! s:init_git_repo(git_url)
             \ '.trash/'
         \ ]
         call writefile(gitignore_content, gitignore_path)
-        call setfperm(gitignore_path, "rw-r--r--")
+        call setfperm(gitignore_path, "rw-r--r--")  " 644 in rwx format
     endif
 endfunction
 
@@ -178,23 +178,82 @@ function! s:setup_git_deploy(owner, repo)
     let pub_key_path = key_path . '.pub'
     let ssh_config = ssh_dir . '/config'
 
+    " Check if we're on Windows
+    let s:is_windows = has('win32') || has('win64')
+
+    " Function to set SSH key permissions based on OS
+    function! s:set_ssh_key_permissions(key_path) abort
+        if s:is_windows
+            " Windows doesn't use chmod, but we can use icacls to set permissions
+            " This ensures only the current user has access to the private key
+            let cmd = 'icacls "' . a:key_path . '" /inheritance:r /grant:r "%USERNAME%":F'
+            let output = system(cmd)
+            if v:shell_error
+                call visidian#debug#error('SYNC', "Failed to set Windows permissions for SSH key: " . output)
+                return 0
+            endif
+        else
+            " Unix/Linux permissions using rwx format
+            call setfperm(a:key_path, "rw-------")  " 600 in rwx format
+            if getfperm(a:key_path) != "rw-------"
+                call visidian#debug#error('SYNC', "Failed to set Unix permissions for SSH key")
+                return 0
+            endif
+        endif
+        return 1
+    endfunction
+
+    " Function to generate SSH key based on OS
+    function! s:generate_ssh_key(key_path, email) abort
+        let key_dir = fnamemodify(a:key_path, ':h')
+        
+        " Create .ssh directory if it doesn't exist
+        if !isdirectory(key_dir)
+            if s:is_windows
+                call mkdir(key_dir, 'p')
+            else
+                call mkdir(key_dir, 'p', 0700)  " rwx------ format
+            endif
+        endif
+
+        " Generate SSH key
+        let cmd = 'ssh-keygen -t ed25519 -C ' . shellescape(a:email) . ' -f ' . shellescape(a:key_path) . ' -N ""'
+        let output = system(cmd)
+        if v:shell_error
+            call visidian#debug#error('SYNC', "Failed to generate SSH key: " . output)
+            return 0
+        endif
+
+        " Set proper permissions
+        if !s:set_ssh_key_permissions(a:key_path)
+            return 0
+        endif
+
+        " Set permissions for public key
+        if s:is_windows
+            let pub_cmd = 'icacls "' . a:key_path . '.pub" /inheritance:r /grant:r "%USERNAME%":F'
+            let output = system(pub_cmd)
+            if v:shell_error
+                call visidian#debug#error('SYNC', "Failed to set Windows permissions for public key: " . output)
+                return 0
+            endif
+        else
+            " Set public key permissions using rwx format
+            call setfperm(a:key_path . '.pub', "rw-r--r--")  " 644 in rwx format
+            if getfperm(a:key_path . '.pub') != "rw-r--r--"
+                call visidian#debug#error('SYNC', "Failed to set Unix permissions for public key")
+                return 0
+            endif
+        endif
+
+        return 1
+    endfunction
+
     " Generate SSH key
     call visidian#debug#info('SYNC', 'Generating SSH key at ' . key_path)
-    let keygen_cmd = 'ssh-keygen -t ed25519 -N "" -f ' . shellescape(key_path)
-    if force_overwrite
-        let cmd = 'yes y | ' . keygen_cmd
-    else
-        let cmd = keygen_cmd
+    if !s:generate_ssh_key(key_path, 'visidian@localhost')
+        throw 'Failed to generate SSH key'
     endif
-
-    let output = system(cmd)
-    if v:shell_error
-        throw 'Failed to generate SSH key: ' . output
-    endif
-
-    " Set permissions (using rwx format)
-    call setfperm(key_path, "rw-------")
-    call setfperm(pub_key_path, "rw-r--r--")
 
     " Create SSH config entry
     let host_alias = 'github.com-visidian_' . a:repo
@@ -207,7 +266,7 @@ function! s:setup_git_deploy(owner, repo)
     " Update SSH config
     if !filereadable(ssh_config)
         call writefile([config_entry], ssh_config)
-        call setfperm(ssh_config, "rw-------")
+        call setfperm(ssh_config, "rw-------")  " 600 in rwx format
     else
         " Check if host alias already exists
         let config_content = readfile(ssh_config)
@@ -388,3 +447,63 @@ function! s:sync_rsync()
         echohl None
     endtry
 endfunction
+
+" FUNCTIONS TO START AND STOP THE AUTO-SYNC TIMER 
+
+" First Version check for auto-sync functionality
+if v:version >= 800
+    function! visidian#sync#toggle_auto_sync()
+        " Ensure vault is set up
+        if !exists('g:visidian_vault_path') || g:visidian_vault_path == ''
+            call visidian#debug#error('SYNC', "No vault path set. Please set your vault first using :VisidianSetVault")
+            return
+        endif
+
+        " Check if git repo exists
+        if !isdirectory(g:visidian_vault_path . '/.git')
+            call visidian#debug#error('SYNC', "Git repository not initialized. Please set up sync first using :VisidianSync")
+            return
+        endif
+
+        if exists('s:auto_sync_timer')
+            call timer_stop(s:auto_sync_timer)
+            unlet s:auto_sync_timer
+            call visidian#debug#info('SYNC', "Auto-sync stopped.")
+            echo "Auto-sync disabled."
+        else
+            let s:auto_sync_timer = timer_start(3600000, function('s:AutoSyncCallback'), {'repeat': -1})
+            call visidian#debug#info('SYNC', "Auto-sync started. Syncing every hour.")
+            echo "Auto-sync enabled. Syncing every hour."
+        endif
+    endfunction
+
+    function! s:AutoSyncCallback(timer)
+        call visidian#sync#sync()
+        call visidian#debug#info('SYNC', "Auto-sync performed at " . strftime('%H:%M:%S'))
+    endfunction
+else
+    " Fallback for versions < 8.0
+    let s:last_sync_time = 0
+    function! s:CheckForSync()
+        " Ensure vault is set up
+        if !exists('g:visidian_vault_path') || g:visidian_vault_path == ''
+            return
+        endif
+
+        " Check if git repo exists
+        if !isdirectory(g:visidian_vault_path . '/.git')
+            return
+        endif
+
+        if !exists('s:last_sync_time') || localtime() - s:last_sync_time > 3600 " 3600 seconds = 1 hour
+            let s:last_sync_time = localtime()
+            call visidian#sync#sync()
+            call visidian#debug#info('SYNC', "Periodic sync performed at " . strftime('%H:%M:%S'))
+        endif
+    endfunction
+
+    augroup VisidianSyncAuto
+        autocmd!
+        autocmd CursorHold * call s:CheckForSync()
+    augroup END
+endif

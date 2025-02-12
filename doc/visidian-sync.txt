@@ -1,6 +1,23 @@
 Setting up automatic synchronization for Visidian can be done in several ways, depending on whether you want to use cron jobs or integrate automatic syncing directly into Vim. Here are methods for both approaches:
 
-Using Cron Jobs:
+Using Built-in Auto-Sync (Recommended)                          *visidian-auto-sync*
+Visidian provides built-in auto-sync functionality that can be controlled using:
+
+:VisidianToggleAutoSync                                     *:VisidianToggleAutoSync*
+    Toggles automatic synchronization on/off. When enabled:
+    - For Vim 8.0+: Syncs every hour using native timers
+    - For older Vim: Syncs during cursor idle periods
+    
+Requirements for Auto-Sync:
+    - Vault must be set up (:VisidianSetVault)
+    - Git repository must be initialized (:VisidianSync)
+    
+Auto-sync status is displayed in messages and logs:
+    - "Auto-sync enabled. Syncing every hour."
+    - "Auto-sync disabled."
+    - Debug logs show sync times and status
+
+Using Cron Jobs (Alternative)                             *visidian-cron-sync*
 Cron jobs are great for automating periodic tasks on Unix-like systems:
 
 Open the Cron Table:
@@ -191,5 +208,31 @@ When using SSH authentication:
 For HTTPS authentication:
 1. Automatically converts to SSH for better security
 2. Credentials are managed by git-credential-store if SSH is not used
+
+SSH Key Management                                          *visidian-ssh-keys*
+
+Visidian handles SSH key generation and permissions automatically based on your operating system:
+
+Windows:~
+    - Uses icacls to set secure permissions
+    - Restricts access to current user only
+    - Handles both private and public keys
+    - No manual permission setting required
+
+Unix/Linux:~
+    - Sets standard 600 permissions for private key
+    - Sets 644 permissions for public key
+    - Creates .ssh directory with 700 permissions if needed
+
+Requirements:
+    Windows:
+    - OpenSSH for Windows (comes with Windows 10 1809 and later)
+    - Git for Windows
+    
+    Unix/Linux:
+    - OpenSSH
+    - Git
+
+The plugin will automatically detect your OS and apply the appropriate security settings.
 
 ==============================================================================

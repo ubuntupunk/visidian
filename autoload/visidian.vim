@@ -1391,41 +1391,7 @@ function! visidian#sync()
     call visidian#sync#sync()
 endfunction
 
-" FUNCTIONS TO START AND STOP THE AUTO-SYNC TIMER 
-
-" First Version check for auto-sync functionality
-if v:version >= 800
-    function! visidian#toggle_auto_sync()
-        if exists('s:auto_sync_timer')
-            call timer_stop(s:auto_sync_timer)
-            unlet s:auto_sync_timer
-            echo "Auto-sync stopped."
-        else
-            let s:auto_sync_timer = timer_start(3600000, function('s:AutoSyncCallback'), {'repeat': -1})
-            echo "Auto-sync started. Syncing every hour."
-        endif
-    endfunction
-
-    function! s:AutoSyncCallback(timer)
-        call visidian#sync()
-        echo "Auto-sync performed."
-    endfunction
-else
-    " Fallback for versions < 8.0
-    let s:last_sync_time = 0
-    function! s:CheckForSync()
-        if !exists('s:last_sync_time') || localtime() - s:last_sync_time > 3600 " 3600 seconds = 1 hour
-            let s:last_sync_time = localtime()
-            call visidian#sync()
-            echo "Periodic sync performed."
-        endif
-    endfunction
-
-    augroup VisidianSyncAuto
-        autocmd!
-        autocmd CursorHold * call s:CheckForSync()
-    augroup END
-endif
+" Moved function for autosync into sync.vim
 
 " Auto-save session on exit
 augroup VisidianSession
