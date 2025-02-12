@@ -22,6 +22,7 @@ let s:DEBUG_CATEGORIES = [
     \ 'LINK',
     \ 'NOTES',
     \ 'IMAGE',
+    \ 'ASCII'
     \ ]
 
 " Initialize debug level from global variable
