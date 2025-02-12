@@ -220,8 +220,7 @@ function! visidian#bookmarking#menu()
         \ 'category:sort - Sort categories',
         \ 'remove - Remove a bookmark',
         \ 'view - View/jump to bookmark',
-        \ 'stats - Toggle statistics view',
-        \ 'graph - Show note graph visualization'
+        \ 'stats - Toggle statistics view'
         \ ]
     
     call fzf#run({
@@ -252,8 +251,6 @@ function! s:handle_menu_selection(selection)
         call s:show_view_menu()
     elseif action == 'stats'
         call s:toggle_stats_buffer()
-    elseif action == 'graph'
-        call visidian#graph#ShowNoteGraph()
     endif
 endfunction
 
