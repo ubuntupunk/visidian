@@ -116,3 +116,140 @@ function! visidian#image#display_graph(data, ...)
 
     call visidian#debug#debug('IMAGE', 'Completed display_graph')
 endfunction
+
+" Function: visidian#image#display_image
+" Description: Display an image file in a buffer using ASCII art
+" Parameters:
+"   - image_path: Path to the image file
+function! visidian#image#display_image()
+    if !has('python3')
+        call visidian#debug#error('IMAGE', 'Python3 support required for image display')
+        return
+    endif
+
+    let image_path = expand('%:p')
+    if !filereadable(image_path)
+        call visidian#debug#error('IMAGE', 'Cannot read image file: ' . image_path)
+        return
+    endif
+
+python3 << EOF
+import vim
+from PIL import Image
+import os
+
+def create_ascii_image(image_path, max_width=None, max_height=None):
+    try:
+        # Open the image
+        img = Image.open(image_path)
+    except Exception as e:
+        vim.command(f"call visidian#debug#error('IMAGE', 'Failed to open image: {str(e)}')")
+        return []
+
+    # Convert to RGB if necessary
+    if img.mode != 'RGB':
+        img = img.convert('RGB')
+
+    # Get window dimensions
+    if max_width is None:
+        max_width = int(vim.eval('winwidth(0)'))
+    if max_height is None:
+        max_height = int(vim.eval('winheight(0)'))
+
+    # Calculate new dimensions preserving aspect ratio
+    width, height = img.size
+    aspect_ratio = width / height
+    window_ratio = max_width / max_height
+
+    if window_ratio > aspect_ratio:
+        new_height = max_height
+        new_width = int(aspect_ratio * new_height)
+    else:
+        new_width = max_width
+        new_height = int(new_width / aspect_ratio)
+
+    # Account for terminal character aspect ratio (characters are taller than wide)
+    new_width = new_width * 2
+
+    # Resize image
+    img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+
+    # Define ASCII characters from darkest to lightest
+    ascii_chars = '@%#*+=-:. '
+
+    # Convert image to ASCII
+    ascii_lines = []
+    for y in range(new_height):
+        line = ''
+        for x in range(new_width // 2):  # Divide by 2 to account for character aspect ratio
+            # Get pixel RGB values
+            r, g, b = img.getpixel((x * 2, y))
+            # Convert to grayscale using perceived luminance
+            gray = int(0.2989 * r + 0.5870 * g + 0.1140 * b)
+            # Map grayscale value to ASCII character
+            char_idx = int((gray / 255) * (len(ascii_chars) - 1))
+            line += ascii_chars[char_idx]
+        ascii_lines.append(line)
+
+    return ascii_lines
+
+# Get image path from Vim
+image_path = vim.eval('image_path')
+
+try:
+    # Create ASCII art
+    ascii_lines = create_ascii_image(image_path)
+
+    if ascii_lines:
+        # Clear current buffer
+        vim.command('setlocal modifiable')
+        vim.current.buffer[:] = None
+
+        # Insert ASCII art
+        vim.current.buffer.append(ascii_lines)
+
+        # Remove empty first line
+        if len(vim.current.buffer) > 0 and vim.current.buffer[0] == '':
+            vim.command('1delete _')
+
+        # Set buffer options
+        vim.command('setlocal buftype=nofile')
+        vim.command('setlocal bufhidden=hide')
+        vim.command('setlocal noswapfile')
+        vim.command('setlocal nomodifiable')
+        vim.command('setlocal nowrap')
+
+        # Add file info header
+        filename = os.path.basename(image_path)
+        info = Image.open(image_path)
+        header = [
+            f'Image: {filename}',
+            f'Size: {info.size[0]}x{info.size[1]}',
+            f'Mode: {info.mode}',
+            f'Format: {info.format}',
+            ''
+        ]
+        vim.current.buffer[0:0] = header
+
+except Exception as e:
+    vim.command(f"call visidian#debug#error('IMAGE', 'Error creating ASCII art: {str(e)}')")
+
+EOF
+endfunction
+
+" Function: visidian#image#setup_autocmds
+" Description: Set up autocommands for image handling
+function! visidian#image#setup_autocmds()
+    augroup VisidianImage
+        autocmd!
+        autocmd BufReadPre *.png,*.jpg,*.jpeg,*.gif,*.bmp if !exists('g:visidian_disable_image_preview') | 
+            \ let b:visidian_is_image = 1 |
+            \ endif
+        autocmd BufRead *.png,*.jpg,*.jpeg,*.gif,*.bmp if exists('b:visidian_is_image') |
+            \ call visidian#image#display_image() |
+            \ endif
+    augroup END
+endfunction
+
+" Initialize autocommands
+call visidian#image#setup_autocmds()

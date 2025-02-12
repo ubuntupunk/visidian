@@ -1,12 +1,10 @@
-*visidian-preview.txt*  Markdown preview functionality
-
-                                                           *visidian-preview*
+*visidian-preview.txt*  Preview Features for Visidian
 
 ==============================================================================
 CONTENTS                                            *visidian-preview-contents*
 
     1. Introduction .................... |visidian-preview-intro|
-    2. Commands ....................... |visidian-preview-commands|
+    2. Features ....................... |visidian-preview-features|
     3. Requirements ................... |visidian-preview-requirements|
     4. Configuration .................. |visidian-preview-config|
 
@@ -17,14 +15,82 @@ See also:
 ==============================================================================
 1. Introduction                                        *visidian-preview-intro*
 
+Visidian provides preview features for both Markdown files and images, helping
+you visualize your content directly in Vim.
+
+==============================================================================
+2. Features                                           *visidian-preview-features*
+
+2.1 Markdown Preview                                  *visidian-preview-markdown*
+
 Visidian Preview provides real-time preview functionality for markdown files,
 supporting multiple preview backends for maximum compatibility.
 
-==============================================================================
-2. Commands                                          *visidian-preview-commands*
+2.2 Image Preview                                     *visidian-preview-image*
 
-:VisidianPreviewToggle                                *:VisidianPreviewToggle*
-    Toggle the markdown preview window
+Visidian can display images directly in Vim using ASCII art. When you open an
+image file, it will automatically be converted to an ASCII representation.
+
+Supported formats:~
+    - PNG (.png)
+    - JPEG (.jpg, .jpeg)
+    - GIF (.gif)
+    - BMP (.bmp)
+
+Features:~
+    - Automatic image detection and conversion
+    - Aspect ratio preservation
+    - Window size adaptation
+    - Image information display
+    - Grayscale conversion with perceived luminance
+    - High-quality character mapping
+
+Requirements:~
+    - Python3 support in Vim
+    - Python Pillow library (PIL)
+
+Configuration:~
+>
+    " Disable automatic image preview
+    let g:visidian_disable_image_preview = 1
+<
+
+Usage:~
+    1. Simply open an image file in Vim:
+>
+        :edit image.png
+<
+    2. The image will be automatically converted to ASCII art
+    3. Image information will be displayed at the top:
+        - Filename
+        - Original dimensions
+        - Color mode
+        - File format
+
+ASCII Characters:~
+    The following characters are used to represent different brightness levels,
+    from darkest to lightest:
+>
+    @%#*+=-:. 
+<
+
+Tips:~
+    - Use a monospace font for best results
+    - Larger terminal windows provide better detail
+    - Set 'nowrap' for proper image display (done automatically)
+    - Adjust terminal window size to change image scale
+
+Example Output:~
+>
+    Image: example.png
+    Size: 800x600
+    Mode: RGB
+    Format: PNG
+
+    @@@@%%%%####****++++====----::::....    
+    @@@@%%%%####****++++====----::::....    
+    @@@@%%%%####****++++====----::::....    
+<
 
 ==============================================================================
 3. Requirements                                   *visidian-preview-requirements*
@@ -58,5 +124,11 @@ Preview backends are tried in the following order:
 1. markdown-preview.nvim (if using Neovim)
 2. grip (if installed)
 3. bracey.vim (fallback)
+
+==============================================================================
+5. Commands                                          *visidian-preview-commands*
+
+:VisidianPreviewToggle                                *:VisidianPreviewToggle*
+    Toggle the markdown preview window
 
  vim:tw=78:ts=8:ft=help:norl:
