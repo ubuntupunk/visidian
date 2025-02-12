@@ -115,25 +115,34 @@ Visidian provides multiple methods to sync your vault:
 
 1. Git Sync                                                    *visidian-git-sync*
    - Supports both HTTPS and SSH authentication
-   - Automated deploy key setup and management
+   - Automated deploy key generation and management
    - Ensures repository is only initialized within vault directory
-   - Automatic detection of repository URL type
+   - Automatic detection and conversion of repository URL types
 
    Deploy Key Setup:                                     *visidian-deploy-key*
-   1. Use the provided script to generate a deploy key:
+   There are three ways to set up Git sync:
+
+   1. Automatic Setup (Recommended):
+      Simply run `:VisidianSync` and Visidian will:
+      - Prompt for GitHub username and repository name
+      - Generate a secure SSH key
+      - Configure SSH with a unique host alias
+      - Display the public key for GitHub
+      - Set proper permissions
+      - Provide the GitHub deploy key URL
+
+   2. HTTPS to SSH Conversion:
+      Start with an HTTPS URL and Visidian will:
+      - Automatically detect HTTPS format
+      - Generate SSH key and configuration
+      - Convert the URL to SSH format
+      - Guide you through deploy key setup
       >
-          ./scripts/generate_deploy_key.sh USERNAME REPO_NAME
+          let g:visidian_git_repo_url = 'https://github.com/username/repo.git'
       <
-      This will:
-      - Generate an ed25519 SSH key
-      - Set up SSH config with a unique host alias
-      - Set proper key permissions
-      - Print the public key for GitHub
-      - Generate Vim configuration snippets
 
-   2. Add the public key to GitHub repository deploy keys
-
-   3. Add the generated configuration to your vimrc:
+   3. Manual Configuration:
+      Directly configure SSH settings:
       >
           let g:visidian_git_repo_url = 'git@github.com-visidian_REPO:USERNAME/REPO.git'
           let g:visidian_deploy_key = '~/.ssh/id_rsa.visidian_REPO'
@@ -142,20 +151,7 @@ Visidian provides multiple methods to sync your vault:
    Configuration:
    - `g:visidian_sync_method = 1`           " Use Git sync
    - `g:visidian_git_repo_url = 'url'`      " Git repository URL (HTTPS or SSH)
-   - `g:visidian_deploy_key = 'path'`       " Path to SSH deploy key
-
-   SSH Example (with deploy key):
-   >
-       let g:visidian_sync_method = 1
-       let g:visidian_git_repo_url = 'git@github.com-visidian_notes:username/notes.git'
-       let g:visidian_deploy_key = '~/.ssh/id_rsa.visidian_notes'
-   <
-
-   HTTPS Example:
-   >
-       let g:visidian_sync_method = 1
-       let g:visidian_git_repo_url = 'https://github.com/username/repo.git'
-   <
+   - `g:visidian_deploy_key = 'path'`       " Optional: Path to SSH deploy key
 
 2. Rsync Sync                                                *visidian-rsync-sync*
    - Direct synchronization with remote server
@@ -175,17 +171,25 @@ Visidian provides multiple methods to sync your vault:
 COMMANDS                                                    *visidian-sync-commands*
 
 :VisidianSync                                                     *:VisidianSync*
-    Start synchronization using the configured method.
+    Start synchronization using the configured method. For Git sync, this will:
+    1. Check for existing configuration
+    2. Prompt for missing information
+    3. Generate deploy keys if needed
+    4. Guide through GitHub setup
+    5. Initialize repository if needed
+    6. Perform sync operation
 
 SECURITY NOTES                                            *visidian-sync-security*
 
 When using SSH authentication:
-1. Use the provided generate_deploy_key.sh script for proper setup
-2. Deploy keys are automatically created with correct permissions (600)
-3. Each repository gets its own unique deploy key and SSH host alias
+1. Each repository gets a unique deploy key and host alias
+2. Keys are automatically created with correct permissions (600)
+3. SSH configuration is automatically managed
 4. Keys are stored outside the vault directory
-5. SSH configuration is automatically managed
+5. Uses IdentitiesOnly for key isolation
 
 For HTTPS authentication:
-1. Credentials are managed by git-credential-store
-2. Consider using SSH with deploy keys for more secure authentication
+1. Automatically converts to SSH for better security
+2. Credentials are managed by git-credential-store if SSH is not used
+
+==============================================================================
