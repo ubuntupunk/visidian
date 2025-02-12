@@ -262,3 +262,12 @@ command! -nargs=0 VisidianShowGraph call visidian#graph#ShowNoteGraph()
 
 " Add image color toggle command
 command! -nargs=0 VisidianImageColor call visidian#image#toggle_color()
+
+" Initialize highlights
+call visidian#statusline#init_highlights()
+
+" Add image concern to statusline
+augroup VisidianImageStatusline
+    autocmd!
+    autocmd BufEnter,BufWinEnter * if &statusline !~# '\[I\]' | let &statusline = visidian#statusline#image_indicator() . &statusline | endif
+augroup END
