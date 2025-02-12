@@ -132,13 +132,17 @@ function! visidian#image#check_dependencies()
 
 python3 << EOF
 import vim
+import sys
+vim.command("call visidian#debug#debug('IMAGE', 'Python path: ' . string(sys.path))")
+vim.command("call visidian#debug#debug('IMAGE', 'Python executable: ' . string(sys.executable))")
+
 try:
     from PIL import Image
     vim.command('let l:has_pillow = 1')
-    vim.command("call visidian#debug#debug('IMAGE', 'Successfully imported PIL')")
-except ImportError:
+    vim.command("call visidian#debug#debug('IMAGE', 'Successfully imported PIL version: ' . string(Image.__version__))")
+except ImportError as e:
     vim.command('let l:has_pillow = 0')
-    vim.command("call visidian#debug#error('IMAGE', 'Python Pillow library (PIL) is required for image preview')")
+    vim.command("call visidian#debug#error('IMAGE', 'Python Pillow library (PIL) import error: ' . string(str(e)))")
     vim.command("echohl WarningMsg")
     vim.command("echom '📦 Visidian Image Preview needs the Pillow library! Install it with:'")
     vim.command("echohl None")
@@ -174,23 +178,42 @@ python3 << EOF
 import vim
 from PIL import Image
 import os
+import sys
 
 def create_ascii_image(image_path, max_width=None, max_height=None):
     try:
-        # Open the image
-        img = Image.open(image_path)
-        vim.command("call visidian#debug#debug('IMAGE', 'Successfully opened image')")
+        vim.command(f"call visidian#debug#debug('IMAGE', 'Attempting to open image: {image_path}')")
+        # Open the image with detailed error handling
+        try:
+            img = Image.open(image_path)
+        except FileNotFoundError:
+            vim.command(f"call visidian#debug#error('IMAGE', 'File not found: {image_path}')")
+            vim.command("echohl ErrorMsg")
+            vim.command("echom '😕 Sorry! Could not find the image file.'")
+            vim.command("echohl None")
+            return
+        except PermissionError:
+            vim.command(f"call visidian#debug#error('IMAGE', 'Permission denied: {image_path}')")
+            vim.command("echohl ErrorMsg")
+            vim.command("echom '😕 Sorry! Permission denied when trying to read the image.'")
+            vim.command("echohl None")
+            return
+        except Exception as e:
+            vim.command(f"call visidian#debug#error('IMAGE', 'Error opening image: {str(e)}')")
+            vim.command("echohl ErrorMsg")
+            vim.command("echom '😕 Sorry! Could not open the image.'")
+            vim.command("echohl None")
+            return
+
+        # Log image details
+        vim.command(f"call visidian#debug#debug('IMAGE', 'Image format: {img.format}')")
+        vim.command(f"call visidian#debug#debug('IMAGE', 'Image mode: {img.mode}')")
+        vim.command(f"call visidian#debug#debug('IMAGE', 'Image size: {img.size}')")
+        
         vim.command("echohl MoreMsg")
         vim.command("echom '🎨 Converting image to ASCII art...'")
         vim.command("echohl None")
-    except Exception as e:
-        vim.command(f"call visidian#debug#error('IMAGE', 'Failed to open image: {str(e)}')")
-        vim.command("echohl ErrorMsg")
-        vim.command("echom '😕 Sorry! Could not open the image.'")
-        vim.command("echohl None")
-        return []
-
-    try:
+        
         # Convert to RGB if necessary
         if img.mode != 'RGB':
             vim.command("call visidian#debug#debug('IMAGE', 'Converting image to RGB mode')")
