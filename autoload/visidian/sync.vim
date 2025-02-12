@@ -23,7 +23,30 @@ function! s:setup_git_deploy(owner, repo)
         throw 'SSH directory not found. Please create ~/.ssh directory with proper permissions (700) first.'
     endif
 
-    let key_path = ssh_dir . '/id_rsa.visidian_' . a:repo
+    let key_name = 'id_rsa.visidian_' . a:repo
+    let key_path = ssh_dir . '/' . key_name
+    
+    " Handle existing key
+    if filereadable(key_path)
+        let choice = inputlist([
+            \ 'SSH key already exists: ' . key_path,
+            \ '1. Overwrite existing key',
+            \ '2. Use alternate name',
+            \ '3. Cancel'
+        \ ])
+
+        if choice == 2
+            let alt_name = input('Enter alternate key name (without path): ')
+            if alt_name == ''
+                throw 'Key name required'
+            endif
+            let key_name = alt_name
+            let key_path = ssh_dir . '/' . key_name
+        elseif choice == 3
+            throw 'Operation cancelled by user'
+        endif
+    endif
+
     let pub_key_path = key_path . '.pub'
     let ssh_config = ssh_dir . '/config'
 
@@ -40,8 +63,9 @@ function! s:setup_git_deploy(owner, repo)
     call setfperm(pub_key_path, "644")
 
     " Create SSH config entry
+    let host_alias = 'github.com-visidian_' . a:repo
     let config_entry = "\n# Visidian Key Generated on " . strftime('%Y-%m-%d at %H:%M:%S') . "\n"
-    let config_entry .= "Host github.com-visidian_" . a:repo . "\n"
+    let config_entry .= "Host " . host_alias . "\n"
     let config_entry .= "    HostName github.com\n"
     let config_entry .= "    User git\n"
     let config_entry .= "    IdentityFile " . key_path . "\n"
@@ -51,11 +75,25 @@ function! s:setup_git_deploy(owner, repo)
         call writefile([config_entry], ssh_config)
         call setfperm(ssh_config, "600")
     else
-        call writefile([config_entry], ssh_config, 'a')
+        " Check if host alias already exists
+        let config_content = readfile(ssh_config)
+        let host_pattern = '^Host\s\+' . host_alias . '$'
+        let host_exists = 0
+        
+        for line in config_content
+            if line =~ host_pattern
+                let host_exists = 1
+                break
+            endif
+        endfor
+
+        if !host_exists
+            call writefile([config_entry], ssh_config, 'a')
+        endif
     endif
 
     " Construct Git URL with alias
-    let git_url = 'git@github.com-visidian_' . a:repo . ':' . a:owner . '/' . a:repo . '.git'
+    let git_url = 'git@' . host_alias . ':' . a:owner . '/' . a:repo . '.git'
 
     " Create buffer with instructions
     new
