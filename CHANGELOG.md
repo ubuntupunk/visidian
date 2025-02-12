@@ -19,6 +19,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Toggle between color and grayscale modes
   - Proper PARA location tracking for images
   - Kitty graphics protocol support
+- Enhanced sync functionality
+  - Git-annex support for large file handling
+  - Cross-platform SSH key management (Windows/Unix)
+  - Automated deploy key generation and setup
+  - Improved repository initialization safety
+  - Better error handling and validation
+  - Reordered sync methods (Git > Git Annex > Rsync)
 - RAG-like functionality for intelligent note context
   - Vector store for semantic note indexing
   - Automatic note indexing on save
