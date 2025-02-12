@@ -1,22 +1,62 @@
 " Tags management for Visidian
 " Maintainer: David Robert Lewis
+"
+" This module provides tag generation, browsing, and navigation functionality.
+" It supports various tag types including headers, links, tasks, and YAML fields.
+" Tags are stored in the vault directory and can be browsed using a dedicated UI.
 
+" FUNCTION: Complete tag type options for the :VisidianTags command
 function! visidian#tags#complete(ArgLead, CmdLine, CursorPos) abort
-    let l:options = ['all', 'headers', 'links', 'tasks']
+    let l:options = ['all', 'headers', 'links', 'tasks', 'yaml']
     return filter(l:options, 'v:val =~ "^" . a:ArgLead')
 endfunction
 
+" FUNCTION: Generate tags based on type
+" Parameters:
+"   type - Optional tag type (all, headers, links, tasks, yaml)
 function! visidian#tags#generate(...) abort
+    if executable('ctags') == 0
+        call visidian#debug#error('TAGS', "Ctags not found. Please install ctags:")
+        if has('unix')
+            call visidian#debug#warn('TAGS', "  - On Ubuntu/Debian: sudo apt-get install universal-ctags")
+            call visidian#debug#warn('TAGS', "  - On macOS with Homebrew: brew install universal-ctags")
+        elseif has('win32')
+            call visidian#debug#warn('TAGS', "  - On Windows with Chocolatey: choco install ctags")
+        endif
+        return
+    endif
+
     let l:type = a:0 > 0 ? a:1 : 'all'
     let l:vault_dir = visidian#get_vault_dir()
     let l:tags_file = l:vault_dir . '/tags'
     
     " Define tag patterns based on type
     let l:patterns = {
-        \ 'all': ['*.md'],
-        \ 'headers': ['^#\+\s\+.*$'],
-        \ 'links': ['\[\[.*\]\]', '\[.*\](.*)', '^tags:.*$'],
-        \ 'tasks': ['^\s*- \[ \].*$', '^\s*- \[x\].*$']
+        \ 'all': [
+            \ '--regex-markdown=/^#\+\s+(.*)/\1/h,heading/',
+            \ '--regex-markdown=/\[\[(.*?)\]\]/\1/l,wikilink/',
+            \ '--regex-markdown=/\[(.*?)\]\((.*?)\)/\2/l,mdlink/',
+            \ '--regex-markdown=/^>\{3}\s+(.*)/\1/p,pullquote/',
+            \ '--regex-markdown=/^\s*- \[ \](.*)/\1/t,task/',
+            \ '--regex-markdown=/^\s*- \[x\](.*)/\1/d,done/',
+            \ '--regex-markdown=/^---$(.*?)---$/\1/m,metadata/',
+            \ '--regex-markdown=/^tags:\s*\[(.*?)\]/\1/y,tags/',
+            \ '--regex-markdown=/^tags:\s*\n\s*-(.*)/\1/y,tags/',
+            \ ],
+        \ 'headers': ['--regex-markdown=/^#\+\s+(.*)/\1/h,heading/'],
+        \ 'links': [
+            \ '--regex-markdown=/\[\[(.*?)\]\]/\1/l,wikilink/',
+            \ '--regex-markdown=/\[(.*?)\]\((.*?)\)/\2/l,mdlink/'
+            \ ],
+        \ 'tasks': [
+            \ '--regex-markdown=/^\s*- \[ \](.*)/\1/t,task/',
+            \ '--regex-markdown=/^\s*- \[x\](.*)/\1/d,done/'
+            \ ],
+        \ 'yaml': [
+            \ '--regex-markdown=/^tags:\s*\[(.*?)\]/\1/y,tags/',
+            \ '--regex-markdown=/^tags:\s*\n\s*-(.*)/\1/y,tags/',
+            \ '--regex-markdown=/^---$(.*?)---$/\1/m,metadata/'
+            \ ]
         \ }
 
     " Get patterns for requested type
@@ -27,29 +67,28 @@ function! visidian#tags#generate(...) abort
     
     " Add language definition for markdown
     let l:cmd += ['--langdef=markdown', '--languages=markdown']
-    let l:cmd += ['--langmap=markdown:.md']
+    let l:cmd += ['--langmap=markdown:.md,.markdown']
 
-    " Add patterns based on type
-    for pattern in l:active_patterns
-        let l:cmd += ['--regex-markdown=' . shellescape('/'.pattern.'/\0/t,tag,tags/')]
-    endfor
+    " Add patterns
+    let l:cmd += l:active_patterns
 
     " Add vault directory
     let l:cmd += [l:vault_dir]
 
-    " Execute command
+    call visidian#debug#info('TAGS', 'Generating tags for type: ' . l:type)
     let l:output = system(join(l:cmd, ' '))
     
     if v:shell_error
-        echoerr 'Failed to generate tags: ' . l:output
+        call visidian#debug#error('TAGS', 'Failed to generate tags: ' . l:output)
         return
     endif
 
     " Reload tags file
     execute 'set tags=' . l:tags_file
-    echomsg 'Generated tags for type: ' . l:type
+    call visidian#debug#info('TAGS', 'Tags generated successfully in ' . l:tags_file)
 endfunction
 
+" FUNCTION: Browse tags in a dedicated window
 function! visidian#tags#browse() abort
     " Open a new vertical split for tag browsing
     vertical new
@@ -98,12 +137,14 @@ function! visidian#tags#browse() abort
     setlocal nomodifiable
 endfunction
 
+" FUNCTION: Jump to the tag under cursor
 function! visidian#tags#jump() abort
     let l:line = getline('.')
-    echom "Attempting to jump:" . l:line
+    call visidian#debug#info('TAGS', "Attempting to jump: " . l:line)
+    
     if l:line =~ '^!'
         " Handle special cases like image or link tags if needed
-        echo "Special tag type, not jumpable"
+        call visidian#debug#warn('TAGS', "Special tag type, not jumpable")
         return
     endif
     
@@ -135,7 +176,7 @@ function! visidian#tags#jump() abort
         else
             let @/ = substitute(l:tag_address, ';".*', '', '')
             if search(@/, 'w') == 0
-                echo "Pattern not found: " . @/
+                call visidian#debug#warn('TAGS', "Pattern not found: " . @/)
             else
                 normal! n
             endif
@@ -149,6 +190,7 @@ function! visidian#tags#jump() abort
     endtry
 endfunction
 
+" FUNCTION: Filter tags by pattern
 function! visidian#tags#filter() abort
     setlocal modifiable
     let l:pattern = input('Filter tags: ')

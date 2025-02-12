@@ -18,7 +18,8 @@ See also:
 1. Introduction                                           *visidian-tags-intro*
 
 Visidian provides ctags integration for efficient navigation of your notes.
-Tags are generated for various elements like headers, links, and tasks.
+Tags are generated for various elements like headers, links, tasks, and YAML
+fields.
 
 ==============================================================================
 2. Commands                                             *visidian-tags-commands*
@@ -27,8 +28,9 @@ Tags are generated for various elements like headers, links, and tasks.
     Generate tags for your vault. Optional [type] parameter can be:
     - all (default): Generate all types of tags
     - headers: Only generate tags for headers
-    - links: Only generate tags for links and tags
-    - tasks: Only generate tags for tasks
+    - links: Only generate tags for links
+    - tasks: Only generate tasks
+    - yaml: Only generate YAML fields
 
 :VisidianBrowseTags                                      *:VisidianBrowseTags*
     Open a window to browse and filter tags. In the browser:
@@ -48,15 +50,26 @@ Use standard Vim commands like |CTRL-]| to jump to tags and |:tag| to list them.
 
 Headers:~
     All markdown headers (#, ##, etc.)
+    Kind: h (heading)
 
 Links:~
     - Wiki-style links: [[Note Name]]
     - Markdown links: [Text](url)
-    - YAML frontmatter tags
+    Kind: l (link)
 
 Tasks:~
     - Unchecked tasks: - [ ] Task
     - Checked tasks: - [x] Task
+    Kind: t (task), d (done)
+
+YAML:~
+    - Tags field: tags: [tag1, tag2]
+    - Multi-line tags:
+      tags:
+        - tag1
+        - tag2
+    - YAML frontmatter blocks
+    Kind: y (tags), m (metadata)
 
 ==============================================================================
 5. Browser                                             *visidian-tags-browser*
