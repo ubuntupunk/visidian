@@ -1,217 +1,53 @@
-Setting up automatic synchronization for Visidian can be done in several ways, depending on whether you want to use cron jobs or integrate automatic syncing directly into Vim. Here are methods for both approaches:
+*visidian-sync.txt*  Synchronization features for Visidian
 
-Using Built-in Auto-Sync (Recommended)                          *visidian-auto-sync*
-Visidian provides built-in auto-sync functionality that can be controlled using:
+                                                                    *visidian-sync*
 
-:VisidianToggleAutoSync                                     *:VisidianToggleAutoSync*
-    Toggles automatic synchronization on/off. When enabled:
+==============================================================================
+CONTENTS                                                   *visidian-sync-contents*
+
+    1. Introduction ................... |visidian-sync-intro|
+    2. Auto-Sync ..................... |visidian-auto-sync|
+    3. SSH Key Management ............ |visidian-ssh-keys|
+    4. Git Integration ............... |visidian-git-sync|
+    5. Commands ...................... |visidian-sync-commands|
+    6. Configuration ................. |visidian-sync-config|
+    7. Troubleshooting ............... |visidian-sync-troubleshooting|
+
+==============================================================================
+1. Introduction                                           *visidian-sync-intro*
+
+Visidian provides robust synchronization capabilities to keep your vault backed up
+and synchronized across multiple devices. The sync system supports both Git and
+manual synchronization methods.
+
+==============================================================================
+2. Auto-Sync                                             *visidian-auto-sync*
+
+Visidian provides built-in auto-sync functionality that can be controlled using
+the :VisidianToggleAutoSync command.
+
+Commands:~
+                                                        *:VisidianToggleAutoSync*
+:VisidianToggleAutoSync     Toggle automatic synchronization on/off
+
+Behavior:~
     - For Vim 8.0+: Syncs every hour using native timers
     - For older Vim: Syncs during cursor idle periods
-    
-Requirements for Auto-Sync:
+
+Requirements:~
     - Vault must be set up (:VisidianSetVault)
     - Git repository must be initialized (:VisidianSync)
-    
-Auto-sync status is displayed in messages and logs:
+
+Status Messages:~
     - "Auto-sync enabled. Syncing every hour."
     - "Auto-sync disabled."
     - Debug logs show sync times and status
 
-Using Cron Jobs (Alternative)                             *visidian-cron-sync*
-Cron jobs are great for automating periodic tasks on Unix-like systems:
-
-Open the Cron Table:
-Open your crontab for editing with crontab -e.
-
-Add a Sync Entry:
-You'll need to ensure Vim can run commands from the command line. Here's an example cron job that syncs every hour:
-
-```bash
-0 * * * * /usr/bin/vim -c ":VisidianSync" -c ":q"
-```
-
-/usr/bin/vim should be replaced with the actual path to Vim on your system if it's different.
-
-`:VisidianSync` runs the sync command within Vim.
-
-:q quits Vim after the command.
-
-Customizing the Sync:
-If you need to specify a particular user's Vim settings, you might need to set environment variables like HOME or VIMINIT. Here's a more complex example:
-
-```bash
-0 * * * * HOME=/home/username VIMINIT='source ~/.vimrc' /usr/bin/vim -c ":VisidianSync" -c ":q"
-```
-
-Replace username with the actual username.
-
-Considerations:
-Make sure the user running the cron job has permissions to perform Git operations or Rsync to the specified locations.
-If using Git, you might need to configure SSH keys for passwordless access to remote repositories.
-
-Automatic Syncing Within Vim:
-If you want the sync to happen automatically within Vim:
-Visidian provides a :VisidianSync command to sync the vault with a remote repository and :VisidianToggleAutoSync to toggle auto-sync on and off.
-
-Autocommands for Sync:
-Add the following to your vimrc or init.vim to sync when certain events occur:
-
-```vim
-augroup VisidianSyncAuto
-    autocmd!
-    " Sync on Vim exit
-    autocmd VimLeave * call visidian#sync()
-    " Or sync after a certain amount of time of inactivity
-    " autocmd CursorHold * if &modified | call visidian#sync() | endif
-augroup END
-```
-
-VimLeave will sync when Vim is closed.
-
-CursorHold can be used for periodic syncing, but it's less common and might be intrusive if not carefully configured.
-
-Periodic Sync with Timers:
-Vim 8.0+ or Neovim supports timers for periodic tasks:
-
-```vim
-if has('timers')
-    let s:sync_timer = timer_start(3600000, 'VisidianPeriodicSync', {'repeat': -1}) " 3600000 ms = 1 hour
-endif
-```
-
-function! VisidianPeriodicSync(timer)
-    call visidian#sync()
-endfunction
-
-This will sync every hour when Vim is open. Adjust the interval as needed.
-
-Notes:
-Security: Be cautious with cron jobs, especially if they involve SSH keys or passwords for Git push/pull operations. Ensure that only trusted users have access to the cron setup.
-
-Vim Configuration: For both methods, ensure that Vim's configuration (vimrc or init.vim) includes all the necessary plugin paths and settings for Visidian to function correctly.
-
-Performance: Regular automatic syncs might impact system performance or battery life, especially if syncing large vaults or over slow connections. Adjust frequency based on your needs.
-
-User Notification: For automatic syncing within Vim, you might want to add notifications or logs to inform the user when a sync has happened or if it failed. This can be done by extending the visidian#sync() function to log or notify.
-
-Configuration Options:
-Visidian Sync provides the following configuration options:
-
-g:visidian_sync_method
-    Sync method to use (1: Git, 2: Rsync, 3: Syncthing)
-    Default: Prompts for selection if not set
-
-g:visidian_git_repo_url
-    Git repository URL for syncing
-    Default: Prompts for URL if not set
-
-g:visidian_rsync_target
-    Rsync target directory (e.g., user@host:/path/to/dir)
-    Default: Prompts for target if not set
-
-Sync Methods:
-Visidian Sync supports the following sync methods:
-
-Git:~
-    Uses Git for version control and syncing. Requires a Git repository URL.
-
-Rsync:~
-    Uses rsync for direct file synchronization. Requires rsync to be installed
-    and a target directory to be specified.
-
-Syncthing:~
-    Uses Syncthing for continuous synchronization. Requires Syncthing to be
-    installed and configured as a system service.
-
 ==============================================================================
-*visidian-sync.txt*  Sync functionality for Visidian
+3. SSH Key Management                                     *visidian-ssh-keys*
 
-SYNC FUNCTIONALITY                                              *visidian-sync*
-
-Visidian provides multiple methods to sync your vault:
-
-1. Git Sync                                                    *visidian-git-sync*
-   - Supports both HTTPS and SSH authentication
-   - Automated deploy key generation and management
-   - Ensures repository is only initialized within vault directory
-   - Automatic detection and conversion of repository URL types
-
-   Deploy Key Setup:                                     *visidian-deploy-key*
-   There are three ways to set up Git sync:
-
-   1. Automatic Setup (Recommended):
-      Simply run `:VisidianSync` and Visidian will:
-      - Prompt for GitHub username and repository name
-      - Generate a secure SSH key
-      - Configure SSH with a unique host alias
-      - Display the public key for GitHub
-      - Set proper permissions
-      - Provide the GitHub deploy key URL
-
-   2. HTTPS to SSH Conversion:
-      Start with an HTTPS URL and Visidian will:
-      - Automatically detect HTTPS format
-      - Generate SSH key and configuration
-      - Convert the URL to SSH format
-      - Guide you through deploy key setup
-      >
-          let g:visidian_git_repo_url = 'https://github.com/username/repo.git'
-      <
-
-   3. Manual Configuration:
-      Directly configure SSH settings:
-      >
-          let g:visidian_git_repo_url = 'git@github.com-visidian_REPO:USERNAME/REPO.git'
-          let g:visidian_deploy_key = '~/.ssh/id_rsa.visidian_REPO'
-      <
-
-   Configuration:
-   - `g:visidian_sync_method = 1`           " Use Git sync
-   - `g:visidian_git_repo_url = 'url'`      " Git repository URL (HTTPS or SSH)
-   - `g:visidian_deploy_key = 'path'`       " Optional: Path to SSH deploy key
-
-2. Rsync Sync                                                *visidian-rsync-sync*
-   - Direct synchronization with remote server
-   - Supports SSH authentication
-
-   Configuration:
-   - `g:visidian_sync_method = 2`           " Use Rsync sync
-   - `g:visidian_rsync_target = 'target'`   " Rsync target path
-
-3. Syncthing Sync                                        *visidian-syncthing-sync*
-   - Continuous synchronization via Syncthing
-   - Requires Syncthing to be installed and configured
-
-   Configuration:
-   - `g:visidian_sync_method = 3`           " Use Syncthing sync
-
-COMMANDS                                                    *visidian-sync-commands*
-
-:VisidianSync                                                     *:VisidianSync*
-    Start synchronization using the configured method. For Git sync, this will:
-    1. Check for existing configuration
-    2. Prompt for missing information
-    3. Generate deploy keys if needed
-    4. Guide through GitHub setup
-    5. Initialize repository if needed
-    6. Perform sync operation
-
-SECURITY NOTES                                            *visidian-sync-security*
-
-When using SSH authentication:
-1. Each repository gets a unique deploy key and host alias
-2. Keys are automatically created with correct permissions (600)
-3. SSH configuration is automatically managed
-4. Keys are stored outside the vault directory
-5. Uses IdentitiesOnly for key isolation
-
-For HTTPS authentication:
-1. Automatically converts to SSH for better security
-2. Credentials are managed by git-credential-store if SSH is not used
-
-SSH Key Management                                          *visidian-ssh-keys*
-
-Visidian handles SSH key generation and permissions automatically based on your operating system:
+Visidian handles SSH key generation and permissions automatically based on your
+operating system:
 
 Windows:~
     - Uses icacls to set secure permissions
@@ -220,11 +56,11 @@ Windows:~
     - No manual permission setting required
 
 Unix/Linux:~
-    - Sets standard 600 permissions for private key
-    - Sets 644 permissions for public key
-    - Creates .ssh directory with 700 permissions if needed
+    - Sets standard 600 permissions for private key (rw-------)
+    - Sets 644 permissions for public key (rw-r--r--)
+    - Creates .ssh directory with 700 permissions (rwx------)
 
-Requirements:
+Requirements:~
     Windows:
     - OpenSSH for Windows (comes with Windows 10 1809 and later)
     - Git for Windows
@@ -233,6 +69,65 @@ Requirements:
     - OpenSSH
     - Git
 
-The plugin will automatically detect your OS and apply the appropriate security settings.
+==============================================================================
+4. Git Integration                                        *visidian-git-sync*
+
+Visidian uses Git for version control and synchronization:
+
+Features:~
+    - Automatic repository initialization
+    - SSH key generation and management
+    - Deploy key setup for GitHub/GitLab
+    - Periodic auto-sync
+    - Manual sync via commands
+
+Security:~
+    - Automated SSH key permission management
+    - Secure credential storage
+    - OS-specific security measures
 
 ==============================================================================
+5. Commands                                           *visidian-sync-commands*
+
+                                                            *:VisidianSync*
+:VisidianSync              Manually trigger synchronization
+
+                                                            *:VisidianSetVault*
+:VisidianSetVault          Set up a new vault or select existing one
+
+==============================================================================
+6. Configuration                                       *visidian-sync-config*
+
+Options:~
+>
+    " Set sync method (1: Git, 2: Manual)
+    let g:visidian_sync_method = 1
+
+    " Set Git repository URL
+    let g:visidian_git_repo_url = 'git@github.com:username/vault.git'
+
+    " Set deploy key path (optional)
+    let g:visidian_deploy_key = '~/.ssh/visidian_deploy_key'
+<
+
+==============================================================================
+7. Troubleshooting                               *visidian-sync-troubleshooting*
+
+Common Issues:~
+
+Permission Errors:
+    - Windows: Ensure OpenSSH is installed and you have admin rights
+    - Unix: Check file permissions (600 for private keys, 644 for public)
+
+Git Issues:
+    - Verify repository URL is correct
+    - Ensure SSH key is added to GitHub/GitLab
+    - Check network connectivity
+
+Auto-Sync:
+    - Verify Vim version (8.0+ for timer-based sync)
+    - Check vault path is set
+    - Ensure Git repository is initialized
+
+==============================================================================
+vim:ft=help:norl:tw=78:ts=8:sw=4
