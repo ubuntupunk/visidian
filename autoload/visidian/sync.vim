@@ -25,6 +25,7 @@ function! s:setup_git_deploy(owner, repo)
 
     let key_name = 'id_rsa.visidian_' . a:repo
     let key_path = ssh_dir . '/' . key_name
+    let force_overwrite = 0
     
     " Handle existing key
     if filereadable(key_path)
@@ -35,7 +36,9 @@ function! s:setup_git_deploy(owner, repo)
             \ '3. Cancel'
         \ ])
 
-        if choice == 2
+        if choice == 1
+            let force_overwrite = 1
+        elseif choice == 2
             let alt_name = input('Enter alternate key name (without path): ')
             if alt_name == ''
                 throw 'Key name required'
@@ -52,7 +55,13 @@ function! s:setup_git_deploy(owner, repo)
 
     " Generate SSH key
     call visidian#debug#info('SYNC', 'Generating SSH key at ' . key_path)
-    let cmd = 'ssh-keygen -t ed25519 -N "" -f ' . shellescape(key_path)
+    let keygen_cmd = 'ssh-keygen -t ed25519 -N "" -f ' . shellescape(key_path)
+    if force_overwrite
+        let cmd = 'yes y | ' . keygen_cmd
+    else
+        let cmd = keygen_cmd
+    endif
+
     let output = system(cmd)
     if v:shell_error
         throw 'Failed to generate SSH key: ' . output
