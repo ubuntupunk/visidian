@@ -35,12 +35,18 @@ function! s:init_git_repo(git_url)
 
     if a:git_url != ''
         call add(init_cmd, 'git remote add origin ' . shellescape(a:git_url))
+        " Only rename branch after first commit
+        call add(init_cmd, 'git add .')
+        call add(init_cmd, 'git commit -m "Initial commit"')
         call add(init_cmd, 'git branch -M main')
     endif
     
     for cmd in init_cmd
         let output = system(cmd)
         if v:shell_error
+            if cmd =~ '^git commit' && output =~ 'nothing to commit'
+                continue  " Skip commit error if no files
+            endif
             throw 'Failed to initialize repository: ' . output
         endif
     endfor
@@ -252,62 +258,6 @@ function! s:setup_git_deploy(owner, repo)
         \ 'key_path': key_path,
         \ 'git_url': git_url
     \ }
-endfunction
-
-"FUNCTION: Initialize Git Repository
-function! s:init_git_repo(git_url)
-    " Ensure we're initializing in the vault directory
-    if !exists('g:visidian_vault_path') || g:visidian_vault_path == ''
-        throw 'Vault path not set. Please set your vault first using :VisidianSetVault'
-    endif
-
-    let vault_path = fnamemodify(g:visidian_vault_path, ':p')
-    
-    " Ensure we're in the vault directory
-    let cwd = getcwd()
-    if cwd != vault_path
-        execute 'lcd ' . fnameescape(vault_path)
-    endif
-    
-    " Check if .git already exists in vault
-    if isdirectory(vault_path . '/.git')
-        throw 'Git repository already exists in vault'
-    endif
-
-    let init_cmd = [
-        \ 'git init',
-        \ 'git config --local core.excludesfile ' . shellescape(vault_path . '/.gitignore')
-    \ ]
-
-    if a:git_url != ''
-        call add(init_cmd, 'git remote add origin ' . shellescape(a:git_url))
-        call add(init_cmd, 'git branch -M main')
-    endif
-    
-    for cmd in init_cmd
-        let output = system(cmd)
-        if v:shell_error
-            throw 'Failed to initialize repository: ' . output
-        endif
-    endfor
-
-    " Create default .gitignore if it doesn't exist
-    let gitignore_path = vault_path . '/.gitignore'
-    if !filereadable(gitignore_path)
-        let gitignore_content = [
-            \ '# Visidian default gitignore',
-            \ '.DS_Store',
-            \ 'Thumbs.db',
-            \ '*.swp',
-            \ '*.swo',
-            \ '*~',
-            \ '.git/',
-            \ '.obsidian/',
-            \ '.trash/'
-        \ ]
-        call writefile(gitignore_content, gitignore_path)
-        call setfperm(gitignore_path, "rw-r--r--")
-    endif
 endfunction
 
 "FUNCTION: Sync
