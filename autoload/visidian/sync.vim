@@ -1,5 +1,3 @@
-"file autoload/visidian/sync.vim:
-
 "These are the sync helper functions called by visidian#sync in
 "autoload/visidian.vim
 
@@ -10,39 +8,64 @@ function! s:is_within_vault(path)
     return check_path =~# '^' . escape(vault_path, '/\')
 endfunction
 
-"FUNCTION: Setup Git SSH
-function! s:setup_git_ssh()
-    if !exists('g:visidian_deploy_key')
-        let g:visidian_deploy_key = input('Enter path to SSH deploy key: ')
-        if g:visidian_deploy_key == ''
-            throw 'Deploy key path required for SSH'
-        endif
-    endif
-
-    if !filereadable(g:visidian_deploy_key)
-        throw 'Deploy key not found at: ' . g:visidian_deploy_key
-    endif
-
-    " Set up SSH command with deploy key
-    let $GIT_SSH_COMMAND = 'ssh -i ' . shellescape(g:visidian_deploy_key) . 
-                        \ ' -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new'
-endfunction
-
 "FUNCTION: Parse Git URL
 function! s:parse_git_url(url)
     let url = a:url
     let parsed = {}
 
-    " Detect URL type
-    if url =~# '^git@'
+    " Detect URL type and extract repo info
+    if url =~# '^git@github\.com-\(visidian_[^:]\+\):\([^/]\+\)/\([^.]\+\)\.git$'
         let parsed.type = 'ssh'
-    elseif url =~# '^https\?://'
+        let parsed.host_alias = matchstr(url, '^git@\zs[^:]\+\ze:')
+        let parsed.owner = matchstr(url, ':\zs[^/]\+\ze/')
+        let parsed.repo = matchstr(url, '/\zs[^.]\+\ze\.git$')
+        let parsed.key_name = matchstr(parsed.host_alias, 'github\.com-\zsvisidian_.\+\ze$')
+    elseif url =~# '^https\?://github\.com/\([^/]\+\)/\([^.]\+\)\.git$'
         let parsed.type = 'https'
+        let parsed.owner = matchstr(url, '\.com/\zs[^/]\+\ze/')
+        let parsed.repo = matchstr(url, '/\zs[^.]\+\ze\.git$')
     else
-        throw 'Unsupported Git URL format'
+        throw 'Unsupported Git URL format. For SSH, use the format from generate_deploy_key.sh script.'
     endif
 
     return parsed
+endfunction
+
+"FUNCTION: Setup Git SSH
+function! s:setup_git_ssh()
+    let url_info = s:parse_git_url(g:visidian_git_repo_url)
+    
+    " For SSH URLs from our deploy key generator
+    if url_info.type == 'ssh'
+        " Check if we have a deploy key path
+        if !exists('g:visidian_deploy_key')
+            " Try to find the key based on repo name
+            let default_key = expand('~/.ssh/id_rsa.visidian_' . url_info.repo)
+            if filereadable(default_key)
+                let g:visidian_deploy_key = default_key
+            else
+                " Suggest using the generator script
+                throw 'Deploy key not found. Please run scripts/generate_deploy_key.sh ' 
+                    \ . url_info.owner . ' ' . url_info.repo
+            endif
+        endif
+
+        " Verify key exists and has correct permissions
+        if !filereadable(g:visidian_deploy_key)
+            throw 'Deploy key not found at: ' . g:visidian_deploy_key
+        endif
+
+        " Check key permissions
+        let key_perms = getfperm(g:visidian_deploy_key)
+        if key_perms != '600'
+            call visidian#debug#warn('SYNC', 'Deploy key has incorrect permissions: ' . key_perms)
+            echo "Warning: Deploy key should have 600 permissions for security"
+        endif
+
+        " Set up SSH command with deploy key
+        let $GIT_SSH_COMMAND = 'ssh -i ' . shellescape(g:visidian_deploy_key) . 
+                            \ ' -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new'
+    endif
 endfunction
 
 "FUNCTION: Sync
