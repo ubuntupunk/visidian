@@ -253,3 +253,6 @@ function! s:UpdateVisidianStatusLine()
         " endif
     endif
 endfunction
+
+command! -nargs=0 VisidianAnnexStatus call visidian#sync#annex#status()
+command! -nargs=+ -complete=file VisidianAnnexAdd call visidian#sync#annex#add_remote(<f-args>)

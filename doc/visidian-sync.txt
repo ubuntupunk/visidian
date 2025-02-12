@@ -10,9 +10,10 @@ CONTENTS                                                   *visidian-sync-conten
     3. SSH Key Management ............ |visidian-ssh-keys|
     4. Git Integration ............... |visidian-git-sync|
     5. Rsync Integration ............. |visidian-rsync-sync|
-    6. Commands ...................... |visidian-sync-commands|
-    7. Configuration ................. |visidian-sync-config|
-    8. Troubleshooting ............... |visidian-sync-troubleshooting|
+    6. Git Annex Integration ........ |visidian-annex-sync|
+    7. Commands ...................... |visidian-sync-commands|
+    8. Configuration ................. |visidian-sync-config|
+    9. Troubleshooting ............... |visidian-sync-troubleshooting|
 
 ==============================================================================
 1. Introduction                                           *visidian-sync-intro*
@@ -113,7 +114,49 @@ Configuration:~
 <
 
 ==============================================================================
-6. Commands                                           *visidian-sync-commands*
+6. Git Annex Integration                              *visidian-annex-sync*
+
+Advanced synchronization method using git-annex, ideal for vaults with large
+files or binary content:
+
+Features:~
+    - Efficient handling of large files
+    - Partial content checkout support
+    - Multiple remote repository support
+    - File presence tracking
+    - Bandwidth-efficient syncing
+
+Requirements:~
+    - git-annex must be installed
+    - Git repository for metadata
+    - Storage location for annexed content
+
+Configuration:~
+>
+    " Enable git-annex sync method
+    let g:visidian_sync_method = 3
+
+    " Set repository URL (same as Git)
+    let g:visidian_git_repo_url = 'git@github.com:username/vault.git'
+
+    " Optional: Configure annex behavior
+    let g:visidian_annex_largefiles = 'largerthan=100kb'
+    let g:visidian_annex_thin = 1
+<
+
+Default Behavior:~
+    - Files larger than 100KB are automatically annexed
+    - Smaller files are tracked directly in Git
+    - Files are added in unlocked mode
+    - Thin mode enabled to save disk space
+
+Commands:~
+    :VisidianSync         Sync both Git metadata and annexed content
+    :VisidianAnnexStatus  Show status of annexed files
+    :VisidianAnnexAdd     Add a new remote storage location
+
+==============================================================================
+7. Commands                                           *visidian-sync-commands*
 
                                                             *:VisidianSync*
 :VisidianSync              Manually trigger synchronization
@@ -125,11 +168,11 @@ Configuration:~
 :VisidianVault             Set up a new vault or select existing one
 
 ==============================================================================
-7. Configuration                                       *visidian-sync-config*
+8. Configuration                                       *visidian-sync-config*
 
 Options:~
 >
-    " Set sync method (1: Git, 2: Rsync)
+    " Set sync method (1: Git, 2: Rsync, 3: Git Annex)
     let g:visidian_sync_method = 1
 
     " Git Configuration
@@ -139,6 +182,10 @@ Options:~
     " Rsync Configuration
     let g:visidian_rsync_target = 'user@host:/path/to/vault'
     let g:visidian_rsync_options = '-avz --delete'  " Optional: custom rsync flags
+
+    " Git Annex Configuration
+    let g:visidian_annex_largefiles = 'largerthan=100kb'
+    let g:visidian_annex_thin = 1
 <
 
 Default Values:~
@@ -147,6 +194,8 @@ Default Values:~
     g:visidian_deploy_key      ~/.ssh/visidian_deploy_key
     g:visidian_rsync_target    Prompts if Rsync sync selected
     g:visidian_rsync_options   -avz --delete
+    g:visidian_annex_largefiles largerthan=100kb
+    g:visidian_annex_thin      1
 
 Notes:~
     - Git sync requires either HTTPS or SSH repository URL
@@ -155,7 +204,7 @@ Notes:~
     - Custom rsync options allow fine-tuning of sync behavior
 
 ==============================================================================
-8. Troubleshooting                               *visidian-sync-troubleshooting*
+9. Troubleshooting                               *visidian-sync-troubleshooting*
 
 Common Issues:~
 

@@ -340,18 +340,16 @@ function! visidian#sync#sync()
         return
     endif
 
+    " Get sync method from user if not set
     if !exists('g:visidian_sync_method')
         call visidian#debug#info('SYNC', 'No sync method set, prompting user')
-        let g:visidian_sync_method = inputlist(['Choose sync method:', '1. Git', '2. Rsync', '3. Other'])
-        if g:visidian_sync_method == 0
-            call visidian#debug#info('SYNC', 'User cancelled sync method selection')
-            echo "Sync method not selected."
-            return
-        endif
+        let g:visidian_sync_method = inputlist(['Choose sync method:', 
+            \ '1. Git', 
+            \ '2. Rsync', 
+            \ '3. Git Annex'])
     endif
 
-    call visidian#debug#debug('SYNC', 'Using sync method: ' . g:visidian_sync_method)
-
+    " Handle sync based on method
     if g:visidian_sync_method == 1 " Git
         " Ask user for Git setup preference
         let setup_choice = inputlist([
@@ -402,14 +400,24 @@ function! visidian#sync#sync()
             let g:visidian_rsync_target = input('Enter Rsync target directory (e.g., user@host:/path/to/dir): ')
         endif
         call s:sync_rsync()
-    elseif g:visidian_sync_method == 3 " Other
-        call visidian#debug#info('SYNC', 'Using other sync method')
-        echo "Other sync methods can be configured in your vimrc."
+    elseif g:visidian_sync_method == 3 " Git Annex
+        if !exists('g:visidian_git_repo_url')
+            call visidian#debug#info('SYNC', 'No Git repository URL set, prompting user')
+            let g:visidian_git_repo_url = input('Enter Git repository URL: ')
+        endif
+        
+        " Initialize git-annex if needed
+        if !isdirectory(g:visidian_vault_path . '/.git/annex')
+            if !visidian#sync#annex#init()
+                return 0
+            endif
+        endif
+        
+        " Perform sync
+        call visidian#sync#annex#sync()
     else
         call visidian#debug#error('SYNC', 'Invalid sync method: ' . g:visidian_sync_method)
-        echohl ErrorMsg
-        echo "Invalid sync method selected."
-        echohl None
+        return 0
     endif
 endfunction
 
