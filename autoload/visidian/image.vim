@@ -150,6 +150,11 @@ EOF
     return has_deps
 endfunction
 
+" Initialize color option (default: off)
+if !exists('g:visidian_image_color')
+    let g:visidian_image_color = 0
+endif
+
 " Function: visidian#image#display_image
 " Description: Display an image file in a buffer using ASCII art
 " Parameters:
@@ -169,11 +174,26 @@ try:
     from PIL import Image
     import os
 
+    def rgb_to_xterm(r, g, b):
+        # Convert RGB values to the closest xterm-256 color code
+        # Using a simplified conversion focusing on the basic 216 color cube
+        r = int((r * 5) / 255)
+        g = int((g * 5) / 255)
+        b = int((b * 5) / 255)
+        return 16 + (36 * r) + (6 * g) + b
+
     # Get the image path from vim
     image_path = vim.eval('image_path')
+    use_color = int(vim.eval('g:visidian_image_color'))
     
-    # Open and convert image
-    img = Image.open(image_path).convert('L')
+    # Open image
+    img = Image.open(image_path)
+    if use_color:
+        # Keep color for color mode
+        img_color = img.convert('RGB')
+        img = img.convert('L')  # Grayscale for ASCII mapping
+    else:
+        img = img.convert('L')
     
     # Get terminal size
     term_width = int(vim.eval('&columns')) - 4
@@ -190,16 +210,20 @@ try:
         new_height = term_height
         new_width = int(new_height / (aspect * 0.45))
     
-    # Resize using ANTIALIAS (older PIL versions) or LANCZOS (newer versions)
+    # Resize
     try:
-        # Try newer PIL version constant
         img = img.resize((new_width, new_height), Image.LANCZOS)
+        if use_color:
+            img_color = img_color.resize((new_width, new_height), Image.LANCZOS)
     except AttributeError:
-        # Fall back to older PIL version constant
         img = img.resize((new_width, new_height), Image.ANTIALIAS)
+        if use_color:
+            img_color = img_color.resize((new_width, new_height), Image.ANTIALIAS)
     
     # Convert to ASCII
     pixels = list(img.getdata())
+    if use_color:
+        pixels_color = list(img_color.getdata())
     chars = ' .:-=+*#%@'
     
     # Create ASCII art line by line
@@ -207,9 +231,21 @@ try:
     for y in range(new_height):
         line = ''
         for x in range(new_width):
-            pixel = pixels[y * new_width + x]
+            pos = y * new_width + x
+            pixel = pixels[pos]
             idx = int((pixel / 255.0) * (len(chars) - 1))
-            line += chars[idx]
+            char = chars[idx]
+            
+            if use_color:
+                r, g, b = pixels_color[pos]
+                color_code = rgb_to_xterm(r, g, b)
+                # Add color escape sequence
+                line += '\033[38;5;{}m{}'.format(color_code, char)
+            else:
+                line += char
+                
+        if use_color:
+            line += '\033[0m'  # Reset color at end of line
         lines.append(line)
     
     # Create header
@@ -217,6 +253,7 @@ try:
         'Image: ' + os.path.basename(image_path),
         'Original: {}x{}'.format(width, height),
         'ASCII: {}x{}'.format(new_width, new_height),
+        'Mode: {}'.format('Color' if use_color else 'Grayscale'),
         ''
     ]
     
@@ -244,6 +281,18 @@ except Exception as e:
     vim.command('echo "Error: {}"'.format(str(e)))
     vim.command('echohl None')
 EOF
+endfunction
+
+" Toggle color mode
+function! visidian#image#toggle_color()
+    let g:visidian_image_color = !g:visidian_image_color
+    echohl MoreMsg
+    echo "ASCII art color mode: " . (g:visidian_image_color ? "ON" : "OFF")
+    echohl None
+    " Refresh current image if in an image buffer
+    if exists('b:visidian_is_image')
+        call visidian#image#display_image()
+    endif
 endfunction
 
 " Function: visidian#image#setup_autocmds

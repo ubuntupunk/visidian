@@ -259,3 +259,6 @@ command! -nargs=+ -complete=file VisidianAnnexAdd call visidian#sync#annex#add_r
 
 " Network graph visualization
 command! -nargs=0 VisidianShowGraph call visidian#graph#ShowNoteGraph()
+
+" Add image color toggle command
+command! -nargs=0 VisidianImageColor call visidian#image#toggle_color()
