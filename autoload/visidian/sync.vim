@@ -8,11 +8,130 @@ function! s:is_within_vault(path)
     return check_path =~# '^' . escape(vault_path, '/\')
 endfunction
 
+"FUNCTION: Initialize Git Repository
+function! s:init_git_repo(git_url)
+    " Ensure we're initializing in the vault directory
+    if !exists('g:visidian_vault_path') || g:visidian_vault_path == ''
+        throw 'Vault path not set. Please set your vault first using :VisidianSetVault'
+    endif
+
+    let vault_path = fnamemodify(g:visidian_vault_path, ':p')
+    
+    " Ensure we're in the vault directory
+    let cwd = getcwd()
+    if cwd != vault_path
+        execute 'lcd ' . fnameescape(vault_path)
+    endif
+    
+    " Check if .git already exists in vault
+    if isdirectory(vault_path . '/.git')
+        throw 'Git repository already exists in vault'
+    endif
+
+    let init_cmd = [
+        \ 'git init',
+        \ 'git config --local core.excludesfile ' . shellescape(vault_path . '/.gitignore')
+    \ ]
+
+    if a:git_url != ''
+        call add(init_cmd, 'git remote add origin ' . shellescape(a:git_url))
+        call add(init_cmd, 'git branch -M main')
+    endif
+    
+    for cmd in init_cmd
+        let output = system(cmd)
+        if v:shell_error
+            throw 'Failed to initialize repository: ' . output
+        endif
+    endfor
+
+    " Create default .gitignore if it doesn't exist
+    let gitignore_path = vault_path . '/.gitignore'
+    if !filereadable(gitignore_path)
+        let gitignore_content = [
+            \ '# Visidian default gitignore',
+            \ '.DS_Store',
+            \ 'Thumbs.db',
+            \ '*.swp',
+            \ '*.swo',
+            \ '*~',
+            \ '.git/',
+            \ '.obsidian/',
+            \ '.trash/'
+        \ ]
+        call writefile(gitignore_content, gitignore_path)
+        call setfperm(gitignore_path, "rw-r--r--")
+    endif
+endfunction
+
+"FUNCTION: Show Deploy Instructions
+function! s:show_deploy_instructions(pub_key, owner, repo)
+    " Create buffer with instructions
+    new
+    setlocal buftype=nofile bufhidden=wipe nobuflisted noswapfile
+    
+    " Set buffer name
+    execute 'file Visidian_Deploy_Instructions'
+    
+    call append(0, [
+        \ '=== Visidian Git Setup Instructions ===',
+        \ '',
+        \ '1. Copy this deploy key and add it to your GitHub repository:',
+        \ '   ' . a:pub_key,
+        \ '',
+        \ '2. Visit this URL to add the deploy key:',
+        \ '   https://github.com/' . a:owner . '/' . a:repo . '/settings/keys/new',
+        \ '',
+        \ '3. Make sure to:',
+        \ '   - Give it a descriptive title (e.g., "Visidian Deploy Key")',
+        \ '   - Check "Allow write access" if you want to push changes',
+        \ '',
+        \ '4. Click "Add deploy key"',
+        \ '',
+        \ '5. Press any key to continue with repository initialization...'
+    \ ])
+    
+    " Format buffer
+    normal! gg
+    setlocal readonly
+    setlocal nomodifiable
+    
+    " Create popup with notification
+    let popup_lines = [
+        \ ' Deploy Key Setup Required ',
+        \ '',
+        \ ' Please check the Visidian_Deploy_Instructions ',
+        \ ' buffer to complete the repository setup. ',
+        \ '',
+        \ ' Press any key to close this popup... '
+    \ ]
+    
+    " Calculate popup dimensions
+    let max_width = max(map(copy(popup_lines), 'len(v:val)'))
+    let height = len(popup_lines)
+    
+    " Show centered popup
+    call popup_create(popup_lines, {
+        \ 'title': ' Visidian ',
+        \ 'padding': [1,1,1,1],
+        \ 'pos': 'center',
+        \ 'border': [],
+        \ 'borderchars': ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
+        \ 'width': max_width + 2,
+        \ 'close': 'click',
+        \ 'highlight': 'Normal',
+        \ 'borderhighlight': ['MoreMsg']
+        \ })
+    
+    redraw
+    call getchar()
+endfunction
+
 "FUNCTION: Generate Deploy Key and Config
 function! s:setup_git_deploy(owner, repo)
     " Ensure we have a vault path
     if !exists('g:visidian_vault_path') || g:visidian_vault_path == ''
-        throw 'Vault path not set'
+        throw 'Vault path not set. Please set your vault first using :VisidianSetVault'
     endif
     
     let vault_path = fnamemodify(g:visidian_vault_path, ':p')
@@ -139,20 +258,25 @@ endfunction
 function! s:init_git_repo(git_url)
     " Ensure we're initializing in the vault directory
     if !exists('g:visidian_vault_path') || g:visidian_vault_path == ''
-        throw 'Vault path not set'
+        throw 'Vault path not set. Please set your vault first using :VisidianSetVault'
     endif
 
     let vault_path = fnamemodify(g:visidian_vault_path, ':p')
     
+    " Ensure we're in the vault directory
+    let cwd = getcwd()
+    if cwd != vault_path
+        execute 'lcd ' . fnameescape(vault_path)
+    endif
+    
     " Check if .git already exists in vault
-    if isdirectory(vault_path . '.git')
+    if isdirectory(vault_path . '/.git')
         throw 'Git repository already exists in vault'
     endif
 
     let init_cmd = [
-        \ 'cd ' . shellescape(vault_path),
         \ 'git init',
-        \ 'git config --local core.excludesfile ' . shellescape(vault_path . '.gitignore')
+        \ 'git config --local core.excludesfile ' . shellescape(vault_path . '/.gitignore')
     \ ]
 
     if a:git_url != ''
@@ -168,7 +292,7 @@ function! s:init_git_repo(git_url)
     endfor
 
     " Create default .gitignore if it doesn't exist
-    let gitignore_path = vault_path . '.gitignore'
+    let gitignore_path = vault_path . '/.gitignore'
     if !filereadable(gitignore_path)
         let gitignore_content = [
             \ '# Visidian default gitignore',
