@@ -159,6 +159,12 @@ endfunction
 " Parameters:
 "   - image_path: Path to the image file
 function! visidian#image#display_image()
+    " Direct echo test
+    echom "DIRECT TEST: Image display function called"
+    echohl ErrorMsg
+    echom "TEST MESSAGE: Image function called"
+    echohl None
+    
     " Test debug message
     call visidian#debug#error('IMAGE', 'TEST: Image display function called')
     call visidian#debug#debug('IMAGE', 'Starting image display process')

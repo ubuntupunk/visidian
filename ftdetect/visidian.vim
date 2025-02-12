@@ -7,6 +7,12 @@ augroup VisidianMarkdown
     autocmd BufRead,BufNewFile *.md call s:CheckVisidianMarkdown()
 augroup END
 
+" Detect image files and set up display
+augroup VisidianImage
+    autocmd!
+    autocmd BufRead *.{jpg,jpeg,png,gif} call visidian#image#display_image()
+augroup END
+
 function! s:CheckVisidianMarkdown()
     " Only set filetype if we're in the Visidian vault
     if exists('g:visidian_vault_path') && !empty(g:visidian_vault_path)
