@@ -132,17 +132,13 @@ function! visidian#image#check_dependencies()
 
 python3 << EOF
 import vim
-import sys
-vim.command("call visidian#debug#debug('IMAGE', 'Python path: ' . string(sys.path))")
-vim.command("call visidian#debug#debug('IMAGE', 'Python executable: ' . string(sys.executable))")
-
 try:
     from PIL import Image
     vim.command('let l:has_pillow = 1')
-    vim.command("call visidian#debug#debug('IMAGE', 'Successfully imported PIL version: ' . string(Image.__version__))")
+    vim.command("call visidian#debug#debug('IMAGE', 'Successfully imported PIL')")
 except ImportError as e:
     vim.command('let l:has_pillow = 0')
-    vim.command("call visidian#debug#error('IMAGE', 'Python Pillow library (PIL) import error: ' . string(str(e)))")
+    vim.command("call visidian#debug#error('IMAGE', 'PIL import error')")
     vim.command("echohl WarningMsg")
     vim.command("echom '📦 Visidian Image Preview needs the Pillow library! Install it with:'")
     vim.command("echohl None")
