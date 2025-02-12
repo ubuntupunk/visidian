@@ -173,58 +173,15 @@ endfunction
 
 " Process response from API
 function! s:process_response(response) abort
-    let l:provider = g:visidian_chat_provider
-    let l:clean_response = s:clean_response(a:response)
-    call s:debug('Processing cleaned response: ' . l:clean_response)
-    
-    try
-        " Handle array of responses
-        let l:json_array = json_decode(l:clean_response)
-        if type(l:json_array) != v:t_list
-            let l:json_array = [l:json_array]
-        endif
-        
-        let l:result = ''
-        for l:json in l:json_array
-            " Check for API errors
-            if type(l:json) == v:t_dict && has_key(l:json, 'error')
-                throw 'API Error: ' . l:json.error.message
-            endif
-            
-            if l:provider == 'gemini'
-                if type(l:json) != v:t_dict
-                    continue
-                endif
-                if !has_key(l:json, 'candidates') || len(l:json.candidates) == 0
-                    continue
-                endif
-                
-                let l:candidate = l:json.candidates[0]
-                if !has_key(l:candidate, 'content')
-                    continue
-                endif
-                
-                let l:content = l:candidate.content
-                if !has_key(l:content, 'parts') || len(l:content.parts) == 0
-                    continue
-                endif
-                
-                let l:text = l:content.parts[0].text
-                let l:result .= l:text
-                call s:append_to_chat_buffer(l:text)
-            endif
-        endfor
-        
-        if empty(l:result)
-            throw 'No valid response content found'
-        endif
-        
-        return l:result
-    catch
-        call s:debug('Error processing response: ' . v:exception)
-        call s:debug('Raw response: ' . a:response)
-        throw v:exception
-    endtry
+    call s:debug('Raw response: ' . a:response)
+    " Clean up response data
+    let l:clean_response = substitute(a:response, '\n', '', 'g')  " Remove newlines
+    let l:clean_response = substitute(l:clean_response, '\r', '', 'g')  " Remove carriage returns
+    let l:clean_response = substitute(l:clean_response, '\t', '', 'g')  " Remove tabs
+    let l:clean_response = substitute(l:clean_response, '\b', '', 'g')  " Remove backspaces
+    let l:clean_response = substitute(l:clean_response, '\f', '', 'g')  " Remove form feeds
+    call s:debug('Cleaned response: ' . l:clean_response)
+    return l:clean_response
 endfunction
 
 " Clean response text by removing null bytes and normalizing newlines
@@ -550,7 +507,6 @@ function! s:append_to_chat_buffer(text) abort
         call visidian#chat#create_window()
         let l:bufnr = bufnr('Visidian Chat')
     endif
-    
     call s:debug('Appending to chat buffer: ' . a:text)
     let l:lines = split(a:text, '\n')
     call setbufvar(l:bufnr, '&modifiable', 1)

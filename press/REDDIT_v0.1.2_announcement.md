@@ -24,7 +24,7 @@ Following our initial release, we're excited to announce Visidian.vim v0.1.2, br
 ## Why Visidian? 🤔
 
 Visidian combines the power of Vim with modern note-taking features:
-- **Fast & Efficient**: Pure Vimscript, no external dependencies
+- **Fast & Efficient**: Pure Vimscript, minimal external dependencies
 - **AI-Enhanced**: Chat with your notes using state-of-the-art AI
 - **PARA Method**: Built-in support for the PARA organization method
 - **Flexible**: Works with your existing markdown files
