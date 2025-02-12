@@ -159,6 +159,8 @@ endfunction
 " Parameters:
 "   - image_path: Path to the image file
 function! visidian#image#display_image()
+    " Test debug message
+    call visidian#debug#error('IMAGE', 'TEST: Image display function called')
     call visidian#debug#debug('IMAGE', 'Starting image display process')
     
     if !visidian#image#check_dependencies()
