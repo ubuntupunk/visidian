@@ -155,129 +155,89 @@ endfunction
 " Parameters:
 "   - image_path: Path to the image file
 function! visidian#image#display_image()
-    " Direct echo test
+    " Test debug message
     echom "DIRECT TEST: Image display function called"
     echohl ErrorMsg
     echom "TEST MESSAGE: Image function called"
     echohl None
     
-    " Test debug message
-    call visidian#debug#error('IMAGE', 'TEST: Image display function called')
-    call visidian#debug#debug('IMAGE', 'Starting image display process')
-    
-    if !visidian#image#check_dependencies()
-        call visidian#debug#error('IMAGE', 'Dependencies check failed')
-        return
-    endif
-
     let image_path = expand('%:p')
-    call visidian#debug#debug('IMAGE', 'Attempting to display image: ' . image_path)
-
-    if !filereadable(image_path)
-        call visidian#debug#error('IMAGE', 'Cannot read image file: ' . image_path)
-        echohl ErrorMsg
-        echom '❌ Oops! Cannot read image: ' . fnamemodify(image_path, ':t')
-        echohl None
-        return
-    endif
-
+    
 python3 << EOF
-import vim
-from PIL import Image
-import os
+try:
+    import vim
+    from PIL import Image
+    import os
 
-def create_ascii_image(image_path, max_width=None, max_height=None):
-    try:
-        vim.command("call visidian#debug#debug('IMAGE', 'Python: Starting ASCII conversion')")
-        
-        # Open the image with detailed error handling
-        try:
-            img = Image.open(image_path)
-            vim.command("call visidian#debug#debug('IMAGE', 'Opened image successfully')")
-        except FileNotFoundError:
-            vim.command("call visidian#debug#error('IMAGE', 'File not found')")
-            vim.command("echohl ErrorMsg")
-            vim.command("echom '😕 Sorry! Could not find the image file.'")
-            vim.command("echohl None")
-            return
-        except Exception as e:
-            vim.command("call visidian#debug#error('IMAGE', 'Error opening image')")
-            vim.command("echohl ErrorMsg")
-            vim.command("echom '😕 Sorry! Could not open the image.'")
-            vim.command("echohl None")
-            return
-
-        # Convert to grayscale first for better quality
-        img = img.convert('L')
-        
-        # Get terminal dimensions
-        term_width = int(vim.eval('&columns'))
-        term_height = int(vim.eval('&lines'))
-        
-        # Calculate dimensions while maintaining aspect ratio
-        img_width, img_height = img.size
-        aspect_ratio = img_height / float(img_width)
-        
-        # Calculate new dimensions
-        new_width = min(term_width - 4, img_width)
-        new_height = int(new_width * aspect_ratio * 0.45)
-        
-        # Ensure height fits in terminal
-        if new_height > term_height - 4:
-            new_height = term_height - 4
-            new_width = int(new_height / (aspect_ratio * 0.45))
-        
-        # Resize image
-        img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
-        
-        # Get pixel data
-        pixels = list(img.getdata())
-        pixels = [pixels[i:i + new_width] for i in range(0, len(pixels), new_width)]
-        
-        # ASCII chars (darkest to lightest)
-        ascii_chars = '@%#*+=-:. '  # Reversed for dark terminal
-        char_width = len(ascii_chars) - 1
-        
-        # Convert to ASCII art with proper encoding
-        ascii_img = []
-        for row in pixels:
-            ascii_row = []
-            for pixel in row:
-                # Map pixel value to ASCII char
-                char_idx = min(int(pixel / 255.0 * char_width), char_width)
-                ascii_row.append(ascii_chars[char_idx])
-            ascii_img.append(''.join(ascii_row))
-        
-        # Prepare buffer content with proper encoding
-        header = [
-            f'Image: {os.path.basename(image_path)}',
-            f'Size: {img_width}x{img_height}',
-            f'ASCII Size: {new_width}x{new_height}',
-            ''
-        ]
-        
-        # Clear and set buffer content safely
-        vim.command('setlocal modifiable')
-        vim.current.buffer[:] = header + ascii_img
-        vim.command('setlocal nomodifiable')
-        
-        # Set buffer options
-        vim.command('setlocal nowrap')
-        vim.command('setlocal buftype=nofile')
-        vim.command('setlocal nonumber')
-        vim.command('setlocal norelativenumber')
-        vim.command('setlocal signcolumn=no')
-        
-        # Success message
-        vim.command("echohl MoreMsg")
-        vim.command("echom '✨ ASCII art conversion complete!'")
-        vim.command("echohl None")
-
-    except Exception as e:
-        vim.command("call visidian#debug#error('IMAGE', 'Error in ASCII conversion')")
-        vim.command("echohl ErrorMsg")
-        vim.command("echom '😢 Something went wrong while creating ASCII art'")
-        vim.command("echohl None")
+    # Get the image path from vim
+    image_path = vim.eval('image_path')
+    
+    # Open and convert image
+    img = Image.open(image_path).convert('L')
+    
+    # Get terminal size
+    term_width = int(vim.eval('&columns')) - 4
+    term_height = int(vim.eval('&lines')) - 4
+    
+    # Calculate new size
+    width, height = img.size
+    aspect = height/float(width)
+    new_width = min(term_width, width)
+    new_height = int(new_width * aspect * 0.45)
+    
+    # Ensure it fits in terminal
+    if new_height > term_height:
+        new_height = term_height
+        new_width = int(new_height / (aspect * 0.45))
+    
+    # Resize
+    img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+    
+    # Convert to ASCII
+    pixels = list(img.getdata())
+    chars = ' .:-=+*#%@'
+    
+    # Create ASCII art line by line
+    lines = []
+    for y in range(new_height):
+        line = ''
+        for x in range(new_width):
+            pixel = pixels[y * new_width + x]
+            idx = int((pixel / 255.0) * (len(chars) - 1))
+            line += chars[idx]
+        lines.append(line)
+    
+    # Create header
+    header = [
+        'Image: ' + os.path.basename(image_path),
+        'Original: {}x{}'.format(width, height),
+        'ASCII: {}x{}'.format(new_width, new_height),
+        ''
+    ]
+    
+    # Set buffer content
+    buffer = vim.current.buffer
+    buffer.options['modifiable'] = True
+    buffer[:] = header + lines
+    buffer.options['modifiable'] = False
+    
+    # Set buffer options
+    vim.command('setlocal buftype=nofile')
+    vim.command('setlocal nomodifiable')
+    vim.command('setlocal nonumber')
+    vim.command('setlocal norelativenumber')
+    vim.command('setlocal signcolumn=no')
+    vim.command('setlocal nowrap')
+    
+    # Success message
+    vim.command('echohl MoreMsg')
+    vim.command('echo "✨ ASCII art created successfully!"')
+    vim.command('echohl None')
+    
+except Exception as e:
+    vim.command('echohl ErrorMsg')
+    vim.command('echo "Error: {}"'.format(str(e)))
+    vim.command('echohl None')
 EOF
 endfunction
 
