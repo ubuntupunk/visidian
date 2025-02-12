@@ -19,6 +19,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Environment variable support for API keys
 - Documentation for chat configuration and usage
 
+## [v0.1.2] - 2025-02-12
+
+### Added
+- YAML tag support in tag generation and browsing
+- Auto setup functionality that runs on first start
+- Tag navigation improvements with better regex patterns
+
+### Changed
+- Improved tag generation with support for different types (headers, links, tasks, YAML)
+- Better error handling and debug messages in tag functionality
+- Updated documentation to match implemented features
+
+### Removed
+- Unused preview theme setting
+- Unimplemented welcome screen setting
+
 ## [v0.1.1] - 2025-02-10
 
 ### Added
@@ -65,5 +81,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Basic preview functionality
 - Initial search implementation
 
+[v0.1.2]: https://github.com/ubuntupunk/visidian.vim/compare/v0.1.1...v0.1.2
 [v0.1.1]: https://github.com/ubuntupunk/visidian.vim/compare/v0.1.0...v0.1.1
 [v0.1.0]: https://github.com/ubuntupunk/visidian.vim/releases/tag/v0.1.0
