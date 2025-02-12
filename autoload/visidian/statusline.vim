@@ -9,12 +9,29 @@ function! visidian#statusline#is_image()
     return index(['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'], l:ext) >= 0
 endfunction
 
+" Function: visidian#statusline#get_para_location
+" Description: Get PARA location of current file
+function! visidian#statusline#get_para_location()
+    let l:path = expand('%:p')
+    if l:path =~? '/Projects/'
+        return 'Project'
+    elseif l:path =~? '/Areas/'
+        return 'Area'
+    elseif l:path =~? '/Resources/'
+        return 'Resource'
+    elseif l:path =~? '/Archives/'
+        return 'Archive'
+    endif
+    return ''
+endfunction
+
 " Function: visidian#statusline#image_indicator
 " Description: Get image indicator if current buffer is an image
 function! visidian#statusline#image_indicator()
     if visidian#statusline#is_image()
-        " Add [I] on left, [Visidian] on right if there's space
-        return '%#VisidianImageConcern#[I]%* %<%f %{&modified?"[+]":""} %= %{winwidth(0)>70?"[Visidian] ":""}'
+        let l:para = visidian#statusline#get_para_location()
+        let l:para_text = empty(l:para) ? '' : ' ' . l:para . ' '
+        return '%#VisidianImageConcern#[I]%*' . l:para_text . '%{winwidth(0)>70?"[Visidian] ":""}'
     endif
     return ''
 endfunction
