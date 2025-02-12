@@ -9,6 +9,7 @@ CONTENTS                                                 *visidian-tags-contents
     2. Commands ....................... |visidian-tags-commands|
     3. Configuration .................. |visidian-tags-config|
     4. Types .......................... |visidian-tags-types|
+    5. Browser ........................ |visidian-tags-browser|
 
 See also:
     Search System .................... |visidian-search|
@@ -28,6 +29,13 @@ Tags are generated for various elements like headers, links, and tasks.
     - headers: Only generate tags for headers
     - links: Only generate tags for links and tags
     - tasks: Only generate tags for tasks
+
+:VisidianBrowseTags                                      *:VisidianBrowseTags*
+    Open a window to browse and filter tags. In the browser:
+    - <CR>: Jump to tag under cursor
+    - /: Filter tags
+    - q: Close browser
+    - <C-n>/<C-p>: Navigate up/down
 
 ==============================================================================
 3. Configuration                                         *visidian-tags-config*
@@ -49,5 +57,27 @@ Links:~
 Tasks:~
     - Unchecked tasks: - [ ] Task
     - Checked tasks: - [x] Task
+
+==============================================================================
+5. Browser                                             *visidian-tags-browser*
+
+The tag browser provides a convenient interface to view and filter tags:
+
+Layout:~
+    - Tag name on the left
+    - File path in the middle
+    - Line number and type on the right
+
+Colors:~
+    - Tag names in title color
+    - File paths in dark gray
+    - Line numbers in yellow
+    - Tag types in light blue
+
+Navigation:~
+    - Use <CR> to jump to tag under cursor
+    - Use / to filter tags by pattern
+    - Use q to close the browser
+    - Use <C-n>/<C-p> to move up/down
 
  vim:tw=78:ts=8:ft=help:norl:

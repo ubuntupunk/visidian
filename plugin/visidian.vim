@@ -117,6 +117,7 @@ command! -nargs=0 -bar VisidianInit call visidian#start#first_start()
 
 " Generate & Browse Ctags
 command! -nargs=? -complete=customlist,visidian#tags#complete VisidianTags call visidian#tags#generate(<f-args>)
+command! -nargs=0 VisidianBrowseTags call visidian#tags#browse()
 
 "Toggle Spelling
 command! -nargs=0 VisidianToggleSpell call visidian#toggle_spell()
