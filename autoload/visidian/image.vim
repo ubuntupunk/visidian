@@ -225,13 +225,13 @@ def create_ascii_image(image_path, max_width=None, max_height=None):
         term_width = int(vim.eval('l:term_width'))
         term_height = int(vim.eval('l:term_height'))
 
-        # Calculate dimensions
+        # Calculate dimensions while maintaining aspect ratio
         img_width, img_height = img.size
         aspect_ratio = img_height / float(img_width)
         
-        # Terminal characters are roughly twice as tall as wide
+        # Calculate new dimensions (terminal characters are roughly twice as tall as wide)
         new_width = min(term_width - 4, img_width)
-        new_height = int(new_width * aspect_ratio * 0.5)
+        new_height = int(new_width * aspect_ratio * 0.5)  # 0.5 to account for terminal character aspect ratio
         
         # Ensure height fits in terminal
         if new_height > term_height - 4:
@@ -240,28 +240,29 @@ def create_ascii_image(image_path, max_width=None, max_height=None):
 
         vim.command(f"call visidian#debug#debug('IMAGE', 'Resizing image to {new_width}x{new_height}')")
         
-        # Resize image
-        img = img.resize((new_width, new_height))
+        # Resize image with antialiasing
+        img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
         
-        # Convert to grayscale using perceived luminance
-        pixels = []
-        for y in range(new_height):
-            row = []
-            for x in range(new_width):
-                r, g, b = img.getpixel((x, y))
-                # Use perceived luminance formula
-                gray = int(0.2989 * r + 0.5870 * g + 0.1140 * b)
-                row.append(gray)
-            pixels.append(row)
+        # Convert to grayscale first using PIL's convert
+        img = img.convert('L')
         
-        # Convert to ASCII
-        ascii_chars = '@%#*+=-:. '
+        # Get pixel data directly as a list
+        pixels = list(img.getdata())
+        
+        # Reshape pixels into rows
+        pixels = [pixels[i:i + new_width] for i in range(0, len(pixels), new_width)]
+        
+        # Convert to ASCII with a better character set and proper brightness mapping
+        # ASCII chars from darkest to lightest
+        ascii_chars = ' .:-=+*#%@'[::-1]  # Reversed to match brightness
+        char_width = len(ascii_chars) - 1
+        
         ascii_img = []
         for row in pixels:
             ascii_row = ''
             for pixel in row:
-                # Map grayscale value to ASCII character
-                char_idx = int((pixel / 255.0) * (len(ascii_chars) - 1))
+                # Map pixel value (0-255) to ascii character
+                char_idx = int((pixel / 255.0) * char_width)
                 ascii_row += ascii_chars[char_idx]
             ascii_img.append(ascii_row)
         
