@@ -14,6 +14,9 @@ CONTENTS                                                     *visidian-contents*
     7. Tips and Best Practices ........ |visidian-tips|
     8. Troubleshooting ................ |visidian-troubleshooting|
 
+See also:
+    Tag Navigation ................... |visidian-tags|
+
 For detailed documentation on specific features:
     :help visidian-bookmarking ........ Note bookmarking system
     :help visidian-chat ............... AI chat integration
@@ -27,6 +30,7 @@ For detailed documentation on specific features:
     :help visidian-start .............. Startup and initialization
     :help visidian-sync ............... Synchronization
     :help visidian-vectorstore ........ Vector-based search
+    :help visidian-tags ............... Tag navigation
 
 ==============================================================================
 1. Introduction                                         *visidian-introduction*
@@ -43,6 +47,7 @@ Key Features:~
 - Note preview and rendering
 - Customizable templates
 - Git-based synchronization
+- Tag navigation
 
 ==============================================================================
 2. Getting Started                                   *visidian-getting-started*
@@ -84,6 +89,7 @@ Detailed documentation for each feature is available in separate help files:
     Startup/Init .............. |visidian-start|
     Sync ...................... |visidian-sync|
     Vector Store .............. |visidian-vectorstore|
+    Tag Navigation ............ |visidian-tags|
 
 Each feature's documentation can be accessed directly using :help followed by
 the feature name (e.g., :help visidian-chat).
@@ -114,7 +120,7 @@ Archives:~
 
 Core Commands:~
     :VisidianInit ........... Initialize new vault
-    :VisidianNew ............ Create new note
+    :VisidianNote ............ Create new note
     :VisidianSearch ......... Search notes
     :VisidianPreview ........ Preview current note
     :VisidianSync ........... Sync vault with git
@@ -132,8 +138,6 @@ Basic Settings:~
     " Enable debug mode
     let g:visidian_debug = 1
 
-    " Set preview theme
-    let g:visidian_preview_theme = 'dark'
 <
 
 See individual feature documentation for detailed configuration options.
