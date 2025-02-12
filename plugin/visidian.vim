@@ -257,9 +257,6 @@ endfunction
 command! -nargs=0 VisidianAnnexStatus call visidian#sync#annex#status()
 command! -nargs=+ -complete=file VisidianAnnexAdd call visidian#sync#annex#add_remote(<f-args>)
 
-" Network graph visualization
-command! -nargs=0 VisidianShowGraph call visidian#graph#ShowNoteGraph()
-
 " Add image color toggle command
 command! -nargs=0 VisidianImageColor call visidian#image#toggle_color()
 
@@ -269,5 +266,5 @@ call visidian#statusline#init_highlights()
 " Add image concern to statusline
 augroup VisidianImageStatusline
     autocmd!
-    autocmd BufEnter,BufWinEnter * if &statusline !~# '\[I\]' | let &statusline = visidian#statusline#image_indicator() . &statusline | endif
+    autocmd BufEnter,BufWinEnter * if &l:statusline !~# '\[I\]' | let &l:statusline = visidian#statusline#image_indicator() . &l:statusline | endif
 augroup END
