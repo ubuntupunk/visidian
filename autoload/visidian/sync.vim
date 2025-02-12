@@ -36,8 +36,8 @@ function! s:setup_git_deploy(owner, repo)
     endif
 
     " Set permissions
-    call setfperm(key_path, '600')
-    call setfperm(pub_key_path, '644')
+    call setfperm(key_path, "600")
+    call setfperm(pub_key_path, "644")
 
     " Create SSH config entry
     let config_entry = "\n# Visidian Key Generated on " . strftime('%Y-%m-%d at %H:%M:%S') . "\n"
@@ -49,7 +49,7 @@ function! s:setup_git_deploy(owner, repo)
     " Update SSH config
     if !filereadable(ssh_config)
         call writefile([config_entry], ssh_config)
-        call setfperm(ssh_config, '600')
+        call setfperm(ssh_config, "600")
     else
         call writefile([config_entry], ssh_config, 'a')
     endif
@@ -135,6 +135,7 @@ function! s:init_git_repo(git_url)
             \ '.trash/'
         \ ]
         call writefile(gitignore_content, gitignore_path)
+        call setfperm(gitignore_path, "644")
     endif
 endfunction
 
