@@ -355,7 +355,7 @@ function! visidian#sync#sync()
             call visidian#debug#info('SYNC', 'No Git repository URL set, prompting user')
             let g:visidian_git_repo_url = input('Enter Git repository URL: ')
         endif
-        call s:setup_git_sync()
+        call s:init_git_repo(g:visidian_git_repo_url)
     elseif g:visidian_sync_method == 2 " Git Annex
         if !exists('g:visidian_git_repo_url')
             call visidian#debug#info('SYNC', 'No Git repository URL set, prompting user')
